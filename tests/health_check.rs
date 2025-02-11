@@ -3,9 +3,9 @@ use std::sync::LazyLock;
 
 use reqwest::StatusCode;
 use secrecy::SecretBox;
-use serde_json::Value as JsonValue;
 use serde_json::json;
-use sqlx::{PgConnection, PgPool, Connection, Executor, postgres::PgPoolOptions};
+use serde_json::Value as JsonValue;
+use sqlx::{postgres::PgPoolOptions, Connection, Executor, PgConnection, PgPool};
 
 use checklist::configuration::{get_configuration, DatabaseSettings};
 use checklist::run;
@@ -45,7 +45,7 @@ async fn health_check_works() {
 #[tokio::test]
 async fn create_todo_works() {
     let test_app = spawn_app().await;
-    let address =test_app.address;
+    let address = test_app.address;
     let client = reqwest::Client::new();
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let response = client
@@ -60,7 +60,7 @@ async fn create_todo_works() {
 #[tokio::test]
 async fn create_todo_fails() {
     let test_app = spawn_app().await;
-    let address =test_app.address;
+    let address = test_app.address;
     let client = reqwest::Client::new();
 
     struct FailCall {
@@ -79,13 +79,11 @@ async fn create_todo_fails() {
         FailCall {
             json: Some(json!(r#"{"name": ""}"#)),
             expected_status_code: StatusCode::BAD_REQUEST,
-
         },
     ];
     // Forgot to include a body
     for case in cases {
-        let mut req = client
-            .post(format!("{}/todo", address));
+        let mut req = client.post(format!("{}/todo", address));
         if let Some(ref json) = case.json {
             req = req.json(json);
         }
@@ -94,9 +92,7 @@ async fn create_todo_fails() {
     }
 }
 
-pub async fn configure_database(
-    configuration: &DatabaseSettings,
-) -> PgPool {
+pub async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     let maintenance_settings = DatabaseSettings {
         host: configuration.host.clone(),
         port: configuration.port,
@@ -106,13 +102,17 @@ pub async fn configure_database(
         max_connections: configuration.max_connections,
         pool_acquire_timeout: configuration.pool_acquire_timeout,
     };
-    let mut connection = PgConnection::connect(
-        &maintenance_settings.to_connection_string()
-    ).await.expect("Failed to connect to postgres");
+    let mut connection = PgConnection::connect(&maintenance_settings.to_connection_string())
+        .await
+        .expect("Failed to connect to postgres");
 
     connection
         .execute(
-            format!(r#"CREATE DATABASE "{}";"#, configuration.database).as_str(),
+            format!(
+                r#"CREATE DATABASE "{}"WITH OWNER "{}";"#,
+                configuration.database, configuration.user
+            )
+            .as_str(),
         )
         .await
         .expect("Unable to create database");

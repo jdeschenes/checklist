@@ -1,7 +1,6 @@
-use std::time::Duration;
 use eyre::{Result, WrapErr};
 use secrecy::ExposeSecret;
-
+use std::time::Duration;
 
 const CONFIGURATION_FILE: &str = "configuration.yaml";
 
@@ -32,10 +31,16 @@ pub struct DatabaseSettings {
 
 impl DatabaseSettings {
     pub fn to_connection_string(&self) -> String {
-        format!("postgres://{}:{}@{}:{}/{}", self.user, self.password.expose_secret(), self.host, self.port, self.database)
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.user,
+            self.password.expose_secret(),
+            self.host,
+            self.port,
+            self.database
+        )
     }
 }
-
 
 pub fn get_configuration() -> Result<Settings> {
     let settings = config::Config::builder()
@@ -46,7 +51,7 @@ pub fn get_configuration() -> Result<Settings> {
         .add_source(
             config::Environment::with_prefix("APP")
                 .prefix_separator("_")
-                .separator("__")
+                .separator("__"),
         )
         .build()
         .context("Building settings")?;

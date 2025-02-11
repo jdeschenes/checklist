@@ -40,7 +40,7 @@ then
         sleep 1
     done
 
-    CREATE_QUERY="CREATE USER ${APP_USER} WITH SUPERUSER PASSWORD '${APP_USER_PWD}';"
+    CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
     docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
 
     GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB"
@@ -63,5 +63,5 @@ fi
 DATABASE_URL="postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}"
 export DATABASE_URL
 sqlx database create
-qlx migrate run
+sqlx migrate run
 >&2 echo "Postgres has been migrated, ready to go!"

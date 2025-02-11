@@ -1,9 +1,8 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateListRequest {
     pub name: String,
-
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -14,7 +13,6 @@ pub struct CreateListResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetListRequest {
     pub name: String,
-
 }
 
 #[derive(Debug, Serialize, Deserialize)]

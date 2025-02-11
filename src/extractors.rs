@@ -6,7 +6,6 @@ use sqlx::PgPool;
 
 use crate::error::InternalError;
 
-
 // we can also write a custom extractor that grabs a connection from the pool
 // which setup is appropriate depends on your application
 pub struct DatabaseConnection(pub sqlx::pool::PoolConnection<sqlx::Postgres>);

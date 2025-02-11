@@ -1,6 +1,6 @@
-use std::future::IntoFuture;
 use eyre::{Context, Result};
 use sqlx::postgres::PgPoolOptions;
+use std::future::IntoFuture;
 use tokio::net::TcpListener;
 
 use checklist::telemetry::{get_subscriber, init_subscriber};
@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     // Configure the tracing subscriber
     // Tracing color-eyre
     // Get the pool up and running
-    let db_connection_str = configuration.database.to_connection_string(); 
+    let db_connection_str = configuration.database.to_connection_string();
     let pool = PgPoolOptions::new()
         .max_connections(configuration.database.max_connections)
         .acquire_timeout(configuration.database.pool_acquire_timeout)
@@ -27,7 +27,9 @@ async fn main() -> Result<()> {
         .await?;
 
     tracing::info!("Binding to: {}", address);
-    let listener = TcpListener::bind(address).await.context("Binding listener")?;
+    let listener = TcpListener::bind(address)
+        .await
+        .context("Binding listener")?;
 
     let server = run(listener, pool).await.context("Getting server")?;
     server.into_future().await.context("Serving traffic")?;
