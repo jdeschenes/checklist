@@ -18,6 +18,7 @@ impl From<CreateTodoQuery> for CreateListResponse {
     }
 }
 
+#[tracing::instrument(name = "Create todo in the database", skip(conn, req))]
 pub async fn create_todo(
     mut conn: PoolConnection<Postgres>,
     req: CreateListRequest,
@@ -44,6 +45,7 @@ impl From<GetTodoQuery> for GetListResponse {
     }
 }
 
+#[tracing::instrument(name = "Create todo in the database", skip(conn))]
 pub async fn get_todo_by_name(
     mut conn: PoolConnection<Postgres>,
     todo_name: &str,

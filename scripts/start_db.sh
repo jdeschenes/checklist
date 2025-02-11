@@ -17,6 +17,7 @@ SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
 APP_USER="${APP_USER:=app}"
 APP_USER_PWD="${APP_USER_PWD:=secret}"
 APP_DB_NAME="${APP_DB_NAME:=newdbname}"
+PG_VERSION="16"
 
 if [[ -z "${SKIP_DOCKER}" ]]
 then
@@ -30,7 +31,7 @@ then
         --publish "${DB_PORT}":5432 \
         --detach \
         --name "${CONTAINER_NAME}" \
-        postgres:16 -N 1000
+        postgres:${PG_VERSION} -N 1000
 
     until [ \
         "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \

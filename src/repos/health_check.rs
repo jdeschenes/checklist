@@ -4,6 +4,7 @@ use sqlx::Postgres;
 
 use crate::error::InternalError;
 
+#[tracing::instrument(name = "health check query for database", skip(conn))]
 pub async fn health_check(mut conn: PoolConnection<Postgres>) -> Result<(), InternalError> {
     let _: i32 = sqlx::query_scalar("SELECT 1")
         .fetch_one(&mut *conn)

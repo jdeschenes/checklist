@@ -4,7 +4,6 @@ use axum::response::IntoResponse;
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
-use uuid::Uuid;
 use validator::Validate;
 
 use axum::extract;
@@ -17,9 +16,7 @@ use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
 
 #[tracing::instrument(
     name = "Create TODO"
-    fields(
-        request_id = %Uuid::new_v4(),
-    )
+    skip(conn, payload),
 )]
 pub async fn create_todo(
     DatabaseConnection(conn): DatabaseConnection,
@@ -30,9 +27,7 @@ pub async fn create_todo(
 
 #[tracing::instrument(
     name = "Get TODO"
-    fields(
-        request_id = %Uuid::new_v4(),
-    )
+    skip(conn),
 )]
 pub async fn get_todo(
     DatabaseConnection(conn): DatabaseConnection,
