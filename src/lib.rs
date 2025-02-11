@@ -24,7 +24,7 @@ pub async fn run(
     let app = Router::new()
         .route("/health_check", get(health_check))
         .route("/todo", post(create_todo))
-        .route("/todo", get(get_todo))
+        .route("/todo/{todo_id}", get(get_todo))
         .with_state(pg_pool);
     Ok(axum::serve(listener, app))
 }

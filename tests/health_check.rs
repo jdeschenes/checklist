@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 
 use reqwest::StatusCode;
 use secrecy::SecretBox;
-use serde_json::json;
 use serde_json::Value as JsonValue;
 use sqlx::{postgres::PgPoolOptions, Connection, Executor, PgConnection, PgPool};
 
@@ -48,13 +47,20 @@ async fn create_todo_works() {
     let address = test_app.address;
     let client = reqwest::Client::new();
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
-    let response = client
+    let create_response = client
         .post(format!("{}/todo", address))
         .json(&payload)
         .send()
         .await
         .expect("Failed to execute request");
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let get_response = client
+        .get(format!("{}/todo/{}", address, "banana"))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(get_response.status(), StatusCode::OK);
 }
 
 #[tokio::test]
@@ -77,7 +83,7 @@ async fn create_todo_fails() {
             expected_status_code: StatusCode::UNPROCESSABLE_ENTITY,
         },
         FailCall {
-            json: Some(json!(r#"{"name": ""}"#)),
+            json: Some(serde_json::from_str(r#"{"name": ""}"#).unwrap()),
             expected_status_code: StatusCode::BAD_REQUEST,
         },
     ];
@@ -109,7 +115,7 @@ pub async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     connection
         .execute(
             format!(
-                r#"CREATE DATABASE "{}"WITH OWNER "{}";"#,
+                r#"CREATE DATABASE "{}" WITH OWNER "{}";"#,
                 configuration.database, configuration.user
             )
             .as_str(),

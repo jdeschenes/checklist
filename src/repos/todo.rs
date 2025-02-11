@@ -1,9 +1,10 @@
 use eyre::Context;
 use sqlx::{pool::PoolConnection, Postgres};
+use uuid::Uuid;
 
 use crate::{
     error::InternalError,
-    types::{CreateListRequest, CreateListResponse, GetListRequest, GetListResponse},
+    types::{CreateListRequest, CreateListResponse, GetListResponse},
 };
 
 #[derive(Debug)]
@@ -23,7 +24,8 @@ pub async fn create_todo(
 ) -> Result<CreateListResponse, InternalError> {
     let result = sqlx::query_as!(
         CreateTodoQuery,
-        r#"INSERT INTO todo (name) VALUES ($1) RETURNING name;"#,
+        r#"INSERT INTO todo (todo_id, name) VALUES ($1, $2) RETURNING name;"#,
+        Uuid::new_v4(),
         req.name
     )
     .fetch_one(&mut *conn)
@@ -42,14 +44,14 @@ impl From<GetTodoQuery> for GetListResponse {
     }
 }
 
-pub async fn get_todo(
+pub async fn get_todo_by_name(
     mut conn: PoolConnection<Postgres>,
-    req: GetListRequest,
+    todo_name: &str,
 ) -> Result<GetListResponse, InternalError> {
     let result = sqlx::query_as!(
         GetTodoQuery,
         r#"SELECT name from todo WHERE name = $1;"#,
-        req.name
+        todo_name
     )
     .fetch_one(&mut *conn)
     .await
