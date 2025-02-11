@@ -16,15 +16,10 @@ async fn main() -> Result<()> {
         "{}:{}",
         configuration.application.host, configuration.application.port
     );
-    // Configure the tracing subscriber
-    // Tracing color-eyre
-    // Get the pool up and running
-    let db_connection_str = configuration.database.to_connection_string();
     let pool = PgPoolOptions::new()
         .max_connections(configuration.database.max_connections)
         .acquire_timeout(configuration.database.pool_acquire_timeout)
-        .connect(&db_connection_str)
-        .await?;
+        .connect_lazy_with(configuration.database.connection_options());
 
     tracing::info!("Binding to: {}", address);
     let listener = TcpListener::bind(address)

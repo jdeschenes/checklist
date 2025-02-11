@@ -107,8 +107,9 @@ pub async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
         password: SecretBox::new(Box::new("password".to_string())),
         max_connections: configuration.max_connections,
         pool_acquire_timeout: configuration.pool_acquire_timeout,
+        require_ssl: false,
     };
-    let mut connection = PgConnection::connect(&maintenance_settings.to_connection_string())
+    let mut connection = PgConnection::connect_with(&maintenance_settings.connection_options())
         .await
         .expect("Failed to connect to postgres");
 
@@ -126,9 +127,7 @@ pub async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     let pool = PgPoolOptions::new()
         .max_connections(configuration.max_connections)
         .acquire_timeout(configuration.pool_acquire_timeout)
-        .connect(&configuration.to_connection_string())
-        .await
-        .expect("Error connecting to DB");
+        .connect_lazy_with(configuration.connection_options());
 
     sqlx::migrate!("./migrations")
         .run(&pool)

@@ -9,3 +9,4 @@ database:
   database: newdbname
   pool_acquire_timeout: 3s
   max_connections: 10
+  require_ssl: false

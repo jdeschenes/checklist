@@ -1,5 +1,6 @@
 use eyre::{Result, WrapErr};
 use secrecy::ExposeSecret;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use std::time::Duration;
 
 const CONFIGURATION_FILE: &str = "configuration.yaml";
@@ -27,18 +28,23 @@ pub struct DatabaseSettings {
     #[serde(with = "humantime_serde")]
     pub pool_acquire_timeout: Duration,
     pub max_connections: u32,
+    pub require_ssl: bool,
 }
 
 impl DatabaseSettings {
-    pub fn to_connection_string(&self) -> String {
-        format!(
-            "postgres://{}:{}@{}:{}/{}",
-            self.user,
-            self.password.expose_secret(),
-            self.host,
-            self.port,
-            self.database
-        )
+    pub fn connection_options(&self) -> PgConnectOptions {
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            PgSslMode::Prefer
+        };
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.user)
+            .password(self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
+            .database(&self.database)
     }
 }
 
