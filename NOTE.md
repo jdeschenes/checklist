@@ -1,6 +1,7 @@
 # Feedback
 * WITH OWNER in the tests starting from PG version 15
 * Would be useful to talk about x-request-id
+* deserialize_with is no longer needed(page 159)
 
 # TODO?
 * using test containers might be a good thing?

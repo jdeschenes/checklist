@@ -17,6 +17,9 @@ use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
 #[tracing::instrument(
     name = "Create TODO"
     skip(conn, payload),
+    fields(
+        todo_name = %payload.name
+    )
 )]
 pub async fn create_todo(
     DatabaseConnection(conn): DatabaseConnection,
@@ -27,7 +30,10 @@ pub async fn create_todo(
 
 #[tracing::instrument(
     name = "Get TODO"
-    skip(conn),
+    skip(conn, todo_name),
+    fields(
+        todo_name = todo_name
+    )
 )]
 pub async fn get_todo(
     DatabaseConnection(conn): DatabaseConnection,
