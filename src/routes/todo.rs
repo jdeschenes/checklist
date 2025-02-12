@@ -1,18 +1,41 @@
-use axum::extract::rejection::JsonRejection;
-use axum::extract::FromRequest;
-use axum::response::IntoResponse;
-use reqwest::StatusCode;
-use serde::de::DeserializeOwned;
-use thiserror::Error;
+use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use axum::extract;
 use axum::Json;
 
+use crate::domain::NewTodoRequest;
+use crate::domain::Todo;
 use crate::error::APIError;
 use crate::extractors::DatabaseConnection;
 use crate::repos::{create_todo as create_todo_repos, get_todo_by_name};
-use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
+
+#[derive(Debug, Serialize, Deserialize, Validate)]
+pub struct CreateTodoRequest {
+    pub name: String,
+}
+
+impl TryFrom<CreateTodoRequest> for NewTodoRequest {
+    type Error = APIError;
+    fn try_from(value: CreateTodoRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            name: value.name.parse()?,
+        })
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetTodoResponse {
+    pub name: String,
+}
+
+impl From<Todo> for GetTodoResponse {
+    fn from(value: Todo) -> Self {
+        Self {
+            name: value.name.as_ref().to_string(),
+        }
+    }
+}
 
 #[tracing::instrument(
     name = "Create TODO"
@@ -23,60 +46,24 @@ use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
 )]
 pub async fn create_todo(
     DatabaseConnection(conn): DatabaseConnection,
-    ValidatedJson(payload): ValidatedJson<CreateListRequest>,
-) -> Result<Json<CreateListResponse>, APIError> {
-    create_todo_repos(conn, payload).await.map(Json)
+    Json(payload): Json<CreateTodoRequest>,
+) -> Result<(), APIError> {
+    let todo = payload.try_into()?;
+    create_todo_repos(conn, todo).await
 }
 
 #[tracing::instrument(
     name = "Get TODO"
-    skip(conn, todo_name),
+    skip(conn, todo_str),
     fields(
-        todo_name = todo_name
+        todo = todo_str
     )
 )]
 pub async fn get_todo(
     DatabaseConnection(conn): DatabaseConnection,
-    extract::Path(todo_name): extract::Path<String>,
-) -> Result<Json<GetListResponse>, APIError> {
-    get_todo_by_name(conn, &todo_name).await.map(Json)
-}
-
-#[derive(Debug, Clone)]
-pub struct ValidatedJson<T>(pub T);
-
-#[derive(Debug, Error)]
-pub enum JsonError {
-    #[error(transparent)]
-    ValidationError(#[from] validator::ValidationErrors),
-
-    #[error(transparent)]
-    JsonRejection(#[from] JsonRejection),
-}
-
-impl IntoResponse for JsonError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            JsonError::ValidationError(_) => {
-                let message = format!("Input validation error: [{self}]").replace('\n', ", ");
-                (StatusCode::BAD_REQUEST, message).into_response()
-            }
-            JsonError::JsonRejection(json_error) => json_error.into_response(),
-        }
-    }
-}
-
-impl<T, S> FromRequest<S> for ValidatedJson<T>
-where
-    T: DeserializeOwned + Validate,
-    S: Send + Sync,
-    Json<T>: FromRequest<S, Rejection = JsonRejection>,
-{
-    type Rejection = JsonError;
-
-    async fn from_request(req: extract::Request, state: &S) -> Result<Self, Self::Rejection> {
-        let Json(value) = Json::<T>::from_request(req, state).await?;
-        value.validate()?;
-        Ok(ValidatedJson(value))
-    }
+    extract::Path(todo_str): extract::Path<String>,
+) -> Result<Json<GetTodoResponse>, APIError> {
+    let todo_name = todo_str.parse()?;
+    let todo_response = get_todo_by_name(conn, &todo_name).await?.into();
+    Ok(Json(todo_response))
 }

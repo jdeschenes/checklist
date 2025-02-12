@@ -19,6 +19,8 @@ impl IntoResponse for InternalError {
 
 #[derive(Debug, Error)]
 pub enum APIError {
+    #[error("bad request: {0}")]
+    BadRequest(String),
     #[error("already exists error: {0}")]
     AlreadyExists(String),
     #[error("not found error: {0}")]
@@ -30,6 +32,7 @@ pub enum APIError {
 impl IntoResponse for APIError {
     fn into_response(self) -> axum::response::Response {
         match self {
+            APIError::BadRequest(x) => (StatusCode::BAD_REQUEST, x).into_response(),
             APIError::AlreadyExists(x) => (StatusCode::BAD_REQUEST, x).into_response(),
             APIError::NotFound(x) => (StatusCode::NOT_FOUND, x).into_response(),
             APIError::Internal(x) => x.into_response(),

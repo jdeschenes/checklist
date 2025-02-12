@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 
 use reqwest::StatusCode;
 use secrecy::SecretBox;
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sqlx::{postgres::PgPoolOptions, Connection, Executor, PgConnection, PgPool};
 
@@ -43,24 +44,46 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn create_todo_works() {
+    #[derive(Debug, Serialize, Deserialize)]
+    struct CaseInout {
+        name: String,
+    }
+
     let test_app = spawn_app().await;
     let address = test_app.address;
     let client = reqwest::Client::new();
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
-    let create_response = client
-        .post(format!("{}/todo", address))
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to execute request");
-    assert_eq!(create_response.status(), StatusCode::OK);
+    let test_cases = vec![
+        (
+            CaseInout {
+                name: "banana".to_string(),
+            },
+            "banana",
+        ),
+        (
+            CaseInout {
+                name: "  banana2  ".to_string(),
+            },
+            "banana2",
+        ),
+    ];
 
-    let get_response = client
-        .get(format!("{}/todo/{}", address, "banana"))
-        .send()
-        .await
-        .expect("Failed to execute request");
-    assert_eq!(get_response.status(), StatusCode::OK);
+    for case in test_cases {
+        let payload: serde_json::Value = serde_json::to_value(case.0).unwrap();
+        let create_response = client
+            .post(format!("{}/todo", address))
+            .json(&payload)
+            .send()
+            .await
+            .expect("Failed to execute request");
+        assert_eq!(create_response.status(), StatusCode::OK);
+
+        let get_response = client
+            .get(format!("{}/todo/{}", address, case.1))
+            .send()
+            .await
+            .expect("Failed to execute request");
+        assert_eq!(get_response.status(), StatusCode::OK);
+    }
 }
 
 #[tokio::test]
@@ -84,6 +107,12 @@ async fn create_todo_fails() {
         },
         FailCall {
             json: Some(serde_json::from_str(r#"{"name": ""}"#).unwrap()),
+            expected_status_code: StatusCode::BAD_REQUEST,
+        },
+        FailCall {
+            json: Some(
+                serde_json::from_str(r#"{"name": "12345678901234567890123456789"}"#).unwrap(),
+            ),
             expected_status_code: StatusCode::BAD_REQUEST,
         },
     ];

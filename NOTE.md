@@ -4,6 +4,7 @@
 * deserialize_with is no longer needed(page 159)
 
 # MAIN TODO
+* List TODO
 * Add TODO item
 * List TODO item
 * Update TODO item(done or not and when it was)

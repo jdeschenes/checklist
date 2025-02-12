@@ -15,12 +15,12 @@ use tower_http::trace::TraceLayer;
 use tracing::{debug_span, error, info_span};
 
 pub mod configuration;
+mod domain;
 mod error;
 mod extractors;
 mod repos;
 mod routes;
 pub mod telemetry;
-mod types;
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
