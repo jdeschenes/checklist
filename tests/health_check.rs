@@ -98,6 +98,69 @@ async fn create_todo_fails() {
     }
 }
 
+#[tokio::test]
+async fn create_todo_fails_if_already_exists() {
+    let test_app = spawn_app().await;
+    let address = test_app.address;
+    let client = reqwest::Client::new();
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = client
+        .post(format!("{}/todo", address))
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let get_response = client
+        .get(format!("{}/todo/{}", address, "banana"))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(get_response.status(), StatusCode::OK);
+
+    let create_response = client
+        .post(format!("{}/todo", address))
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(
+        create_response.status(),
+        StatusCode::BAD_REQUEST,
+        "Fails if it already exists"
+    );
+}
+
+#[tokio::test]
+async fn get_todo() {
+    let test_app = spawn_app().await;
+    let address = test_app.address;
+    let client = reqwest::Client::new();
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = client
+        .post(format!("{}/todo", address))
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let get_response = client
+        .get(format!("{}/todo/{}", address, "banana"))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(get_response.status(), StatusCode::OK);
+
+    let get_response = client
+        .get(format!("{}/todo/{}", address, "DOESNOTEXIST"))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+}
+
 pub async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     let maintenance_settings = DatabaseSettings {
         host: configuration.host.clone(),

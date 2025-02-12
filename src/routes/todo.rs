@@ -9,7 +9,7 @@ use validator::Validate;
 use axum::extract;
 use axum::Json;
 
-use crate::error::InternalError;
+use crate::error::APIError;
 use crate::extractors::DatabaseConnection;
 use crate::repos::{create_todo as create_todo_repos, get_todo_by_name};
 use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
@@ -24,7 +24,7 @@ use crate::types::{CreateListRequest, CreateListResponse, GetListResponse};
 pub async fn create_todo(
     DatabaseConnection(conn): DatabaseConnection,
     ValidatedJson(payload): ValidatedJson<CreateListRequest>,
-) -> Result<Json<CreateListResponse>, InternalError> {
+) -> Result<Json<CreateListResponse>, APIError> {
     create_todo_repos(conn, payload).await.map(Json)
 }
 
@@ -38,7 +38,7 @@ pub async fn create_todo(
 pub async fn get_todo(
     DatabaseConnection(conn): DatabaseConnection,
     extract::Path(todo_name): extract::Path<String>,
-) -> Result<Json<GetListResponse>, InternalError> {
+) -> Result<Json<GetListResponse>, APIError> {
     get_todo_by_name(conn, &todo_name).await.map(Json)
 }
 

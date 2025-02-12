@@ -2,6 +2,7 @@ use axum::{
     extract::{FromRef, FromRequestParts},
     http::request::Parts,
 };
+use eyre::WrapErr;
 use sqlx::PgPool;
 
 use crate::error::InternalError;
@@ -20,7 +21,10 @@ where
     async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let pool = PgPool::from_ref(state);
 
-        let conn = pool.acquire().await?;
+        let conn = pool
+            .acquire()
+            .await
+            .context("acquiring database connection from pool")?;
 
         Ok(Self(conn))
     }

@@ -1,6 +1,10 @@
 use axum::{http::StatusCode, response::IntoResponse};
+use eyre::ErrReport;
+use thiserror::Error;
 
-pub struct InternalError(eyre::Report);
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct InternalError(#[from] eyre::Report);
 
 impl IntoResponse for InternalError {
     fn into_response(self) -> axum::response::Response {
@@ -13,11 +17,34 @@ impl IntoResponse for InternalError {
     }
 }
 
-impl<E> From<E> for InternalError
-where
-    E: Into<eyre::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
+#[derive(Debug, Error)]
+pub enum APIError {
+    #[error("already exists error: {0}")]
+    AlreadyExists(String),
+    #[error("not found error: {0}")]
+    NotFound(String),
+    #[error("internal server error: {0}")]
+    Internal(#[from] InternalError),
+}
+
+impl IntoResponse for APIError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            APIError::AlreadyExists(x) => (StatusCode::BAD_REQUEST, x).into_response(),
+            APIError::NotFound(x) => (StatusCode::NOT_FOUND, x).into_response(),
+            APIError::Internal(x) => x.into_response(),
+        }
+    }
+}
+
+impl From<sqlx::Error> for InternalError {
+    fn from(value: sqlx::Error) -> Self {
+        InternalError(value.into())
+    }
+}
+
+impl From<ErrReport> for APIError {
+    fn from(value: ErrReport) -> Self {
+        APIError::Internal(InternalError(value))
     }
 }
