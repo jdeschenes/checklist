@@ -12,6 +12,7 @@
 * Add recurring todos 
 * Add a timeout on the request using middleware
 * Add max request threshold using middleware
+* Add CI and all the checks
 
 # TODO?
 * using test containers might be a good thing?
