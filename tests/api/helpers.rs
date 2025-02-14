@@ -1,15 +1,14 @@
-use std::future::IntoFuture;
 use std::sync::LazyLock;
 
-use sqlx::{postgres::PgPoolOptions, Connection, Executor, PgConnection, PgPool};
 use secrecy::SecretBox;
+use sqlx::{Connection, Executor, PgConnection};
 
 use checklist::configuration::{get_configuration, DatabaseSettings};
-use checklist::run;
+use checklist::startup::{get_connection_pool, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
 
 pub struct TestApp {
-   pub address: String,
+    pub address: String,
 }
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -24,7 +23,7 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
     };
 });
 
-async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
+async fn configure_database(configuration: &DatabaseSettings) -> () {
     let maintenance_settings = DatabaseSettings {
         host: configuration.host.clone(),
         port: configuration.port,
@@ -50,34 +49,29 @@ async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
         .await
         .expect("Unable to create database");
 
-    let pool = PgPoolOptions::new()
-        .max_connections(configuration.max_connections)
-        .acquire_timeout(configuration.pool_acquire_timeout)
-        .connect_lazy_with(configuration.connection_options());
+    let pool = get_connection_pool(configuration);
 
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
         .expect("Failed to migrate database");
-    pool
 }
 
 pub async fn spawn_app() -> TestApp {
     LazyLock::force(&TRACING);
-    let mut configuration = get_configuration().expect("Unable to get configuration");
-    configuration.database.database = uuid::Uuid::new_v4().to_string();
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("Binding listener");
-    let port = listener.local_addr().unwrap().port();
-    let pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, pool.clone())
+    let configuration = {
+        let mut c = get_configuration().expect("Unable to read configuration");
+        c.database.database = uuid::Uuid::new_v4().to_string();
+        c.application.port = 0;
+        c
+    };
+    configure_database(&configuration.database).await;
+
+    let application = Application::build(configuration)
         .await
         .expect("Failed to bind address");
-
-    let _ = tokio::spawn(server.into_future());
-    TestApp {
-        address: format!("http://127.0.0.1:{}", port),
-    }
+    let address = format!("http://127.0.0.1:{}", application.port());
+    let _ = tokio::spawn(application.run_until_stopped());
+    TestApp { address }
 }

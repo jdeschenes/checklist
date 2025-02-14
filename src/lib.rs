@@ -20,14 +20,14 @@ mod error;
 mod extractors;
 mod repos;
 mod routes;
+pub mod startup;
 pub mod telemetry;
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
-pub async fn run(
-    listener: tokio::net::TcpListener,
-    pg_pool: Pool<Postgres>,
-) -> Result<Serve<tokio::net::TcpListener, Router, Router>> {
+pub type Server = Serve<tokio::net::TcpListener, Router, Router>;
+
+pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> Result<Server> {
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
 
     let request_id_middleware = ServiceBuilder::new()

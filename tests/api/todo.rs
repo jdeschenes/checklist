@@ -85,7 +85,13 @@ async fn create_todo_fails() {
             req = req.json(json);
         }
         let response = req.send().await.expect("Failed to execute request");
-        assert_eq!(response.status(), case.expected_status_code, "The API did not return a '{}' when the payload '{:?}'.", case.expected_status_code, case.json);
+        assert_eq!(
+            response.status(),
+            case.expected_status_code,
+            "The API did not return a '{}' when the payload '{:?}'.",
+            case.expected_status_code,
+            case.json
+        );
     }
 }
 
@@ -151,4 +157,3 @@ async fn get_todo() {
         .expect("Failed to execute request");
     assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
 }
-

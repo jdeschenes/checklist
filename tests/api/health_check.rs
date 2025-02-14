@@ -16,4 +16,3 @@ async fn health_check_works() {
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(Some(0), response.content_length());
 }
-
