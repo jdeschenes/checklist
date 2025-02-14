@@ -123,7 +123,7 @@ async fn create_todo_fails() {
             req = req.json(json);
         }
         let response = req.send().await.expect("Failed to execute request");
-        assert_eq!(response.status(), case.expected_status_code);
+        assert_eq!(response.status(), case.expected_status_code, "The API did not return a '{}' when the payload '{:?}'.", case.expected_status_code, case.json);
     }
 }
 

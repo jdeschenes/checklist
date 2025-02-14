@@ -10,6 +10,8 @@
 * Update TODO item(done or not and when it was)
 * Authentication and Authorization
 * Add recurring todos 
+* Add a timeout on the request using middleware
+* Add max request threshold using middleware
 
 # TODO?
 * using test containers might be a good thing?
