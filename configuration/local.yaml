@@ -1,2 +1,11 @@
 application:
   host: 127.0.0.1
+database:
+  host: 127.0.0.1
+  port: 5432
+  user: app
+  password: secret
+  database: newdbname
+  pool_acquire_timeout: 1s
+  max_connections: 10
+  require_ssl: false
