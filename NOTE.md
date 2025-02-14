@@ -21,3 +21,13 @@
 * Add more tests around invalid/missing values
 * Create a backend folder because of the incoming frontend component
 * Work on the error model
+
+
+# Design
+
+TODO: This is the main thing where todo item are hosted
+TODO ITEM: Item that must be completed
+Recurring Job: A job that is completed and upon completion a new cycle is started.
+The application will automatically create a new TODO every time you complete.
+* There should be a start time and a end time
+* There should be a periodicity(daily, weekly, etc.) For now keep it kiss? Just use normal time and parse
