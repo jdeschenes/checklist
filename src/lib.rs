@@ -26,7 +26,6 @@ pub mod telemetry;
 // This should be moved out of the way once it is more fleshed out
 pub mod golden;
 
-
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
 pub type Server = Serve<tokio::net::TcpListener, Router, Router>;
