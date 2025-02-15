@@ -1,11 +1,11 @@
 use std::sync::LazyLock;
 
-use secrecy::SecretBox;
-use sqlx::{Connection, Executor, PgConnection};
-use serde_json::Value as JsonValue;
 use checklist::configuration::{get_configuration, DatabaseSettings};
 use checklist::startup::{get_connection_pool, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
+use secrecy::SecretBox;
+use serde_json::Value as JsonValue;
+use sqlx::{Connection, Executor, PgConnection};
 
 use crate::golden::GoldenTest;
 
@@ -86,7 +86,7 @@ pub async fn spawn_app() -> TestApp {
 
 impl TestApp {
     pub async fn post_todo(&self, payload: &JsonValue) -> reqwest::Response {
-            self.client
+        self.client
             .post(format!("{}/todo", self.address))
             .json(payload)
             .send()
@@ -96,19 +96,17 @@ impl TestApp {
 
     pub async fn get_todo(&self, todo_name: &str) -> reqwest::Response {
         self.client
-        .get(format!("{}/todo/{}", self.address, todo_name))
-        .send()
-        .await
-        .expect("Failed to execute request")
+            .get(format!("{}/todo/{}", self.address, todo_name))
+            .send()
+            .await
+            .expect("Failed to execute request")
     }
 
     pub async fn list_todo(&self) -> reqwest::Response {
         self.client
-        .get(format!("{}/todo", self.address))
-        .send()
-        .await
-        .expect("Failed to execute request")
-        
+            .get(format!("{}/todo", self.address))
+            .send()
+            .await
+            .expect("Failed to execute request")
     }
 }
-

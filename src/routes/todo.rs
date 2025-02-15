@@ -3,6 +3,7 @@ use validator::Validate;
 
 use axum::extract;
 use axum::Json;
+use sqlx::Acquire;
 
 use crate::domain::NewTodoRequest;
 use crate::domain::{ListTodo, ListTodoItem, Todo};
@@ -72,11 +73,14 @@ impl From<ListTodo> for ListTodoResponse {
     )
 )]
 pub async fn create_todo(
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     Json(payload): Json<CreateTodoRequest>,
 ) -> Result<(), APIError> {
     let todo = payload.try_into()?;
-    create_todo_repos(conn, todo).await
+    let mut transaction = conn.begin().await?;
+    create_todo_repos(&mut transaction, todo).await?;
+    transaction.commit().await?;
+    Ok(())
 }
 
 #[tracing::instrument(
@@ -87,11 +91,12 @@ pub async fn create_todo(
     )
 )]
 pub async fn get_todo(
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<Json<GetTodoResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
-    let todo_response = get_todo_by_name(conn, &todo_name).await?.into();
+    let mut transaction = conn.begin().await?;
+    let todo_response = get_todo_by_name(&mut transaction, &todo_name).await?.into();
     Ok(Json(todo_response))
 }
 
@@ -100,8 +105,9 @@ pub async fn get_todo(
     skip(conn),
 )]
 pub async fn list_todo(
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
 ) -> Result<Json<ListTodoResponse>, APIError> {
-    let todo_response = repos::list_todo(conn).await?.into();
+    let mut transaction = conn.begin().await?;
+    let todo_response = repos::list_todo(&mut transaction).await?.into();
     Ok(Json(todo_response))
 }

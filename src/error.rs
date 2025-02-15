@@ -46,6 +46,12 @@ impl From<sqlx::Error> for InternalError {
     }
 }
 
+impl From<sqlx::Error> for APIError {
+    fn from(value: sqlx::Error) -> Self {
+        APIError::Internal(value.into())
+    }
+}
+
 impl From<ErrReport> for APIError {
     fn from(value: ErrReport) -> Self {
         APIError::Internal(InternalError(value))

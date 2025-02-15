@@ -1,4 +1,4 @@
-use sqlx::{pool::PoolConnection, Postgres};
+use sqlx::PgTransaction;
 use uuid::Uuid;
 
 use crate::{
@@ -6,9 +6,9 @@ use crate::{
     error::APIError,
 };
 
-#[tracing::instrument(name = "Create todo in the database", skip(conn, req))]
+#[tracing::instrument(name = "Create todo in the database", skip(transaction, req))]
 pub async fn create_todo(
-    mut conn: PoolConnection<Postgres>,
+    transaction: &mut PgTransaction<'_>,
     req: NewTodoRequest,
 ) -> Result<(), APIError> {
     match sqlx::query!(
@@ -18,7 +18,7 @@ pub async fn create_todo(
         Uuid::new_v4(),
         req.name.as_ref(),
     )
-    .fetch_one(&mut *conn)
+    .fetch_one(&mut **transaction)
     .await
     {
         Ok(_) => Ok(()),
@@ -44,9 +44,9 @@ impl TryFrom<GetTodoQuery> for Todo {
     }
 }
 
-#[tracing::instrument(name = "Create todo in the database", skip(conn))]
+#[tracing::instrument(name = "Create todo in the database", skip(transaction))]
 pub async fn get_todo_by_name(
-    mut conn: PoolConnection<Postgres>,
+    transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
 ) -> Result<Todo, APIError> {
     match sqlx::query_as!(
@@ -54,7 +54,7 @@ pub async fn get_todo_by_name(
         r#"SELECT name from todo WHERE name = $1;"#,
         todo_name.as_ref()
     )
-    .fetch_one(&mut *conn)
+    .fetch_one(&mut **transaction)
     .await
     {
         Ok(result) => Ok(result.try_into()?),
@@ -89,10 +89,10 @@ impl TryFrom<ListTodoQuery> for ListTodoItem {
     }
 }
 
-#[tracing::instrument(name = "list todo in the database", skip(conn))]
-pub async fn list_todo(mut conn: PoolConnection<Postgres>) -> Result<ListTodo, APIError> {
+#[tracing::instrument(name = "list todo in the database", skip(transaction))]
+pub async fn list_todo(transaction: &mut PgTransaction<'_>) -> Result<ListTodo, APIError> {
     match sqlx::query_as!(ListTodoQuery, r#"SELECT name from todo;"#,)
-        .fetch_all(&mut *conn)
+        .fetch_all(&mut **transaction)
         .await
     {
         Ok(result) => Ok(result.try_into()?),
