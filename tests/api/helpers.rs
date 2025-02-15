@@ -7,8 +7,11 @@ use checklist::configuration::{get_configuration, DatabaseSettings};
 use checklist::startup::{get_connection_pool, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
 
+use crate::golden::GoldenTest;
+
 pub struct TestApp {
     pub address: String,
+    pub golden: GoldenTest,
 }
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -73,5 +76,8 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to bind address");
     let address = format!("http://127.0.0.1:{}", application.port());
     let _ = tokio::spawn(application.run_until_stopped());
-    TestApp { address }
+    TestApp {
+        address,
+        golden: GoldenTest::new(),
+    }
 }

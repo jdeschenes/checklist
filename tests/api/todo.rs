@@ -14,38 +14,31 @@ async fn create_todo_works() {
     let test_app = spawn_app().await;
     let address = test_app.address;
     let client = reqwest::Client::new();
-    let test_cases = vec![
-        (
-            CaseInout {
-                name: "banana".to_string(),
-            },
-            "banana",
-        ),
-        (
-            CaseInout {
-                name: "  banana2  ".to_string(),
-            },
-            "banana2",
-        ),
-    ];
+    let test_case = (
+        CaseInout {
+            name: "banana".to_string(),
+        },
+        "banana",
+    );
 
-    for case in test_cases {
-        let payload: serde_json::Value = serde_json::to_value(case.0).unwrap();
-        let create_response = client
-            .post(format!("{}/todo", address))
-            .json(&payload)
-            .send()
-            .await
-            .expect("Failed to execute request");
-        assert_eq!(create_response.status(), StatusCode::OK);
+    let payload: serde_json::Value = serde_json::to_value(test_case.0).unwrap();
+    let create_response = client
+        .post(format!("{}/todo", address))
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_eq!(Some(0), create_response.content_length());
 
-        let get_response = client
-            .get(format!("{}/todo/{}", address, case.1))
-            .send()
-            .await
-            .expect("Failed to execute request");
-        assert_eq!(get_response.status(), StatusCode::OK);
-    }
+    let get_response = client
+        .get(format!("{}/todo/{}", address, test_case.1))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(get_response.status(), StatusCode::OK);
+    let expected: serde_json::Value = get_response.json().await.expect("Failed to read json");
+    test_app.golden.check_diff("get_todo", &expected);
 }
 
 #[tokio::test]

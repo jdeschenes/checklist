@@ -4,7 +4,6 @@
 //
 use std::fs::File;
 use std::io::BufWriter;
-use std::path::Path;
 
 use serde_json::Value;
 use similar::{Algorithm, TextDiff};
@@ -12,32 +11,42 @@ use similar::{Algorithm, TextDiff};
 const WRITE_ENVIRONMENT_VARIABLE: &str = "GOLDEN_OVERWRITE";
 
 pub struct GoldenTest {
-    test_file: String,
+    test_dir: String,
 }
 
 impl GoldenTest {
-    pub fn new(test_file: &Path) -> Self {
+    pub fn new() -> Self {
         Self {
             // TODO: Do the right interface to make this ergonomic
             // Add proper errors when checking the difference... Most of the stuff
             // Are irrelevant errors. Maybe we should panic?
-            test_file: test_file.to_str().unwrap().to_string(),
+            test_dir: "goldens".to_string(),
+        }
+    }
+    pub fn new_with_dir(test_dir: &str) -> Self {
+        Self {
+            // TODO: Do the right interface to make this ergonomic
+            // Add proper errors when checking the difference... Most of the stuff
+            // Are irrelevant errors. Maybe we should panic?
+            test_dir: test_dir.to_string(),
         }
     }
 
-    pub fn check_diff(&self, value: &Value) {
+    pub fn check_diff(&self, test_name: &str, value: &Value) {
         match std::env::var(WRITE_ENVIRONMENT_VARIABLE) {
             Ok(_) => {
-                self.write_golden(value);
+                self.write_golden(test_name, value);
             }
             Err(_) => {
-                self.assert_golden(value);
+                self.assert_golden(test_name, value);
             }
         }
     }
-    pub fn assert_golden(&self, value: &Value) {
+    pub fn assert_golden(&self, test_name: &str, value: &Value) {
         println!("Attempt to read file");
-        let file = File::open(&self.test_file).expect("Failed to open file for reading");
+        let file =
+            File::open(&std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
+                .expect("Failed to open file for reading");
         let data: serde_json::Value =
             serde_json::from_reader(file).expect("Failed to read data from json");
         let expected = serde_json::to_string_pretty(&data).expect("Failed to parsed expected data");
@@ -55,9 +64,12 @@ impl GoldenTest {
         }
     }
 
-    pub fn write_golden(&self, value: &Value) {
+    pub fn write_golden(&self, test_name: &str, value: &Value) {
+        std::fs::create_dir_all(&self.test_dir).expect("Failed to create test folder");
         println!("Attempt to write file");
-        let file = File::create(&self.test_file).expect("Failed to open file for writing");
+        let file =
+            File::create(&std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
+                .expect("Failed to open file for writing");
         let mut writer = BufWriter::new(file);
         let mut filtered_value = value.clone();
         dummify(&mut filtered_value);
@@ -98,11 +110,8 @@ mod tests {
     #[test]
     fn test_golden_identical() {
         let temp_dir = std::env::temp_dir();
-        let file_name = temp_dir.join(format!(
-            "{}.json",
-            Alphanumeric.sample_string(&mut rand::rng(), 16)
-        ));
-        let golden = GoldenTest::new(&file_name);
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -115,20 +124,17 @@ mod tests {
 
         });
         // Write the file
-        golden.write_golden(&value);
+        golden.write_golden(&test_name, &value);
         // Now the comparison should work
-        golden.assert_golden(&value);
+        golden.assert_golden(&test_name, &value);
     }
 
     #[test]
     #[should_panic(expected = "Data is different")]
     fn test_golden_different() {
         let temp_dir = std::env::temp_dir();
-        let file_name = temp_dir.join(format!(
-            "{}.json",
-            Alphanumeric.sample_string(&mut rand::rng(), 16)
-        ));
-        let golden = GoldenTest::new(&file_name);
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -141,22 +147,19 @@ mod tests {
 
         });
         // Write the file
-        golden.write_golden(&value);
+        golden.write_golden(&test_name, &value);
         let value2 = serde_json::json!({
             "number": 2,
         });
-        golden.assert_golden(&value2);
+        golden.assert_golden(&test_name, &value2);
     }
 
     #[test]
     #[should_panic(expected = "Failed to open file")]
     fn test_golden_does_not_exist() {
         let temp_dir = std::env::temp_dir();
-        let file_name = temp_dir.join(format!(
-            "{}.json",
-            Alphanumeric.sample_string(&mut rand::rng(), 16)
-        ));
-        let golden = GoldenTest::new(&file_name);
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -169,26 +172,23 @@ mod tests {
 
         });
         // This should fail since the file does not exist
-        golden.assert_golden(&value);
+        golden.assert_golden(&test_name, &value);
     }
 
     #[test]
     fn test_should_replace_uuid() {
         let temp_dir = std::env::temp_dir();
-        let file_name = temp_dir.join(format!(
-            "{}.json",
-            Alphanumeric.sample_string(&mut rand::rng(), 16)
-        ));
-        let golden = GoldenTest::new(&file_name);
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
         });
-        golden.write_golden(&value);
+        golden.write_golden(&test_name, &value);
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
         });
-        golden.assert_golden(&value);
+        golden.assert_golden(&test_name, &value);
     }
 }
