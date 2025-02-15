@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::error::APIError;
 
 #[derive(Debug, Clone)]
@@ -17,10 +15,10 @@ pub struct TodoName(String);
 
 const MAX_TODO_NAME_LENGTH: usize = 20;
 
-impl FromStr for TodoName {
-    type Err = APIError;
+impl TryFrom<String> for TodoName {
+    type Error = APIError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn try_from(s: String) -> Result<Self, Self::Error> {
         let s = s.trim();
         if s.is_empty() {
             return Err(APIError::BadRequest("Name cannot be empty".to_string()));
@@ -35,10 +33,29 @@ impl FromStr for TodoName {
     }
 }
 
+impl TryFrom<&str> for TodoName {
+    type Error = APIError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let s = value.to_string();
+        s.try_into()
+    }
+}
+
 impl AsRef<str> for TodoName {
     fn as_ref(&self) -> &str {
         &self.0
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ListTodo {
+    pub items: Vec<ListTodoItem>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ListTodoItem {
+    pub name: TodoName,
 }
 
 #[cfg(test)]
@@ -58,7 +75,7 @@ mod tests {
             ("1234", "1234"),
         ];
         for test_case in test_cases {
-            let result: Result<TodoName, _> = test_case.0.parse();
+            let result: Result<TodoName, _> = test_case.0.try_into();
             assert_ok!(&result);
             assert_eq!(result.unwrap().as_ref(), test_case.1);
         }
@@ -75,7 +92,7 @@ mod tests {
             ),
         ];
         for test_case in test_cases {
-            let result: Result<TodoName, _> = test_case.0.parse();
+            let result: Result<TodoName, _> = test_case.0.try_into();
             assert_err!(&result);
             match result.unwrap_err() {
                 APIError::BadRequest(x) => assert_eq!(x, test_case.1),

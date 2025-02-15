@@ -5,7 +5,6 @@
 * talk about golden testing
 
 # MAIN TODO
-* List TODO
 * Add TODO item
 * List TODO item
 * Update TODO item(done or not and when it was)
@@ -14,10 +13,10 @@
 * Add a timeout on the request using middleware
 * Add max request threshold using middleware
 * Add CI and all the checks
+* Add makefile to start docker, cargo test, build, overwrite golden files
 
 # TODO?
 * using test containers might be a good thing?
-* Add golden tests in the integration tests
 * Add more tests around invalid/missing values
 * Create a backend folder because of the incoming frontend component
 * Work on the error model

@@ -8,7 +8,7 @@ use eyre::Result;
 use sqlx::postgres::Postgres;
 use sqlx::Pool;
 
-use routes::{create_todo, get_todo, health_check};
+use routes::{create_todo, get_todo, health_check, list_todo};
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
@@ -58,6 +58,7 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
     let app = Router::new()
         .route("/health_check", get(health_check))
         .route("/todo", post(create_todo))
+        .route("/todo", get(list_todo))
         .route("/todo/{todo_id}", get(get_todo))
         .layer(request_id_middleware)
         .with_state(pg_pool);

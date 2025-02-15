@@ -150,3 +150,31 @@ async fn get_todo() {
         .expect("Failed to execute request");
     assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn list_todo() {
+    let test_app = spawn_app().await;
+    let address = test_app.address;
+    let client = reqwest::Client::new();
+    for i in 0..50 {
+
+        let payload: serde_json::Value = serde_json::from_str(&format!(r#"{{"name": "banana{i}"}}"#)).unwrap();
+        let create_response = client
+            .post(format!("{}/todo", address))
+            .json(&payload)
+            .send()
+            .await
+            .expect("Failed to execute request");
+        assert_eq!(create_response.status(), StatusCode::OK);
+    }
+
+    let list_response = client
+        .get(format!("{}/todo", address))
+        .send()
+        .await
+        .expect("Failed to execute request");
+    assert_eq!(list_response.status(), StatusCode::OK);
+    let expected: serde_json::Value = list_response.json().await.expect("Failed to read json");
+    test_app.golden.check_diff("list_todo", &expected);
+}
+

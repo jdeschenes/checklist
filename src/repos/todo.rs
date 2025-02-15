@@ -2,7 +2,7 @@ use sqlx::{pool::PoolConnection, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    domain::{NewTodoRequest, Todo, TodoName},
+    domain::{ListTodo, ListTodoItem, NewTodoRequest, Todo, TodoName},
     error::APIError,
 };
 
@@ -39,7 +39,7 @@ impl TryFrom<GetTodoQuery> for Todo {
     type Error = APIError;
     fn try_from(value: GetTodoQuery) -> Result<Self, Self::Error> {
         Ok(Self {
-            name: value.name.parse()?,
+            name: value.name.try_into()?,
         })
     }
 }
@@ -62,6 +62,40 @@ pub async fn get_todo_by_name(
             "todo: {} is not found",
             todo_name.as_ref()
         ))),
+        Err(err) => Err(APIError::Internal(err.into())),
+    }
+}
+
+#[derive(Debug)]
+struct ListTodoQuery {
+    name: String,
+}
+
+impl TryFrom<Vec<ListTodoQuery>> for ListTodo {
+    type Error = APIError;
+    fn try_from(value: Vec<ListTodoQuery>) -> Result<Self, Self::Error> {
+        let items: Result<Vec<ListTodoItem>, Self::Error> =
+            value.into_iter().map(|i| i.try_into()).collect();
+        Ok(Self { items: items? })
+    }
+}
+
+impl TryFrom<ListTodoQuery> for ListTodoItem {
+    type Error = APIError;
+    fn try_from(value: ListTodoQuery) -> Result<Self, Self::Error> {
+        Ok(Self {
+            name: value.name.try_into()?,
+        })
+    }
+}
+
+#[tracing::instrument(name = "list todo in the database", skip(conn))]
+pub async fn list_todo(mut conn: PoolConnection<Postgres>) -> Result<ListTodo, APIError> {
+    match sqlx::query_as!(ListTodoQuery, r#"SELECT name from todo;"#,)
+        .fetch_all(&mut *conn)
+        .await
+    {
+        Ok(result) => Ok(result.try_into()?),
         Err(err) => Err(APIError::Internal(err.into())),
     }
 }
