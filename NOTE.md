@@ -21,6 +21,8 @@
 * Add more tests around invalid/missing values
 * Create a backend folder because of the incoming frontend component
 * Work on the error model
+* Add colored diff for golden testing
+* Add dummy for datetimes
 
 
 # Design
