@@ -12,8 +12,6 @@ async fn create_todo_works() {
     }
 
     let test_app = spawn_app().await;
-    let address = test_app.address;
-    let client = reqwest::Client::new();
     let test_case = (
         CaseInout {
             name: "banana".to_string(),
@@ -22,20 +20,10 @@ async fn create_todo_works() {
     );
 
     let payload: serde_json::Value = serde_json::to_value(test_case.0).unwrap();
-    let create_response = client
-        .post(format!("{}/todo", address))
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to execute request");
+    let create_response = test_app.post_todo(&payload).await;
     assert_eq!(create_response.status(), StatusCode::OK);
     assert_eq!(Some(0), create_response.content_length());
-
-    let get_response = client
-        .get(format!("{}/todo/{}", address, test_case.1))
-        .send()
-        .await
-        .expect("Failed to execute request");
+    let get_response = test_app.get_todo(test_case.1).await;
     assert_eq!(get_response.status(), StatusCode::OK);
     let expected: serde_json::Value = get_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff("get_todo", &expected);
@@ -91,30 +79,14 @@ async fn create_todo_fails() {
 #[tokio::test]
 async fn create_todo_fails_if_already_exists() {
     let test_app = spawn_app().await;
-    let address = test_app.address;
-    let client = reqwest::Client::new();
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
-    let create_response = client
-        .post(format!("{}/todo", address))
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to execute request");
+    let create_response = test_app.post_todo(&payload).await;
     assert_eq!(create_response.status(), StatusCode::OK);
-
-    let get_response = client
-        .get(format!("{}/todo/{}", address, "banana"))
-        .send()
-        .await
-        .expect("Failed to execute request");
+    
+    let get_response = test_app.get_todo("banana").await;
     assert_eq!(get_response.status(), StatusCode::OK);
-
-    let create_response = client
-        .post(format!("{}/todo", address))
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to execute request");
+    
+    let create_response = test_app.post_todo(&payload).await;
     assert_eq!(
         create_response.status(),
         StatusCode::BAD_REQUEST,
@@ -125,54 +97,27 @@ async fn create_todo_fails_if_already_exists() {
 #[tokio::test]
 async fn get_todo() {
     let test_app = spawn_app().await;
-    let address = test_app.address;
-    let client = reqwest::Client::new();
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
-    let create_response = client
-        .post(format!("{}/todo", address))
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to execute request");
+    let create_response = test_app.post_todo(&payload).await;
     assert_eq!(create_response.status(), StatusCode::OK);
-
-    let get_response = client
-        .get(format!("{}/todo/{}", address, "banana"))
-        .send()
-        .await
-        .expect("Failed to execute request");
+    
+    let get_response = test_app.get_todo("banana").await;
     assert_eq!(get_response.status(), StatusCode::OK);
-
-    let get_response = client
-        .get(format!("{}/todo/{}", address, "DOESNOTEXIST"))
-        .send()
-        .await
-        .expect("Failed to execute request");
+    
+    let get_response = test_app.get_todo("DOESNOTEXIST").await;
     assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
 async fn list_todo() {
     let test_app = spawn_app().await;
-    let address = test_app.address;
-    let client = reqwest::Client::new();
     for i in 0..50 {
-
         let payload: serde_json::Value = serde_json::from_str(&format!(r#"{{"name": "banana{i}"}}"#)).unwrap();
-        let create_response = client
-            .post(format!("{}/todo", address))
-            .json(&payload)
-            .send()
-            .await
-            .expect("Failed to execute request");
+        let create_response = test_app.post_todo(&payload).await;
         assert_eq!(create_response.status(), StatusCode::OK);
     }
 
-    let list_response = client
-        .get(format!("{}/todo", address))
-        .send()
-        .await
-        .expect("Failed to execute request");
+    let list_response = test_app.list_todo().await;
     assert_eq!(list_response.status(), StatusCode::OK);
     let expected: serde_json::Value = list_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff("list_todo", &expected);

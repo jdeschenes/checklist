@@ -5,6 +5,7 @@
 * talk about golden testing
 
 # MAIN TODO
+* Update TODO
 * Add TODO item
 * List TODO item
 * Update TODO item(done or not and when it was)
@@ -14,6 +15,7 @@
 * Add max request threshold using middleware
 * Add CI and all the checks
 * Add makefile to start docker, cargo test, build, overwrite golden files
+* Add transaction in the middleware
 
 # TODO?
 * using test containers might be a good thing?
