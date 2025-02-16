@@ -87,7 +87,7 @@ async fn spawn_app_with_config(valid_app: bool) -> TestApp {
         .await
         .expect("Failed to bind address");
     let address = format!("http://127.0.0.1:{}", application.port());
-    let _ = tokio::spawn(application.run_until_stopped());
+    tokio::spawn(application.run_until_stopped());
     TestApp {
         address,
         golden: GoldenTest::new(),

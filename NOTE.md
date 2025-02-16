@@ -6,8 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
-* Add 
-* Add check for uniqueness and proper errors
+* Add UUID for the ID
 * Update TODO
 * Delete TODO(soft delete?)
 * Add TODO item
