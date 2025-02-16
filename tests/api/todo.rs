@@ -123,3 +123,21 @@ async fn list_todo() {
     let expected: serde_json::Value = list_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff("list_todo", &expected);
 }
+
+#[tokio::test]
+async fn todo_fails_if_fatal_database_error() {
+    let test_app = spawn_app().await;
+
+    sqlx::query!("ALTER TABLE todo ADD COLUMN invalid_column TEXT not null")
+        .execute(&test_app.db_pool)
+        .await
+        .expect("Failed to create column");
+
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert!(
+        create_response.headers().get("x-request-id").is_some(),
+        "ensures that x-request-id is present"
+    );
+}

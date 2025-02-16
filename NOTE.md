@@ -5,7 +5,9 @@
 * talk about golden testing
 
 # MAIN TODO
+* Add check for uniqueness and proper errors
 * Update TODO
+* Delete TODO(soft delete?)
 * Add TODO item
 * List TODO item
 * Update TODO item(done or not and when it was)
@@ -16,6 +18,8 @@
 * Add CI and all the checks
 * Add makefile to start docker, cargo test, build, overwrite golden files
 * Add transaction in the middleware
+* Add a test that we are not sending cookie and authorization headers in the logs
+* Add a test to check that we are sending the right logs
 
 # TODO?
 * using test containers might be a good thing?

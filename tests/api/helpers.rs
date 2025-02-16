@@ -5,7 +5,7 @@ use checklist::startup::{get_connection_pool, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
 use secrecy::SecretBox;
 use serde_json::Value as JsonValue;
-use sqlx::{Connection, Executor, PgConnection};
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 
 use crate::golden::GoldenTest;
 
@@ -13,6 +13,7 @@ pub struct TestApp {
     pub address: String,
     pub golden: GoldenTest,
     pub client: reqwest::Client,
+    pub db_pool: PgPool,
 }
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -27,7 +28,7 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
     };
 });
 
-async fn configure_database(configuration: &DatabaseSettings) -> () {
+async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     let maintenance_settings = DatabaseSettings {
         host: configuration.host.clone(),
         port: configuration.port,
@@ -59,6 +60,8 @@ async fn configure_database(configuration: &DatabaseSettings) -> () {
         .run(&pool)
         .await
         .expect("Failed to migrate database");
+
+    pool
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -70,7 +73,7 @@ pub async fn spawn_app() -> TestApp {
         c.application.port = 0;
         c
     };
-    configure_database(&configuration.database).await;
+    let db_pool = configure_database(&configuration.database).await;
 
     let application = Application::build(configuration)
         .await
@@ -81,6 +84,7 @@ pub async fn spawn_app() -> TestApp {
         address,
         golden: GoldenTest::new(),
         client: reqwest::Client::new(),
+        db_pool,
     }
 }
 

@@ -7,7 +7,11 @@ use checklist::telemetry::{get_subscriber, init_subscriber};
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    let subscriber = get_subscriber("checklist".into(), "info".into(), std::io::stdout);
+    let subscriber = get_subscriber(
+        "checklist".into(),
+        "sqlx=error,info".into(),
+        std::io::stdout,
+    );
     init_subscriber(subscriber)?;
     let configuration = get_configuration().context("Failed to read configuration")?;
     let application = Application::build(configuration)

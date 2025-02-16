@@ -12,7 +12,7 @@ use routes::{create_todo, get_todo, health_check, list_todo};
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tracing::{debug_span, error, info_span};
+use tracing::{error, error_span};
 
 pub mod configuration;
 mod domain;
@@ -38,22 +38,20 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
                 let request_id = request.headers().get(REQUEST_ID_HEADER);
-
                 match request_id {
                     Some(request_id) => {
-                        debug_span!(
+                        error_span!(
                             "http_request",
                             request_id = ?request_id,
                         )
                     }
                     None => {
                         error!("could not extract request_id");
-                        info_span!("http_request")
+                        error_span!("http_request")
                     }
                 }
             }),
         )
-        // Send headers from request to response headers
         .layer(PropagateRequestIdLayer::new(x_request_id));
     let app = Router::new()
         .route("/health_check", get(health_check))

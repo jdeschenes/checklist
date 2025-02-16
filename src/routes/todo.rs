@@ -1,3 +1,4 @@
+use eyre::Context;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -77,9 +78,15 @@ pub async fn create_todo(
     Json(payload): Json<CreateTodoRequest>,
 ) -> Result<(), APIError> {
     let todo = payload.try_into()?;
-    let mut transaction = conn.begin().await?;
+    let mut transaction = conn
+        .begin()
+        .await
+        .context("Failed to acquire transaction")?;
     create_todo_repos(&mut transaction, todo).await?;
-    transaction.commit().await?;
+    transaction
+        .commit()
+        .await
+        .context("Failed to commit transaction")?;
     Ok(())
 }
 
@@ -95,7 +102,10 @@ pub async fn get_todo(
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<Json<GetTodoResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
-    let mut transaction = conn.begin().await?;
+    let mut transaction = conn
+        .begin()
+        .await
+        .context("Failed to acquire transaction")?;
     let todo_response = get_todo_by_name(&mut transaction, &todo_name).await?.into();
     Ok(Json(todo_response))
 }
@@ -107,7 +117,10 @@ pub async fn get_todo(
 pub async fn list_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
 ) -> Result<Json<ListTodoResponse>, APIError> {
-    let mut transaction = conn.begin().await?;
+    let mut transaction = conn
+        .begin()
+        .await
+        .context("Failed to acquire transaction")?;
     let todo_response = repos::list_todo(&mut transaction).await?.into();
     Ok(Json(todo_response))
 }
