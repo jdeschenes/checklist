@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use checklist::configuration::{get_configuration, DatabaseSettings};
 use checklist::startup::{get_connection_pool, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
-use secrecy::SecretBox;
+use secrecy::SecretString;
 use serde_json::Value as JsonValue;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 
@@ -28,13 +28,13 @@ static TRACING: LazyLock<()> = LazyLock::new(|| {
     };
 });
 
-async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
+async fn setup_database(configuration: &DatabaseSettings) {
     let maintenance_settings = DatabaseSettings {
         host: configuration.host.clone(),
         port: configuration.port,
         database: "postgres".to_string(),
         user: "postgres".to_string(),
-        password: SecretBox::new(Box::new("password".to_string())),
+        password: SecretString::new("password".to_string().into()),
         max_connections: configuration.max_connections,
         pool_acquire_timeout: configuration.pool_acquire_timeout,
         require_ssl: false,
@@ -53,28 +53,36 @@ async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
         )
         .await
         .expect("Unable to create database");
+}
 
-    let pool = get_connection_pool(configuration);
-
+async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
+    setup_database(configuration).await;
+    let pool = get_connection_pool(&configuration);
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
         .expect("Failed to migrate database");
-
     pool
 }
 
 pub async fn spawn_app() -> TestApp {
+    spawn_app_with_config(true).await
+}
+
+async fn spawn_app_with_config(valid_app: bool) -> TestApp {
     LazyLock::force(&TRACING);
 
-    let configuration = {
+    let mut configuration = {
         let mut c = get_configuration().expect("Unable to read configuration");
         c.database.database = uuid::Uuid::new_v4().to_string();
         c.application.port = 0;
         c
     };
     let db_pool = configure_database(&configuration.database).await;
-
+    if !valid_app {
+        configuration.database.database = "INVALIDDB".to_string();
+        configuration.application.validate_db_on_startup = Some(false);
+    }
     let application = Application::build(configuration)
         .await
         .expect("Failed to bind address");
@@ -86,6 +94,10 @@ pub async fn spawn_app() -> TestApp {
         client: reqwest::Client::new(),
         db_pool,
     }
+}
+
+pub async fn spawn_invalid_db_app() -> TestApp {
+    spawn_app_with_config(false).await
 }
 
 impl TestApp {

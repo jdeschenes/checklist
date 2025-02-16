@@ -5,7 +5,7 @@ use std::time::Duration;
 
 const CONFIGURATION_FILE: &str = "base.yaml";
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
@@ -39,19 +39,20 @@ impl TryFrom<String> for Environment {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct ApplicationSettings {
     pub host: String,
     pub port: u16,
+    pub validate_db_on_startup: Option<bool>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct DatabaseSettings {
     pub host: String,
     pub port: u16,
     pub user: String,
     pub database: String,
-    pub password: secrecy::SecretBox<String>,
+    pub password: secrecy::SecretString,
 
     #[serde(with = "humantime_serde")]
     pub pool_acquire_timeout: Duration,

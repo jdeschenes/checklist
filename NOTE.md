@@ -3,8 +3,10 @@
 * Would be useful to talk about x-request-id
 * deserialize_with is no longer needed(page 159)
 * talk about golden testing
+* Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
+* Add 
 * Add check for uniqueness and proper errors
 * Update TODO
 * Delete TODO(soft delete?)

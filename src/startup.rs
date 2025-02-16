@@ -2,6 +2,7 @@ use std::future::IntoFuture;
 
 use eyre::{Context, Result};
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use sqlx::Executor;
 use tokio::net::TcpListener;
 
 use crate::configuration::{DatabaseSettings, Settings};
@@ -24,12 +25,19 @@ impl Application {
             .context("Binding listener")?;
         let port = listener.local_addr().unwrap().port();
         let pool = get_connection_pool(&configuration.database);
+        if let Some(true) | None = configuration.application.validate_db_on_startup {
+            pool.execute("SELECT 1")
+                .await
+                .context("Attempting to execute query on DB")?;
+        }
         let server = run(listener, pool).await?;
         Ok(Application { server, port })
     }
+
     pub fn port(&self) -> u16 {
         self.port
     }
+
     pub async fn run_until_stopped(self) -> Result<()> {
         self.server
             .into_future()

@@ -12,7 +12,7 @@ use routes::{create_todo, get_todo, health_check, list_todo};
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tracing::{error, error_span};
+use tracing::{error, info_span};
 
 pub mod configuration;
 mod domain;
@@ -29,7 +29,6 @@ pub type Server = Serve<tokio::net::TcpListener, Router, Router>;
 
 pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> Result<Server> {
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
-
     let request_id_middleware = ServiceBuilder::new()
         .layer(SetRequestIdLayer::new(
             x_request_id.clone(),
@@ -40,14 +39,14 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
                 let request_id = request.headers().get(REQUEST_ID_HEADER);
                 match request_id {
                     Some(request_id) => {
-                        error_span!(
+                        info_span!(
                             "http_request",
                             request_id = ?request_id,
                         )
                     }
                     None => {
                         error!("could not extract request_id");
-                        error_span!("http_request")
+                        info_span!("http_request")
                     }
                 }
             }),
