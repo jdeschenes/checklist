@@ -45,7 +45,7 @@ impl GoldenTest {
     pub fn assert_golden(&self, test_name: &str, value: &Value) {
         println!("Attempt to read file");
         let file =
-            File::open(&std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
+            File::open(std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
                 .expect("Failed to open file for reading");
         let data: serde_json::Value =
             serde_json::from_reader(file).expect("Failed to read data from json");
@@ -68,7 +68,7 @@ impl GoldenTest {
         std::fs::create_dir_all(&self.test_dir).expect("Failed to create test folder");
         println!("Attempt to write file");
         let file =
-            File::create(&std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
+            File::create(std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
                 .expect("Failed to open file for writing");
         let mut writer = BufWriter::new(file);
         let mut filtered_value = value.clone();
@@ -111,7 +111,7 @@ mod tests {
     fn test_golden_identical() {
         let temp_dir = std::env::temp_dir();
         let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
-        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -134,7 +134,7 @@ mod tests {
     fn test_golden_different() {
         let temp_dir = std::env::temp_dir();
         let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
-        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -159,7 +159,7 @@ mod tests {
     fn test_golden_does_not_exist() {
         let temp_dir = std::env::temp_dir();
         let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
-        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
@@ -179,7 +179,7 @@ mod tests {
     fn test_should_replace_uuid() {
         let temp_dir = std::env::temp_dir();
         let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
-        let golden = GoldenTest::new_with_dir(&temp_dir.to_str().unwrap());
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],

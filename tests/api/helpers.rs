@@ -57,7 +57,7 @@ async fn setup_database(configuration: &DatabaseSettings) {
 
 async fn configure_database(configuration: &DatabaseSettings) -> PgPool {
     setup_database(configuration).await;
-    let pool = get_connection_pool(&configuration);
+    let pool = get_connection_pool(configuration);
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
