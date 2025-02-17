@@ -6,6 +6,11 @@ pub struct NewTodoRequest {
 }
 
 #[derive(Debug, Clone)]
+pub struct UpdateTodoRequest {
+    pub name: TodoName,
+}
+
+#[derive(Debug, Clone)]
 pub struct Todo {
     pub name: TodoName,
 }

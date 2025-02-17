@@ -6,8 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
-* Add UUID for the ID
-* Update TODO
+* Add UUID for the ID. add create_time, update_time
 * Delete TODO(soft delete?)
 * Add TODO item
 * List TODO item
@@ -21,6 +20,7 @@
 * Add transaction in the middleware
 * Add a test that we are not sending cookie and authorization headers in the logs
 * Add a test to check that we are sending the right logs
+* Improve logs on failure
 
 # TODO?
 * using test containers might be a good thing?

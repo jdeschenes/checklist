@@ -125,6 +125,62 @@ async fn list_todo() {
 }
 
 #[tokio::test]
+async fn test_update_todo_works() {
+    let test_app = spawn_app().await;
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let get_response = test_app.get_todo("banana").await;
+    assert_eq!(get_response.status(), StatusCode::OK);
+
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
+    let update_response = test_app.update_todo("banana", &payload).await;
+    assert_eq!(update_response.status(), StatusCode::OK);
+
+    let get_response = test_app.get_todo("banana").await;
+    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+
+    let get_response = test_app.get_todo("banana2").await;
+    assert_eq!(get_response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn update_todo_failures() {
+    let test_app = spawn_app().await;
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let test_cases = vec![
+        (
+            "NOT_EXISTS",
+            serde_json::json!({
+                "name": "banana"
+            }),
+            StatusCode::NOT_FOUND,
+        ),
+        (
+            "banana2",
+            serde_json::json!({
+                "name": "banana"
+            }),
+            StatusCode::BAD_REQUEST,
+        ),
+    ];
+    for test_case in test_cases {
+        let update_response = test_app.update_todo(test_case.0, &test_case.1).await;
+        assert_eq!(update_response.status(), test_case.2);
+    }
+    // Todo does not exist
+    // Todo name is updated to an already existing todo
+}
+
+#[tokio::test]
 async fn todo_fails_if_fatal_database_error() {
     let test_app = spawn_app().await;
 
