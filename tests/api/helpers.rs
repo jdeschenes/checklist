@@ -142,4 +142,32 @@ impl TestApp {
             .await
             .expect("Failed to execute request")
     }
+
+    pub async fn post_todo_item(&self, todo_name: &str, payload: &JsonValue) -> reqwest::Response {
+        self.client
+            .post(format!("{}/todo/{}/item", self.address, todo_name))
+            .json(payload)
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn get_todo_item(&self, todo_name: &str, todo_item_id: &str) -> reqwest::Response {
+        self.client
+            .get(format!(
+                "{}/todo/{}/item/{}",
+                self.address, todo_name, todo_item_id
+            ))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn list_todo_items(&self, todo_name: &str) -> reqwest::Response {
+        self.client
+            .get(format!("{}/todo/{}/item", self.address, todo_name))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
 }

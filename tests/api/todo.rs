@@ -26,14 +26,13 @@ async fn create_todo_works() {
     let get_response = test_app.get_todo(test_case.1).await;
     assert_eq!(get_response.status(), StatusCode::OK);
     let expected: serde_json::Value = get_response.json().await.expect("Failed to read json");
-    test_app.golden.check_diff("get_todo", &expected);
+    test_app.golden.check_diff_json("get_todo", &expected);
 }
 
 #[tokio::test]
 async fn create_todo_fails() {
     let test_app = spawn_app().await;
     let address = test_app.address;
-    let client = reqwest::Client::new();
 
     struct FailCall {
         expected_status_code: StatusCode,
@@ -61,7 +60,7 @@ async fn create_todo_fails() {
     ];
     // Forgot to include a body
     for case in cases {
-        let mut req = client.post(format!("{}/todo", address));
+        let mut req = test_app.client.post(format!("{}/todo", address));
         if let Some(ref json) = case.json {
             req = req.json(json);
         }
@@ -121,7 +120,7 @@ async fn list_todo() {
     let list_response = test_app.list_todo().await;
     assert_eq!(list_response.status(), StatusCode::OK);
     let expected: serde_json::Value = list_response.json().await.expect("Failed to read json");
-    test_app.golden.check_diff("list_todo", &expected);
+    test_app.golden.check_diff_json("list_todo", &expected);
 }
 
 #[tokio::test]
@@ -146,7 +145,7 @@ async fn test_update_todo_works() {
 }
 
 #[tokio::test]
-async fn update_todo_failures() {
+async fn update_todo_fails() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;

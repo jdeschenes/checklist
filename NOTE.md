@@ -6,12 +6,11 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
-* Add UUID for the ID. add create_time, update_time
-* Add TODO item
-* List TODO item
-* Update TODO item(done or not and when it was)
+* Add response for create/update on TODO
+* Add done todo item endpoint???(snapshot the complete_time)
 * Authentication and Authorization
 * Add recurring todos 
+* Add due date on the todo item, default NOW()?
 * Add a timeout on the request using middleware
 * Add max request threshold using middleware
 * Add CI and all the checks
@@ -19,6 +18,7 @@
 * Add transaction in the middleware
 * Add a test that we are not sending cookie and authorization headers in the logs
 * Add a test to check that we are sending the right logs
+* Add checks on all API calls that we are receiving a x-request-id
 * Improve logs on failure
 
 # TODO?

@@ -7,7 +7,7 @@ use sqlx::Acquire;
 
 use crate::domain;
 use crate::domain::NewTodoRequest;
-use crate::domain::{ListTodo, ListTodoItem, Todo};
+use crate::domain::{ListTodo, ListTodoSingle, Todo};
 use crate::error::APIError;
 use crate::extractors::DatabaseConnection;
 use crate::repos;
@@ -63,8 +63,8 @@ pub struct ListTodoSingleItem {
     name: String,
 }
 
-impl From<ListTodoItem> for ListTodoSingleItem {
-    fn from(value: ListTodoItem) -> Self {
+impl From<ListTodoSingle> for ListTodoSingleItem {
+    fn from(value: ListTodoSingle) -> Self {
         Self {
             name: value.name.as_ref().to_string(),
         }

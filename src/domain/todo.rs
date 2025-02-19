@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use crate::error::APIError;
 
 #[derive(Debug, Clone)]
@@ -12,6 +14,7 @@ pub struct UpdateTodoRequest {
 
 #[derive(Debug, Clone)]
 pub struct Todo {
+    pub todo_id: Uuid,
     pub name: TodoName,
 }
 
@@ -55,11 +58,11 @@ impl AsRef<str> for TodoName {
 
 #[derive(Debug, Clone)]
 pub struct ListTodo {
-    pub items: Vec<ListTodoItem>,
+    pub items: Vec<ListTodoSingle>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ListTodoItem {
+pub struct ListTodoSingle {
     pub name: TodoName,
 }
 

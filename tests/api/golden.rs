@@ -32,18 +32,17 @@ impl GoldenTest {
         }
     }
 
-    pub fn check_diff(&self, test_name: &str, value: &Value) {
+    pub fn check_diff_json(&self, test_name: &str, value: &Value) {
         match std::env::var(WRITE_ENVIRONMENT_VARIABLE) {
             Ok(_) => {
-                self.write_golden(test_name, value);
+                self.write_golden_json(test_name, value);
             }
             Err(_) => {
-                self.assert_golden(test_name, value);
+                self.assert_golden_json(test_name, value);
             }
         }
     }
-    pub fn assert_golden(&self, test_name: &str, value: &Value) {
-        println!("Attempt to read file");
+    pub fn assert_golden_json(&self, test_name: &str, value: &Value) {
         let file =
             File::open(std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
                 .expect("Failed to open file for reading");
@@ -64,9 +63,8 @@ impl GoldenTest {
         }
     }
 
-    pub fn write_golden(&self, test_name: &str, value: &Value) {
+    pub fn write_golden_json(&self, test_name: &str, value: &Value) {
         std::fs::create_dir_all(&self.test_dir).expect("Failed to create test folder");
-        println!("Attempt to write file");
         let file =
             File::create(std::path::Path::new(&self.test_dir).join(format!("{test_name}.json")))
                 .expect("Failed to open file for writing");
@@ -124,9 +122,9 @@ mod tests {
 
         });
         // Write the file
-        golden.write_golden(&test_name, &value);
+        golden.write_golden_json(&test_name, &value);
         // Now the comparison should work
-        golden.assert_golden(&test_name, &value);
+        golden.assert_golden_json(&test_name, &value);
     }
 
     #[test]
@@ -147,11 +145,11 @@ mod tests {
 
         });
         // Write the file
-        golden.write_golden(&test_name, &value);
+        golden.write_golden_json(&test_name, &value);
         let value2 = serde_json::json!({
             "number": 2,
         });
-        golden.assert_golden(&test_name, &value2);
+        golden.assert_golden_json(&test_name, &value2);
     }
 
     #[test]
@@ -172,7 +170,7 @@ mod tests {
 
         });
         // This should fail since the file does not exist
-        golden.assert_golden(&test_name, &value);
+        golden.assert_golden_json(&test_name, &value);
     }
 
     #[test]
@@ -184,11 +182,11 @@ mod tests {
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
         });
-        golden.write_golden(&test_name, &value);
+        golden.write_golden_json(&test_name, &value);
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
         });
-        golden.assert_golden(&test_name, &value);
+        golden.assert_golden_json(&test_name, &value);
     }
 }

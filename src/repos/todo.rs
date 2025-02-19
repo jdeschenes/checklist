@@ -2,7 +2,7 @@ use sqlx::PgTransaction;
 use uuid::Uuid;
 
 use crate::{
-    domain::{ListTodo, ListTodoItem, NewTodoRequest, Todo, TodoName, UpdateTodoRequest},
+    domain::{ListTodo, ListTodoSingle, NewTodoRequest, Todo, TodoName, UpdateTodoRequest},
     error::APIError,
 };
 
@@ -32,6 +32,7 @@ pub async fn create_todo(
 
 #[derive(Debug)]
 struct GetTodoQuery {
+    todo_id: Uuid,
     name: String,
 }
 
@@ -39,6 +40,7 @@ impl TryFrom<GetTodoQuery> for Todo {
     type Error = APIError;
     fn try_from(value: GetTodoQuery) -> Result<Self, Self::Error> {
         Ok(Self {
+            todo_id: value.todo_id,
             name: value.name.try_into()?,
         })
     }
@@ -51,7 +53,7 @@ pub async fn get_todo_by_name(
 ) -> Result<Todo, APIError> {
     match sqlx::query_as!(
         GetTodoQuery,
-        r#"SELECT name from todo WHERE name = $1;"#,
+        r#"SELECT todo_id, name from todo WHERE name = $1;"#,
         todo_name.as_ref()
     )
     .fetch_one(&mut **transaction)
@@ -133,13 +135,13 @@ struct ListTodoQuery {
 impl TryFrom<Vec<ListTodoQuery>> for ListTodo {
     type Error = APIError;
     fn try_from(value: Vec<ListTodoQuery>) -> Result<Self, Self::Error> {
-        let items: Result<Vec<ListTodoItem>, Self::Error> =
+        let items: Result<Vec<ListTodoSingle>, Self::Error> =
             value.into_iter().map(|i| i.try_into()).collect();
         Ok(Self { items: items? })
     }
 }
 
-impl TryFrom<ListTodoQuery> for ListTodoItem {
+impl TryFrom<ListTodoQuery> for ListTodoSingle {
     type Error = APIError;
     fn try_from(value: ListTodoQuery) -> Result<Self, Self::Error> {
         Ok(Self {
