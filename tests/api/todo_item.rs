@@ -107,22 +107,42 @@ async fn get_todo_item_fails() {
 
 #[tokio::test]
 async fn list_todo_items_works() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     unimplemented!()
 }
 
 #[tokio::test]
 async fn list_todo_items_fails() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     // TODO doesn't exist
     unimplemented!()
 }
 
 #[tokio::test]
 async fn update_todo_item_works() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     unimplemented!()
 }
 
 #[tokio::test]
 async fn update_todo_item_fails() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     // TODO doesn't exist
     // TODO Item doesn't exist
     // TODO item is not a uuid
@@ -131,11 +151,21 @@ async fn update_todo_item_fails() {
 
 #[tokio::test]
 async fn delete_todo_item_works() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     unimplemented!()
 }
 
 #[tokio::test]
 async fn delete_todo_item_fails() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
     // TODO doesn't exist
     // TODO Item doesn't exist
     // TODO item is not a uuid
