@@ -127,6 +127,14 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
+    pub async fn delete_todo(&self, todo_name: &str) -> reqwest::Response {
+        self.client
+            .delete(format!("{}/todo/{}", self.address, todo_name))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
     pub async fn list_todo(&self) -> reqwest::Response {
         self.client
             .get(format!("{}/todo", self.address))

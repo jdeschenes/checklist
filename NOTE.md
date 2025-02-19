@@ -7,7 +7,6 @@
 
 # MAIN TODO
 * Add UUID for the ID. add create_time, update_time
-* Delete TODO(soft delete?)
 * Add TODO item
 * List TODO item
 * Update TODO item(done or not and when it was)

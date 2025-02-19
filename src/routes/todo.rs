@@ -126,6 +126,30 @@ pub async fn get_todo(
 }
 
 #[tracing::instrument(
+    name = "Delete TODO"
+    skip(conn, todo_str),
+    fields(
+        todo = todo_str
+    )
+)]
+pub async fn delete_todo(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    extract::Path(todo_str): extract::Path<String>,
+) -> Result<(), APIError> {
+    let todo_name = todo_str.try_into()?;
+    let mut transaction = conn
+        .begin()
+        .await
+        .context("Failed to acquire transaction")?;
+    repos::delete_todo_by_name(&mut transaction, &todo_name).await?;
+    transaction
+        .commit()
+        .await
+        .context("Failed to commit transaction")?;
+    Ok(())
+}
+
+#[tracing::instrument(
     name = "Update TODO"
     skip(conn, todo_str, payload),
     fields(

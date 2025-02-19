@@ -176,8 +176,32 @@ async fn update_todo_failures() {
         let update_response = test_app.update_todo(test_case.0, &test_case.1).await;
         assert_eq!(update_response.status(), test_case.2);
     }
+}
+
+#[tokio::test]
+async fn delete_todo_works() {
+    let test_app = spawn_app().await;
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let delete_response = test_app.delete_todo("banana").await;
+    assert_eq!(delete_response.status(), StatusCode::OK);
+
+    let get_response = test_app.get_todo("banana").await;
+    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn delete_todo_fails() {
     // Todo does not exist
-    // Todo name is updated to an already existing todo
+    let test_app = spawn_app().await;
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let delete_response = test_app.delete_todo("NOT_EXISTS").await;
+    assert_eq!(delete_response.status(), StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]

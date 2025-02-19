@@ -66,7 +66,31 @@ pub async fn get_todo_by_name(
     }
 }
 
-#[tracing::instrument(name = "Update todo in the database", skip(transaction))]
+#[tracing::instrument(name = "Delete todo in the database", skip(transaction))]
+pub async fn delete_todo_by_name(
+    transaction: &mut PgTransaction<'_>,
+    todo_name: &TodoName,
+) -> Result<(), APIError> {
+    let r = sqlx::query_as!(
+        GetTodoQuery,
+        r#"DELETE from todo WHERE name = $1;"#,
+        todo_name.as_ref()
+    )
+    .execute(&mut **transaction)
+    .await?;
+    match r.rows_affected() {
+        0 => Err(APIError::NotFound(format!(
+            "TODO: '{}' not found",
+            todo_name.as_ref()
+        ))),
+        1 => Ok(()),
+        _ => Err(APIError::Internal(
+            eyre::eyre!("More than 1 row affected. Problem with the query").into(),
+        )),
+    }
+}
+
+#[tracing::instrument(name = "Update todo in the database", skip(transaction, req))]
 pub async fn update_todo(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
