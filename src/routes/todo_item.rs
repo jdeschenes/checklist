@@ -28,15 +28,32 @@ pub struct TodoItemSingleResponse {
     pub is_complete: bool,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UpdateTodoItemRequest {
+    pub title: String,
+    pub is_complete: bool,
+}
+
+// These are alias as they are incidentally the same thing.
+// Create new types as it evolves
 pub type CreateTodoItemResponse = TodoItemSingleResponse;
 pub type GetTodoItemResponse = TodoItemSingleResponse;
-pub type UpdateTodoItemRequest = TodoItemSingleResponse;
 pub type UpdateTodoItemResponse = TodoItemSingleResponse;
 
 impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
     type Error = APIError;
     fn try_from(value: CreateTodoItemRequest) -> Result<Self, Self::Error> {
         Ok(Self { title: value.title })
+    }
+}
+
+impl TryFrom<UpdateTodoItemRequest> for domain::UpdateTodoItemRequest {
+    type Error = APIError;
+    fn try_from(value: UpdateTodoItemRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            title: value.title,
+            is_complete: value.is_complete,
+        })
     }
 }
 

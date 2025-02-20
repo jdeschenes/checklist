@@ -1,3 +1,4 @@
+use eyre::eyre;
 use sqlx::PgTransaction;
 use uuid::Uuid;
 
@@ -144,7 +145,7 @@ pub async fn delete_todo_item(
     todo_item: &Uuid,
 ) -> Result<(), APIError> {
     let todo = get_todo_by_name(transaction, todo_name).await?;
-    sqlx::query!(
+    let result = sqlx::query!(
         r#"DELETE from todo_item
            WHERE
               todo_id = $1
@@ -154,5 +155,14 @@ pub async fn delete_todo_item(
     )
     .execute(&mut **transaction)
     .await?;
-    Ok(())
+    match result.rows_affected() {
+        0 => Err(APIError::NotFound(format!(
+            "TodoItem not found: {}",
+            todo_item
+        ))),
+        1 => Ok(()),
+        _ => Err(APIError::Internal(
+            eyre!("Multiple rows affected by delete operation").into(),
+        )),
+    }
 }
