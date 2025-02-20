@@ -31,7 +31,6 @@ pub struct TodoItemSingleResponse {
 #[derive(Debug, Deserialize)]
 pub struct UpdateTodoItemRequest {
     pub title: String,
-    pub is_complete: bool,
 }
 
 // These are alias as they are incidentally the same thing.
@@ -50,10 +49,7 @@ impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
 impl TryFrom<UpdateTodoItemRequest> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: UpdateTodoItemRequest) -> Result<Self, Self::Error> {
-        Ok(Self {
-            title: value.title,
-            is_complete: value.is_complete,
-        })
+        Ok(Self { title: value.title })
     }
 }
 
@@ -90,7 +86,6 @@ impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
     fn try_from(value: TodoItemSingleResponse) -> Result<Self, Self::Error> {
         Ok(Self {
             title: value.title,
-            is_complete: value.is_complete,
         })
     }
 }

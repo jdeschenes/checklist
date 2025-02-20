@@ -82,7 +82,6 @@ pub async fn update_todo_item(
         TodoItem,
         r#"UPDATE todo_item SET
             title = $3
-            , is_complete = $4
            WHERE
               todo_id = $1
               AND todo_item_id = $2
@@ -91,7 +90,6 @@ pub async fn update_todo_item(
         todo.todo_id,
         todo_item,
         req.title,
-        req.is_complete,
     )
     .fetch_one(&mut **transaction)
     .await

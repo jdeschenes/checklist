@@ -27,5 +27,4 @@ pub struct ListTodoItemSingle {
 #[derive(Debug, Clone)]
 pub struct UpdateTodoItemRequest {
     pub title: String,
-    pub is_complete: bool,
 }
