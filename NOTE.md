@@ -6,6 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
+* Add cascade delete on the todo item
 * Add response for create/update on TODO
 * Add done todo item endpoint???(snapshot the complete_time)
 * Authentication and Authorization
@@ -38,3 +39,24 @@ Recurring Job: A job that is completed and upon completion a new cycle is starte
 The application will automatically create a new TODO every time you complete.
 * There should be a start time and a end time
 * There should be a periodicity(daily, weekly, etc.) For now keep it kiss? Just use normal time and parse
+
+## User Stories
+### TODO
+The user shall be able to create multiple todos
+The todos shall be unique by name
+If a todo is deleted, the associated todo item will be deleted as well
+
+### TODO Item
+todo item will be associated with a todo
+Once a todo item is completed, the complete_time shall be set
+Once a todo item is completed, it will not be possible to edit it
+A todo item shall have an associated due date. If not due date is provided, the due date shall be set to NOW()
+The list of todo item shall be ordered by due date ascending
+The list of todo items shall only list items that are NOT completed
+
+### Recurring Job
+A recurring job shall have a start time. If no start time is provided, it will
+be assumed that the start time is NOW()
+Once a recurring job is created, associated todo items will be created
+Once a todo item associated with a recurring job is completed, a new todo item 
+shall be created with the due date set to the periodicity of the recurring job
