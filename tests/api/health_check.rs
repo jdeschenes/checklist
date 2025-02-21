@@ -1,6 +1,6 @@
 use reqwest::StatusCode;
 
-use crate::helpers::{spawn_app, spawn_invalid_db_app};
+use crate::helpers::{assert_response, spawn_app, spawn_invalid_db_app};
 
 #[tokio::test]
 async fn health_check_works() {
@@ -13,8 +13,8 @@ async fn health_check_works() {
         .send()
         .await
         .expect("Failed to execute request");
-    assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(Some(0), response.content_length());
+    assert_response(&response, StatusCode::OK);
 }
 
 #[tokio::test]
@@ -28,5 +28,5 @@ async fn health_check_fails_no_db() {
         .send()
         .await
         .expect("Failed to execute request");
-    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert_response(&response, StatusCode::INTERNAL_SERVER_ERROR);
 }

@@ -2,7 +2,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
-use crate::helpers::spawn_app;
+use crate::helpers::{assert_response, spawn_app};
 
 #[derive(Deserialize)]
 struct CreateResponse {
@@ -26,10 +26,10 @@ async fn create_todo_works() {
 
     let payload: serde_json::Value = serde_json::to_value(test_case.0).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
     assert_eq!(Some(0), create_response.content_length());
     let get_response = test_app.get_todo(test_case.1).await;
-    assert_eq!(get_response.status(), StatusCode::OK);
+    assert_response(&get_response, StatusCode::OK);
     let expected: serde_json::Value = get_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff_json("get_todo", &expected);
 }
@@ -85,17 +85,13 @@ async fn create_todo_fails_if_already_exists() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
-    assert_eq!(get_response.status(), StatusCode::OK);
+    assert_response(&get_response, StatusCode::OK);
 
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(
-        create_response.status(),
-        StatusCode::BAD_REQUEST,
-        "Fails if it already exists"
-    );
+    assert_response(&create_response, StatusCode::BAD_REQUEST);
 }
 
 #[tokio::test]
@@ -103,13 +99,13 @@ async fn get_todo() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
-    assert_eq!(get_response.status(), StatusCode::OK);
+    assert_response(&get_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("DOESNOTEXIST").await;
-    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+    assert_response(&get_response, StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
@@ -119,11 +115,11 @@ async fn list_todo() {
         let payload: serde_json::Value =
             serde_json::from_str(&format!(r#"{{"name": "banana{i}"}}"#)).unwrap();
         let create_response = test_app.post_todo(&payload).await;
-        assert_eq!(create_response.status(), StatusCode::OK);
+        assert_response(&create_response, StatusCode::OK);
     }
 
     let list_response = test_app.list_todo().await;
-    assert_eq!(list_response.status(), StatusCode::OK);
+    assert_response(&list_response, StatusCode::OK);
     let expected: serde_json::Value = list_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff_json("list_todo", &expected);
 }
@@ -133,20 +129,20 @@ async fn test_update_todo_works() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
-    assert_eq!(get_response.status(), StatusCode::OK);
+    assert_response(&get_response, StatusCode::OK);
 
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
     let update_response = test_app.update_todo("banana", &payload).await;
-    assert_eq!(update_response.status(), StatusCode::OK);
+    assert_response(&update_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
-    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+    assert_response(&get_response, StatusCode::NOT_FOUND);
 
     let get_response = test_app.get_todo("banana2").await;
-    assert_eq!(get_response.status(), StatusCode::OK);
+    assert_response(&get_response, StatusCode::OK);
 }
 
 #[tokio::test]
@@ -154,14 +150,15 @@ async fn update_todo_fails() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let test_cases = vec![
         (
+            "TODO_NOT_EXISTS",
             "NOT_EXISTS",
             serde_json::json!({
                 "name": "banana"
@@ -169,6 +166,7 @@ async fn update_todo_fails() {
             StatusCode::NOT_FOUND,
         ),
         (
+            "TODO_ALREADY_EXISTS",
             "banana2",
             serde_json::json!({
                 "name": "banana"
@@ -177,8 +175,8 @@ async fn update_todo_fails() {
         ),
     ];
     for test_case in test_cases {
-        let update_response = test_app.update_todo(test_case.0, &test_case.1).await;
-        assert_eq!(update_response.status(), test_case.2);
+        let update_response = test_app.update_todo(test_case.1, &test_case.2).await;
+        assert_eq!(update_response.status(), test_case.3, "{}", test_case.0);
     }
 }
 
@@ -187,13 +185,13 @@ async fn delete_todo_works() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let delete_response = test_app.delete_todo("banana").await;
-    assert_eq!(delete_response.status(), StatusCode::OK);
+    assert_response(&delete_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
-    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+    assert_response(&get_response, StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
@@ -202,10 +200,10 @@ async fn delete_todo_fails() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let delete_response = test_app.delete_todo("NOT_EXISTS").await;
-    assert_eq!(delete_response.status(), StatusCode::NOT_FOUND);
+    assert_response(&delete_response, StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
@@ -219,11 +217,7 @@ async fn todo_fails_if_fatal_database_error() {
 
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(
-        create_response.headers().get("x-request-id").is_some(),
-        "ensures that x-request-id is present"
-    );
+    assert_response(&create_response, StatusCode::INTERNAL_SERVER_ERROR);
 }
 
 #[tokio::test]
@@ -232,24 +226,24 @@ async fn delete_todo_also_deletes_items() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
-    assert_eq!(create_response.status(), StatusCode::OK);
+    assert_response(&create_response, StatusCode::OK);
 
     let mut todo_item: Option<CreateResponse> = None;
     for i in 0..50 {
         let payload: serde_json::Value =
             serde_json::from_str(&format!(r#"{{"title": "banana{i}"}}"#)).unwrap();
         let create_response = test_app.post_todo_item("banana", &payload).await;
-        assert_eq!(create_response.status(), StatusCode::OK);
+        assert_response(&create_response, StatusCode::OK);
 
         let response = (create_response).json().await.unwrap();
         todo_item = Some(response);
     }
 
     let delete_response = test_app.delete_todo("banana").await;
-    assert_eq!(delete_response.status(), StatusCode::OK);
+    assert_response(&delete_response, StatusCode::OK);
 
     let todo_item_response = test_app
         .get_todo_item("banana", todo_item.unwrap().todo_item_id.as_str())
         .await;
-    assert_eq!(todo_item_response.status(), StatusCode::NOT_FOUND);
+    assert_response(&todo_item_response, StatusCode::NOT_FOUND);
 }

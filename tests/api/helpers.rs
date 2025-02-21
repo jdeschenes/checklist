@@ -214,3 +214,16 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 }
+
+pub fn assert_response(response: &reqwest::Response, status_code: reqwest::StatusCode) {
+    assert_eq!(response.status(), status_code);
+    match response.headers().get("x-request-id") {
+        Some(x) => {
+            let y = x.to_str().expect("Expected a string in the header");
+            uuid::Uuid::parse_str(y).expect("uuid expected in x-request-id");
+        }
+        None => {
+            panic!("no x-request-id header found in response")
+        }
+    }
+}
