@@ -9,6 +9,11 @@ struct CreateResponse {
     todo_item_id: String,
 }
 
+#[derive(Deserialize)]
+struct ListResponse {
+    items: Vec<serde_json::Value>,
+}
+
 #[tokio::test]
 async fn create_todo_item_works() {
     let test_app = spawn_app().await;
@@ -163,6 +168,37 @@ async fn list_todo_items_works() {
 }
 
 #[tokio::test]
+async fn list_todo_items_only_show_incomplete() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
+
+    let mut todo_item: Option<CreateResponse> = None;
+    for i in 0..50 {
+        let payload: serde_json::Value =
+            serde_json::from_str(&format!(r#"{{"title": "banana{i}"}}"#)).unwrap();
+        let create_response = test_app.post_todo_item("banana", &payload).await;
+        assert_eq!(create_response.status(), StatusCode::OK);
+
+        let response = (create_response).json().await.unwrap();
+        todo_item = Some(response);
+    }
+
+    let complete_response = test_app
+        .complete_todo_item("banana", &todo_item.unwrap().todo_item_id)
+        .await;
+    assert_eq!(complete_response.status(), StatusCode::OK);
+
+    let list_response = test_app.list_todo_items("banana").await;
+    assert_eq!(list_response.status(), StatusCode::OK);
+
+    let response: ListResponse = list_response.json().await.expect("Error parsing json");
+    assert_eq!(response.items.len(), 49);
+}
+
+#[tokio::test]
 async fn list_todo_items_fails() {
     let test_app = spawn_app().await;
 
@@ -246,23 +282,30 @@ async fn update_todo_item_fails() {
         (
             "invalid_payload",
             "banana",
-            &response.todo_item_id,
+            response.todo_item_id.as_str(),
             &invalid_payload,
             StatusCode::UNPROCESSABLE_ENTITY,
         ),
         (
             "invalid_todo",
             "NOT_EXISTS",
-            &response.todo_item_id,
+            response.todo_item_id.as_str(),
             &valid_payload,
             StatusCode::NOT_FOUND,
         ),
         (
             "invalid_todo_item",
             "banana",
-            &invalid_uuid,
+            invalid_uuid.as_str(),
             &valid_payload,
             StatusCode::NOT_FOUND,
+        ),
+        (
+            "invalid_todo_item_uuid",
+            "banana",
+            "INVALID_UUID",
+            &valid_payload,
+            StatusCode::BAD_REQUEST,
         ),
     ];
     for test_case in test_cases {
@@ -271,6 +314,164 @@ async fn update_todo_item_fails() {
             .await;
         assert_eq!(update_response.status(), test_case.4, "{}", test_case.0);
     }
+}
+
+#[tokio::test]
+async fn update_todo_item_fails_if_already_complete() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
+
+    let todo_item_payload = serde_json::from_str(
+        r#"{
+        "title": "todo_item"
+    }"#,
+    )
+    .unwrap();
+    let create_todo_item_response = test_app.post_todo_item("banana", &todo_item_payload).await;
+    assert_eq!(create_todo_item_response.status(), StatusCode::OK);
+
+    let response: CreateResponse = create_todo_item_response
+        .json()
+        .await
+        .expect("Error parsing json");
+
+    let complete_todo_item_response = test_app
+        .complete_todo_item("banana", &response.todo_item_id)
+        .await;
+    assert_eq!(complete_todo_item_response.status(), StatusCode::OK);
+
+    let valid_payload = serde_json::json!({
+        "title": "todo_item2",
+        "is_complete": true
+    });
+    let update_response = test_app
+        .update_todo_item("banana", &response.todo_item_id, &valid_payload)
+        .await;
+    assert_eq!(update_response.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn complete_todo_item_works() {
+    // CHECK THAT THE COMPLETE TIME IS SET
+    // Implement datetime parsing
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
+
+    let todo_item_payload = serde_json::from_str(
+        r#"{
+        "title": "todo_item"
+    }"#,
+    )
+    .unwrap();
+    let create_todo_item_response = test_app.post_todo_item("banana", &todo_item_payload).await;
+    assert_eq!(create_todo_item_response.status(), StatusCode::OK);
+    let response: CreateResponse = create_todo_item_response
+        .json()
+        .await
+        .expect("Error parsing json");
+
+    let complete_todo_item_response = test_app
+        .complete_todo_item("banana", &response.todo_item_id)
+        .await;
+    assert_eq!(complete_todo_item_response.status(), StatusCode::OK);
+
+    let value: serde_json::Value = complete_todo_item_response
+        .json()
+        .await
+        .expect("Failed to read json");
+    test_app
+        .golden
+        .check_diff_json("complete_todo_item", &value);
+}
+
+#[tokio::test]
+async fn complete_todo_item_fails() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
+
+    let todo_item_payload = serde_json::from_str(
+        r#"{
+        "title": "todo_item"
+    }"#,
+    )
+    .unwrap();
+    let create_todo_item_response = test_app.post_todo_item("banana", &todo_item_payload).await;
+    assert_eq!(create_todo_item_response.status(), StatusCode::OK);
+
+    let response: CreateResponse = create_todo_item_response
+        .json()
+        .await
+        .expect("Error parsing json");
+
+    let invalid_uuid = Uuid::new_v4().to_string();
+    let test_cases = vec![
+        (
+            "todo_no_exists",
+            "NOT_EXISTS",
+            response.todo_item_id.as_str(),
+            StatusCode::NOT_FOUND,
+        ),
+        (
+            "todo_item_no_exists",
+            "banana",
+            invalid_uuid.as_str(),
+            StatusCode::NOT_FOUND,
+        ),
+        (
+            "todo_item_not_uuid",
+            "banana",
+            "NOT_UUID",
+            StatusCode::BAD_REQUEST,
+        ),
+    ];
+    for test_case in test_cases {
+        let complete_response = test_app.complete_todo_item(test_case.1, test_case.2).await;
+        assert_eq!(complete_response.status(), test_case.3, "{}", test_case.0);
+    }
+}
+
+#[tokio::test]
+async fn complete_todo_item_fails_if_already_complete() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_eq!(create_todo_response.status(), StatusCode::OK);
+
+    let todo_item_payload = serde_json::from_str(
+        r#"{
+        "title": "todo_item"
+    }"#,
+    )
+    .unwrap();
+    let create_todo_item_response = test_app.post_todo_item("banana", &todo_item_payload).await;
+    assert_eq!(create_todo_item_response.status(), StatusCode::OK);
+    let response: CreateResponse = create_todo_item_response
+        .json()
+        .await
+        .expect("Error parsing json");
+
+    let complete_todo_item_response = test_app
+        .complete_todo_item("banana", &response.todo_item_id)
+        .await;
+    assert_eq!(complete_todo_item_response.status(), StatusCode::OK);
+
+    let complete_todo_item_response = test_app
+        .complete_todo_item("banana", &response.todo_item_id)
+        .await;
+    assert_eq!(
+        complete_todo_item_response.status(),
+        StatusCode::BAD_REQUEST
+    );
 }
 
 #[tokio::test]

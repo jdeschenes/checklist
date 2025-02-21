@@ -4,6 +4,11 @@ use serde_json::Value as JsonValue;
 
 use crate::helpers::spawn_app;
 
+#[derive(Deserialize)]
+struct CreateResponse {
+    todo_item_id: String,
+}
+
 #[tokio::test]
 async fn create_todo_works() {
     #[derive(Debug, Serialize, Deserialize)]
@@ -219,4 +224,32 @@ async fn todo_fails_if_fatal_database_error() {
         create_response.headers().get("x-request-id").is_some(),
         "ensures that x-request-id is present"
     );
+}
+
+#[tokio::test]
+async fn delete_todo_also_deletes_items() {
+    // Todo does not exist
+    let test_app = spawn_app().await;
+    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_response = test_app.post_todo(&payload).await;
+    assert_eq!(create_response.status(), StatusCode::OK);
+
+    let mut todo_item: Option<CreateResponse> = None;
+    for i in 0..50 {
+        let payload: serde_json::Value =
+            serde_json::from_str(&format!(r#"{{"title": "banana{i}"}}"#)).unwrap();
+        let create_response = test_app.post_todo_item("banana", &payload).await;
+        assert_eq!(create_response.status(), StatusCode::OK);
+
+        let response = (create_response).json().await.unwrap();
+        todo_item = Some(response);
+    }
+
+    let delete_response = test_app.delete_todo("banana").await;
+    assert_eq!(delete_response.status(), StatusCode::OK);
+
+    let todo_item_response = test_app
+        .get_todo_item("banana", todo_item.unwrap().todo_item_id.as_str())
+        .await;
+    assert_eq!(todo_item_response.status(), StatusCode::NOT_FOUND);
 }

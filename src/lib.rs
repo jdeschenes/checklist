@@ -9,8 +9,8 @@ use sqlx::postgres::Postgres;
 use sqlx::Pool;
 
 use routes::{
-    create_todo, create_todo_item, delete_todo, delete_todo_item, get_todo, get_todo_item,
-    health_check, list_todo, list_todo_items, update_todo, update_todo_item,
+    complete_todo_item, create_todo, create_todo_item, delete_todo, delete_todo_item, get_todo,
+    get_todo_item, health_check, list_todo, list_todo_items, update_todo, update_todo_item,
 };
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
@@ -67,6 +67,10 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
         .route("/todo/{todo_id}/item/{item_id}", get(get_todo_item))
         .route("/todo/{todo_id}/item/{item_id}", put(update_todo_item))
         .route("/todo/{todo_id}/item/{item_id}", delete(delete_todo_item))
+        .route(
+            "/todo/{todo_id}/item/{item_id}/complete",
+            post(complete_todo_item),
+        )
         .layer(request_id_middleware)
         .with_state(pg_pool);
     Ok(axum::serve(listener, app))

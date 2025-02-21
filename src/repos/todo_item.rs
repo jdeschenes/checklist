@@ -78,6 +78,8 @@ pub async fn update_todo_item(
     req: &UpdateTodoItemRequest,
 ) -> Result<TodoItem, APIError> {
     let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo_id = todo.todo_id;
+    get_todo_item_for_update(transaction, &todo_id, todo_item).await?;
     match sqlx::query_as!(
         TodoItem,
         r#"UPDATE todo_item SET
@@ -122,13 +124,94 @@ pub async fn list_todo_items(
         r#"SELECT todo_item_id, title, is_complete
            FROM todo_item
            WHERE
-              todo_id = $1;"#,
+              todo_id = $1
+              AND is_complete = FALSE
+        ;"#,
         todo.todo_id,
     )
     .fetch_all(&mut **transaction)
     .await
     {
         Ok(result) => Ok(result.into()),
+        Err(err) => Err(APIError::Internal(err.into())),
+    }
+}
+
+#[tracing::instrument(
+    name = "Get todo item for update",
+    skip(transaction, todo_id, todo_item)
+)]
+async fn get_todo_item_for_update(
+    transaction: &mut PgTransaction<'_>,
+    todo_id: &Uuid,
+    todo_item: &Uuid,
+) -> Result<(), APIError> {
+    match sqlx::query!(
+        r#"
+            SELECT todo_item_id, is_complete
+            FROM todo_item
+            WHERE
+                todo_id = $1
+                AND todo_item_id = $2
+            FOR UPDATE;
+        "#,
+        &todo_id,
+        todo_item,
+    )
+    .fetch_one(&mut **transaction)
+    .await
+    {
+        Ok(t) => {
+            if t.is_complete {
+                return Err(APIError::BadRequest(
+                    "Todo item is already complete".to_string(),
+                ));
+            }
+            Ok(())
+        }
+        Err(sqlx::Error::RowNotFound) => {
+            return Err(APIError::NotFound(format!(
+                "todo: '{}' not found",
+                todo_item
+            )));
+        }
+        Err(e) => {
+            return Err(APIError::Internal(e.into()));
+        }
+    }
+}
+
+#[tracing::instrument(name = "Complete todo item", skip(transaction, todo_name, todo_item))]
+pub async fn complete_todo_item(
+    transaction: &mut PgTransaction<'_>,
+    todo_name: &TodoName,
+    todo_item: &Uuid,
+) -> Result<TodoItem, APIError> {
+    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo_id = todo.todo_id;
+    get_todo_item_for_update(transaction, &todo_id, todo_item).await?;
+
+    match sqlx::query_as!(
+        TodoItem,
+        r#"UPDATE todo_item SET
+              is_complete = TRUE,
+              complete_time = NOW()
+           WHERE
+              todo_id = $1
+              AND todo_item_id = $2
+           RETURNING todo_item_id, title, is_complete
+            ;"#,
+        &todo_id,
+        todo_item,
+    )
+    .fetch_one(&mut **transaction)
+    .await
+    {
+        Ok(result) => Ok(result),
+        Err(sqlx::Error::RowNotFound) => Err(APIError::NotFound(format!(
+            "todo item: {} is not found",
+            todo_item
+        ))),
         Err(err) => Err(APIError::Internal(err.into())),
     }
 }

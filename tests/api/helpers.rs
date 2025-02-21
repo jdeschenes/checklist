@@ -163,6 +163,21 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
+    pub async fn complete_todo_item(
+        &self,
+        todo_name: &str,
+        todo_item_id: &str,
+    ) -> reqwest::Response {
+        self.client
+            .post(format!(
+                "{}/todo/{}/item/{}/complete",
+                self.address, todo_name, todo_item_id
+            ))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
     pub async fn update_todo_item(
         &self,
         todo_name: &str,

@@ -9,9 +9,10 @@ CREATE TABLE todo (
 
 CREATE TABLE todo_item (
     todo_item_id uuid PRIMARY KEY,
-    todo_id uuid NOT NULL REFERENCES todo (todo_id),
+    todo_id uuid NOT NULL REFERENCES todo (todo_id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     is_complete BOOLEAN NOT NULL DEFAULT FALSE,
+    due_date date NOT NULL DEFAULT NOW(),
     complete_time timestamptz NULL,
     create_time timestamptz NOT NULL DEFAULT NOW(),
     update_time timestamptz NOT NULL DEFAULT NOW()

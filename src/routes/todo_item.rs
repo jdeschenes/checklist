@@ -84,9 +84,7 @@ impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
 impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: TodoItemSingleResponse) -> Result<Self, Self::Error> {
-        Ok(Self {
-            title: value.title,
-        })
+        Ok(Self { title: value.title })
     }
 }
 
@@ -228,4 +226,32 @@ pub async fn delete_todo_item(
         .await
         .context("Failed to commit transaction")?;
     Ok(())
+}
+
+#[tracing::instrument(
+    name = "Complete TODO Item"
+    skip(conn, todo_str, todo_item),
+    fields(
+        todo_name = %todo_str,
+        todo_item = %todo_item,
+    )
+)]
+pub async fn complete_todo_item(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
+) -> Result<Json<GetTodoItemResponse>, APIError> {
+    let todo_name = todo_str.try_into()?;
+
+    let mut transaction = conn
+        .begin()
+        .await
+        .context("Failed to acquire transaction")?;
+    let todo_item = repos::complete_todo_item(&mut transaction, &todo_name, &todo_item)
+        .await?
+        .into();
+    transaction
+        .commit()
+        .await
+        .context("Failed to commit transaction")?;
+    Ok(Json(todo_item))
 }
