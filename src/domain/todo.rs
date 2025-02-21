@@ -1,3 +1,4 @@
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::error::APIError;
@@ -16,6 +17,8 @@ pub struct UpdateTodoRequest {
 pub struct Todo {
     pub todo_id: Uuid,
     pub name: TodoName,
+    pub create_time: OffsetDateTime,
+    pub update_time: OffsetDateTime,
 }
 
 #[derive(Debug, Clone)]
@@ -64,6 +67,8 @@ pub struct ListTodo {
 #[derive(Debug, Clone)]
 pub struct ListTodoSingle {
     pub name: TodoName,
+    pub create_time: OffsetDateTime,
+    pub update_time: OffsetDateTime,
 }
 
 #[cfg(test)]

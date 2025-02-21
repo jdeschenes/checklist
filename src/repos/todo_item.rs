@@ -25,7 +25,8 @@ pub async fn create_todo_item(
     let result = sqlx::query_as!(
         TodoItem,
         r#"INSERT INTO todo_item (todo_item_id, todo_id, title) VALUES ($1, $2, $3)
-           RETURNING todo_item_id, title, is_complete;"#,
+           RETURNING todo_item_id, title, is_complete, complete_time, create_time, update_time
+           ;"#,
         Uuid::new_v4(),
         todo.todo_id,
         req.title,
@@ -47,7 +48,7 @@ pub async fn get_todo_item(
     let todo = get_todo_by_name(transaction, todo_name).await?;
     match sqlx::query_as!(
         TodoItem,
-        r#"SELECT todo_item_id, title, is_complete
+        r#"SELECT todo_item_id, title, is_complete, complete_time, create_time, update_time
            FROM todo_item
            WHERE
               todo_id = $1
@@ -87,7 +88,7 @@ pub async fn update_todo_item(
            WHERE
               todo_id = $1
               AND todo_item_id = $2
-           RETURNING todo_item_id, title, is_complete
+           RETURNING todo_item_id, title, is_complete, complete_time, create_time, update_time
             ;"#,
         todo.todo_id,
         todo_item,
@@ -121,7 +122,7 @@ pub async fn list_todo_items(
     let todo = get_todo_by_name(transaction, todo_name).await?;
     match sqlx::query_as!(
         ListTodoItemSingle,
-        r#"SELECT todo_item_id, title, is_complete
+        r#"SELECT todo_item_id, title, is_complete, complete_time, create_time, update_time
            FROM todo_item
            WHERE
               todo_id = $1
@@ -199,7 +200,7 @@ pub async fn complete_todo_item(
            WHERE
               todo_id = $1
               AND todo_item_id = $2
-           RETURNING todo_item_id, title, is_complete
+           RETURNING todo_item_id, title, is_complete, complete_time, create_time, update_time
             ;"#,
         &todo_id,
         todo_item,

@@ -7,7 +7,6 @@
 
 # MAIN TODO
 * Add response for create/update on TODO
-* Add complete_time, create_time, update_time to the endpoints(todo and todo_item)
 * Add due date on the todo item, default NOW()?
 * Add transaction in the middleware
 * Add a timeout on the request using middleware

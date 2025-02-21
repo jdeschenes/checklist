@@ -3,6 +3,7 @@ use axum::Json;
 use eyre::WrapErr;
 use serde::{Deserialize, Serialize};
 use sqlx::Acquire;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::domain;
@@ -26,6 +27,12 @@ pub struct TodoItemSingleResponse {
     pub todo_item_id: Uuid,
     pub title: String,
     pub is_complete: bool,
+    #[serde(with = "time::serde::rfc3339::option")]
+    pub complete_time: Option<OffsetDateTime>,
+    #[serde(with = "time::serde::rfc3339")]
+    pub create_time: OffsetDateTime,
+    #[serde(with = "time::serde::rfc3339")]
+    pub update_time: OffsetDateTime,
 }
 
 #[derive(Debug, Deserialize)]
@@ -67,6 +74,9 @@ impl From<domain::TodoItem> for TodoItemSingleResponse {
             todo_item_id: value.todo_item_id,
             title: value.title,
             is_complete: value.is_complete,
+            complete_time: value.complete_time,
+            create_time: value.create_time,
+            update_time: value.update_time,
         }
     }
 }
@@ -77,6 +87,9 @@ impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
             todo_item_id: value.todo_item_id,
             title: value.title,
             is_complete: value.is_complete,
+            complete_time: value.complete_time,
+            create_time: value.create_time,
+            update_time: value.update_time,
         }
     }
 }

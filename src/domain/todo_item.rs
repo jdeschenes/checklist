@@ -1,3 +1,4 @@
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -10,6 +11,9 @@ pub struct TodoItem {
     pub todo_item_id: Uuid,
     pub title: String,
     pub is_complete: bool,
+    pub complete_time: Option<OffsetDateTime>,
+    pub create_time: OffsetDateTime,
+    pub update_time: OffsetDateTime,
 }
 
 #[derive(Debug, Clone)]
@@ -22,6 +26,9 @@ pub struct ListTodoItemSingle {
     pub todo_item_id: Uuid,
     pub title: String,
     pub is_complete: bool,
+    pub complete_time: Option<OffsetDateTime>,
+    pub create_time: OffsetDateTime,
+    pub update_time: OffsetDateTime,
 }
 
 #[derive(Debug, Clone)]

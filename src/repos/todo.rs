@@ -34,6 +34,8 @@ pub async fn create_todo(
 struct GetTodoQuery {
     todo_id: Uuid,
     name: String,
+    create_time: sqlx::types::time::OffsetDateTime,
+    update_time: sqlx::types::time::OffsetDateTime,
 }
 
 impl TryFrom<GetTodoQuery> for Todo {
@@ -42,6 +44,8 @@ impl TryFrom<GetTodoQuery> for Todo {
         Ok(Self {
             todo_id: value.todo_id,
             name: value.name.try_into()?,
+            create_time: value.create_time,
+            update_time: value.update_time,
         })
     }
 }
@@ -53,7 +57,7 @@ pub async fn get_todo_by_name(
 ) -> Result<Todo, APIError> {
     match sqlx::query_as!(
         GetTodoQuery,
-        r#"SELECT todo_id, name from todo WHERE name = $1;"#,
+        r#"SELECT todo_id, name, create_time, update_time from todo WHERE name = $1;"#,
         todo_name.as_ref()
     )
     .fetch_one(&mut **transaction)
@@ -130,6 +134,8 @@ pub async fn update_todo(
 #[derive(Debug)]
 struct ListTodoQuery {
     name: String,
+    create_time: sqlx::types::time::OffsetDateTime,
+    update_time: sqlx::types::time::OffsetDateTime,
 }
 
 impl TryFrom<Vec<ListTodoQuery>> for ListTodo {
@@ -146,15 +152,20 @@ impl TryFrom<ListTodoQuery> for ListTodoSingle {
     fn try_from(value: ListTodoQuery) -> Result<Self, Self::Error> {
         Ok(Self {
             name: value.name.try_into()?,
+            create_time: value.create_time,
+            update_time: value.update_time,
         })
     }
 }
 
 #[tracing::instrument(name = "list todo in the database", skip(transaction))]
 pub async fn list_todo(transaction: &mut PgTransaction<'_>) -> Result<ListTodo, APIError> {
-    match sqlx::query_as!(ListTodoQuery, r#"SELECT name from todo;"#,)
-        .fetch_all(&mut **transaction)
-        .await
+    match sqlx::query_as!(
+        ListTodoQuery,
+        r#"SELECT name, create_time, update_time from todo;"#,
+    )
+    .fetch_all(&mut **transaction)
+    .await
     {
         Ok(result) => Ok(result.try_into()?),
         Err(err) => Err(APIError::Internal(err.into())),

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use axum::extract;
 use axum::Json;
 use sqlx::Acquire;
+use time::OffsetDateTime;
 
 use crate::domain;
 use crate::domain::NewTodoRequest;
@@ -43,12 +44,18 @@ impl TryFrom<UpdateTodoRequest> for domain::UpdateTodoRequest {
 #[derive(Debug, Serialize)]
 pub struct GetTodoResponse {
     pub name: String,
+    #[serde(with = "time::serde::rfc3339")]
+    pub create_time: OffsetDateTime,
+    #[serde(with = "time::serde::rfc3339")]
+    pub update_time: OffsetDateTime,
 }
 
 impl From<Todo> for GetTodoResponse {
     fn from(value: Todo) -> Self {
         Self {
             name: value.name.as_ref().to_string(),
+            create_time: value.create_time,
+            update_time: value.update_time,
         }
     }
 }
@@ -61,12 +68,18 @@ pub struct ListTodoResponse {
 #[derive(Debug, Serialize)]
 pub struct ListTodoSingleItem {
     name: String,
+    #[serde(with = "time::serde::rfc3339")]
+    pub create_time: OffsetDateTime,
+    #[serde(with = "time::serde::rfc3339")]
+    pub update_time: OffsetDateTime,
 }
 
 impl From<ListTodoSingle> for ListTodoSingleItem {
     fn from(value: ListTodoSingle) -> Self {
         Self {
             name: value.name.as_ref().to_string(),
+            create_time: value.create_time,
+            update_time: value.update_time,
         }
     }
 }
