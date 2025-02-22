@@ -5,7 +5,7 @@
 * talk about golden testing
 * Verify initial DB connection at startup. Avoid a broken container
 
-# MAIN TODO
+# BACKEND TODO
 * Add makefile to start docker, cargo test, build, overwrite golden files
 * Add response for create/update on TODO
 * Add transaction in the middleware
@@ -22,6 +22,14 @@
 * Improve logs on failure
 * Use quickcheck to validate the dummify function
 * Add a test to properly validate the list todo item order by logic
+
+# FRONTEND TODO
+
+* Add linting and code formatting
+* Add the main scaffolding(tanstack router, tanstack query, tailwind)
+* Create Main Page(No todo created and then shows the todo item of the favorite todo)
+* The favorite todo is browser side
+* Create a place where you can select your todos
 
 # TODO?
 * using test containers might be a good thing?
