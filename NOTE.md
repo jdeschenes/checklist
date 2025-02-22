@@ -6,9 +6,8 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
-* Add test to dummify to check proper usage. Will need to fix the date parsing
+* Add integration test to check create with a due date
 * Add response for create/update on TODO
-* Add due date on the todo item, default NOW()?
 * Add transaction in the middleware
 * Add a timeout on the request using middleware
 * Add max body size middleware
@@ -22,6 +21,7 @@
 * Add a test to check that we are sending the right logs
 * Change the assert_response to a macro to check for x-request-id, to give error message
 * Improve logs on failure
+* Use quickcheck to validate the dummify function
 
 # TODO?
 * using test containers might be a good thing?

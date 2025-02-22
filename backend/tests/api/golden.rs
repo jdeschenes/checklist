@@ -7,7 +7,7 @@ use std::io::BufWriter;
 
 use serde_json::Value;
 use similar::{Algorithm, TextDiff};
-use time::{format_description::well_known::Rfc3339, Date, OffsetDateTime};
+use time::{format_description::well_known::Rfc3339, macros::format_description, Date, OffsetDateTime};
 
 const WRITE_ENVIRONMENT_VARIABLE: &str = "GOLDEN_OVERWRITE";
 
@@ -78,6 +78,7 @@ impl GoldenTest {
 }
 
 fn dummify(value: &mut Value) {
+    let date_description = format_description!("[year]-[month]-[day]");
     match value {
         Value::String(ref mut s) => {
             // We can easily add new "types that we want to dummify
@@ -90,7 +91,7 @@ fn dummify(value: &mut Value) {
                 *s = "2023-02-01T00:00:00.123456Z".to_string();
                 return;
             }
-            if Date::parse(s, &Rfc3339).is_ok() {
+            if Date::parse(s, &date_description).is_ok() {
                 *s = "2020-10-01".to_string();
                 return;
             }
@@ -123,6 +124,7 @@ mod tests {
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
+            "empty": "",
             "null": null,
             "bool": true,
             "array": ["text"],
@@ -146,6 +148,7 @@ mod tests {
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
+            "empty": "",
             "null": null,
             "bool": true,
             "array": ["text"],
@@ -171,6 +174,7 @@ mod tests {
         let value = serde_json::json!({
             "number": 1,
             "text": "text",
+            "empty": "",
             "null": null,
             "bool": true,
             "array": ["text"],
@@ -191,11 +195,63 @@ mod tests {
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
+            "object": {
+                "uuid": uuid::Uuid::new_v4().to_string(),
+            },
         });
         golden.write_golden_json(&test_name, &value);
         let value = serde_json::json!({
             "uuid": uuid::Uuid::new_v4().to_string(),
             "list": [uuid::Uuid::new_v4().to_string()],
+            "object": {
+                "uuid": uuid::Uuid::new_v4().to_string(),
+            },
+        });
+        golden.assert_golden_json(&test_name, &value);
+    }
+
+    #[test]
+    fn test_should_replace_datetime() {
+        let temp_dir = std::env::temp_dir();
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
+        let value = serde_json::json!({
+            "datetime": "2023-02-01T00:00:00.123456Z",
+            "list": ["2023-02-01T04:00:10.123456Z"],
+            "object": {
+                "datetime": "2023-10-11T23:14:59.123456Z",
+            },
+        });
+        golden.write_golden_json(&test_name, &value);
+        let value = serde_json::json!({
+            "datetime": "2023-02-01T20:00:00.123456Z",
+            "list": ["2023-02-01T00:00:30.123456Z"],
+            "object": {
+                "datetime": "2023-02-01T10:00:00.123456Z",
+            },
+        });
+        golden.assert_golden_json(&test_name, &value);
+    }
+
+    #[test]
+    fn test_should_replace_date() {
+        let temp_dir = std::env::temp_dir();
+        let test_name = Alphanumeric.sample_string(&mut rand::rng(), 16);
+        let golden = GoldenTest::new_with_dir(temp_dir.to_str().unwrap());
+        let value = serde_json::json!({
+            "date": "2015-01-02",
+            "list": ["2018-02-14"],
+            "object": {
+                "date": "2019-04-30",
+            },
+        });
+        golden.write_golden_json(&test_name, &value);
+        let value = serde_json::json!({
+            "date": "2020-10-01",
+            "list": ["2023-02-01"],
+            "object": {
+                "date": "2030-12-24",
+            },
         });
         golden.assert_golden_json(&test_name, &value);
     }

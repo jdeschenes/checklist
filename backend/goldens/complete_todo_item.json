@@ -1,8 +1,8 @@
 {
-  "complete_time": null,
+  "complete_time": "2023-02-01T00:00:00.123456Z",
   "create_time": "2023-02-01T00:00:00.123456Z",
-  "due_date": "2025-02-21",
-  "is_complete": false,
+  "due_date": "2020-10-01",
+  "is_complete": true,
   "title": "todo_item",
   "todo_item_id": "00000000-0000-0000-0000-000000000000",
   "update_time": "2023-02-01T00:00:00.123456Z"
