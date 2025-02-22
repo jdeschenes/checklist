@@ -248,7 +248,8 @@ async fn update_todo_item_works() {
 
     let valid_payload = serde_json::json!({
         "title": "todo_item2",
-        "is_complete": true
+        "is_complete": true,
+        "due_date": "2200-10-02"
     });
     let update_response = test_app
         .update_todo_item("banana", &response.todo_item_id, &valid_payload)
@@ -283,10 +284,12 @@ async fn update_todo_item_fails() {
     let valid_payload = serde_json::json!({
         "title": "todo_item2",
         "is_complete": false,
+        "due_date": "2200-10-02"
     });
     let invalid_payload = serde_json::json!({
         "invalid": "todo_item2",
         "is_complete": false,
+        "due_date": "2200-10-02"
     });
     let invalid_uuid = Uuid::new_v4().to_string();
     let test_cases = vec![
@@ -356,7 +359,8 @@ async fn update_todo_item_fails_if_already_complete() {
 
     let valid_payload = serde_json::json!({
         "title": "todo_item2",
-        "is_complete": true
+        "is_complete": true,
+        "due_date": "2200-10-02"
     });
     let update_response = test_app
         .update_todo_item("banana", &response.todo_item_id, &valid_payload)

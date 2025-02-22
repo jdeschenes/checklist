@@ -6,6 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
+* Add test to dummify to check proper usage. Will need to fix the date parsing
 * Add response for create/update on TODO
 * Add due date on the todo item, default NOW()?
 * Add transaction in the middleware

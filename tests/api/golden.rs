@@ -7,7 +7,7 @@ use std::io::BufWriter;
 
 use serde_json::Value;
 use similar::{Algorithm, TextDiff};
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use time::{format_description::well_known::Rfc3339, Date, OffsetDateTime};
 
 const WRITE_ENVIRONMENT_VARIABLE: &str = "GOLDEN_OVERWRITE";
 
@@ -84,9 +84,15 @@ fn dummify(value: &mut Value) {
             if s.parse::<uuid::Uuid>().is_ok() {
                 // This is the dummy replacement
                 *s = "00000000-0000-0000-0000-000000000000".to_string();
+                return;
             }
             if OffsetDateTime::parse(s, &Rfc3339).is_ok() {
                 *s = "2023-02-01T00:00:00.123456Z".to_string();
+                return;
+            }
+            if Date::parse(s, &Rfc3339).is_ok() {
+                *s = "2020-10-01".to_string();
+                return;
             }
         }
         Value::Array(a) => {

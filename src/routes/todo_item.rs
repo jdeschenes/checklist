@@ -3,7 +3,9 @@ use axum::Json;
 use eyre::WrapErr;
 use serde::{Deserialize, Serialize};
 use sqlx::Acquire;
+use time::Date;
 use time::OffsetDateTime;
+use time::UtcOffset;
 use uuid::Uuid;
 
 use crate::domain;
@@ -15,6 +17,7 @@ use crate::repos;
 #[derive(Debug, Deserialize)]
 pub struct CreateTodoItemRequest {
     pub title: String,
+    pub due_date: Option<Date>,
 }
 
 #[derive(Debug, Serialize)]
@@ -26,6 +29,7 @@ pub struct ListTodoItemResponse {
 pub struct TodoItemSingleResponse {
     pub todo_item_id: Uuid,
     pub title: String,
+    pub due_date: Date,
     pub is_complete: bool,
     #[serde(with = "time::serde::rfc3339::option")]
     pub complete_time: Option<OffsetDateTime>,
@@ -38,6 +42,7 @@ pub struct TodoItemSingleResponse {
 #[derive(Debug, Deserialize)]
 pub struct UpdateTodoItemRequest {
     pub title: String,
+    pub due_date: Date,
 }
 
 // These are alias as they are incidentally the same thing.
@@ -49,14 +54,28 @@ pub type UpdateTodoItemResponse = TodoItemSingleResponse;
 impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
     type Error = APIError;
     fn try_from(value: CreateTodoItemRequest) -> Result<Self, Self::Error> {
-        Ok(Self { title: value.title })
+        let due_date = match value.due_date {
+            Some(x) => x,
+            // This is probably wrong
+            None => {
+                let offset = match UtcOffset::current_local_offset() {
+                    Ok(x) => x,
+                    Err(e) => {
+                        tracing::warn!("Could not find the time offset, default to UTC: {}", e);
+                        UtcOffset::UTC
+                    }
+                };
+                OffsetDateTime::now_utc().to_offset(offset).date()
+            },
+        };
+        Ok(Self { title: value.title, due_date })
     }
 }
 
 impl TryFrom<UpdateTodoItemRequest> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: UpdateTodoItemRequest) -> Result<Self, Self::Error> {
-        Ok(Self { title: value.title })
+        Ok(Self { title: value.title, due_date: value.due_date })
     }
 }
 
@@ -73,6 +92,7 @@ impl From<domain::TodoItem> for TodoItemSingleResponse {
         Self {
             todo_item_id: value.todo_item_id,
             title: value.title,
+            due_date: value.due_date,
             is_complete: value.is_complete,
             complete_time: value.complete_time,
             create_time: value.create_time,
@@ -86,6 +106,7 @@ impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
         Self {
             todo_item_id: value.todo_item_id,
             title: value.title,
+            due_date: value.due_date,
             is_complete: value.is_complete,
             complete_time: value.complete_time,
             create_time: value.create_time,
@@ -97,7 +118,7 @@ impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
 impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: TodoItemSingleResponse) -> Result<Self, Self::Error> {
-        Ok(Self { title: value.title })
+        Ok(Self { title: value.title, due_date: value.due_date })
     }
 }
 

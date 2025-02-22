@@ -33,7 +33,7 @@ validator = { version = "0.20.0", features = ["derive"] }
 thiserror = "2.0.11"
 tower-http = { version = "0.6.2", features = ["request-id", "trace"] }
 tower = "0.5.2"
-time = { version = "0.3.37", features = ["parsing", "serde-human-readable", "serde-well-known"] }
+time = { version = "0.3.37", features = ["local-offset", "parsing", "serde-human-readable", "serde-well-known"] }
 
 [dev-dependencies]
 claims = "0.8.0"
