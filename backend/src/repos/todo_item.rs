@@ -130,6 +130,7 @@ pub async fn list_todo_items(
            WHERE
               todo_id = $1
               AND is_complete = FALSE
+            ORDER BY due_date, create_time
         ;"#,
         todo.todo_id,
     )

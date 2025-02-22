@@ -6,7 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # MAIN TODO
-* Add integration test to check create with a due date
+* Add makefile to start docker, cargo test, build, overwrite golden files
 * Add response for create/update on TODO
 * Add transaction in the middleware
 * Add a timeout on the request using middleware
@@ -14,7 +14,6 @@
 * Add compression middleware(?)
 * Add max request threshold using middleware(?)
 * Add CI and all the checks
-* Add makefile to start docker, cargo test, build, overwrite golden files
 * Authentication and Authorization
 * Add recurring todos 
 * Add a test that we are not sending cookie and authorization headers in the logs
@@ -22,15 +21,13 @@
 * Change the assert_response to a macro to check for x-request-id, to give error message
 * Improve logs on failure
 * Use quickcheck to validate the dummify function
+* Add a test to properly validate the list todo item order by logic
 
 # TODO?
 * using test containers might be a good thing?
 * Add more tests around invalid/missing values
-* Create a backend folder because of the incoming frontend component
 * Work on the error model
 * Add colored diff for golden testing
-* Add dummy for datetimes
-
 
 # Design
 
@@ -52,7 +49,7 @@ todo item will be associated with a todo
 Once a todo item is completed, the complete_time shall be set
 Once a todo item is completed, it will not be possible to edit it
 A todo item shall have an associated due date. If not due date is provided, the due date shall be set to NOW()
-The list of todo item shall be ordered by due date ascending
+The list of todo item shall be ordered by due date ascending, and create_date
 The list of todo items shall only list items that are NOT completed
 
 ### Recurring Job

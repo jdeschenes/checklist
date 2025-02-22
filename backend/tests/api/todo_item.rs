@@ -1,5 +1,6 @@
 use reqwest::StatusCode;
 use serde::Deserialize;
+use time::Date;
 use uuid::Uuid;
 
 use crate::helpers::{assert_response, spawn_app};
@@ -7,6 +8,7 @@ use crate::helpers::{assert_response, spawn_app};
 #[derive(Deserialize)]
 struct CreateResponse {
     todo_item_id: String,
+    due_date: Date,
 }
 
 #[derive(Deserialize)]
@@ -40,6 +42,31 @@ async fn create_todo_item_works() {
         .get_todo_item("banana", &create_value.todo_item_id)
         .await;
     assert_response(&get_todo_item_response, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn create_todo_item_with_due_date() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let create_todo_response = test_app.post_todo(&todo_payload).await;
+    assert_response(&create_todo_response, StatusCode::OK);
+
+    let todo_item_payload = serde_json::from_str(
+        r#"{
+        "title": "todo_item",
+        "due_date": "2030-10-01"
+    }"#,
+    )
+    .unwrap();
+    let create_todo_item_response = test_app.post_todo_item("banana", &todo_item_payload).await;
+    assert_response(&create_todo_item_response, StatusCode::OK);
+    let value: serde_json::Value = create_todo_item_response
+        .json()
+        .await
+        .expect("Failed to read json");
+    let create_value: CreateResponse = serde_json::from_value(value).unwrap();
+    assert_eq!(create_value.due_date.year(), 2030);
 }
 
 #[tokio::test]
@@ -255,9 +282,11 @@ async fn update_todo_item_works() {
         .update_todo_item("banana", &response.todo_item_id, &valid_payload)
         .await;
     assert_response(&update_response, StatusCode::OK);
-
+    
     let value: serde_json::Value = update_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff_json("update_todo_item", &value);
+    let create_value: CreateResponse = serde_json::from_value(value).unwrap();
+    assert_eq!(create_value.due_date.year(), 2200);
 }
 
 #[tokio::test]
