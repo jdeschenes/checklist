@@ -45,5 +45,5 @@ module.exports = tseslint.config(
         },
     },
     eslintConfigPrettier,
-    ...pluginQuery.configs['flat/recommended'],
+    ...pluginQuery.configs['flat/recommended']
 )
