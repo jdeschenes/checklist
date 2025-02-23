@@ -26,7 +26,8 @@
 
 # FRONTEND TODO
 
-* Add the main scaffolding(tanstack router, tanstack query, tailwind)
+* Add tailwind with shadcn
+* Add dummy/offline "backend"
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
 * The favorite todo is browser side
 * Create a place where you can select your todos
