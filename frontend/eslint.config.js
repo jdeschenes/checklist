@@ -2,8 +2,9 @@ const eslint = require('@eslint/js')
 const tseslint = require('typescript-eslint')
 const reactLint = require('eslint-plugin-react')
 const eslintConfigPrettier = require('eslint-config-prettier')
+const pluginQuery = require('@tanstack/eslint-plugin-query')
 
-const ignores = ['**/*.js', 'prettier.config.mjs']
+const ignores = ['**/*.js', 'prettier.config.mjs', 'vite.config.ts']
 const reactConfig = reactLint.configs.flat.all
 
 reactConfig.ignores = ignores
@@ -43,5 +44,6 @@ module.exports = tseslint.config(
             ],
         },
     },
-    eslintConfigPrettier
+    eslintConfigPrettier,
+    ...pluginQuery.configs['flat/recommended'],
 )
