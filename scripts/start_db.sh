@@ -63,6 +63,7 @@ fi
 >&2 echo "Postgres is up and running on port ${DB_PORT} -- running migrations now!"
 DATABASE_URL="postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}"
 export DATABASE_URL
+cd backend
 sqlx database create
 sqlx migrate run
 >&2 echo "Postgres has been migrated, ready to go!"

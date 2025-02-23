@@ -6,7 +6,6 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # BACKEND TODO
-* Add makefile to start docker, cargo test, build, overwrite golden files
 * Add response for create/update on TODO
 * Add transaction in the middleware
 * Add a timeout on the request using middleware
@@ -14,6 +13,8 @@
 * Add compression middleware(?)
 * Add max request threshold using middleware(?)
 * Add CI and all the checks
+* Add cargo watch so that there is always a fresh copy when running the backend
+  using run
 * Authentication and Authorization
 * Add recurring todos 
 * Add a test that we are not sending cookie and authorization headers in the logs
