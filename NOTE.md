@@ -25,7 +25,6 @@
 
 # FRONTEND TODO
 
-* Add linting and code formatting
 * Add the main scaffolding(tanstack router, tanstack query, tailwind)
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
 * The favorite todo is browser side
