@@ -11,11 +11,14 @@
         "allowJs": true,
         "noEmit": true,
         "strict": true,
-        "baseUrl": "./",
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "moduleResolution": "node",
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     },
     "include": ["./src"]
 }
