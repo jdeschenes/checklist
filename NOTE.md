@@ -6,6 +6,8 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # BACKEND TODO
+* Improve frontend run command... Can't be stopped
+* Run script should check if db is up and online, before starting anything.
 * Add response for create/update on TODO
 * Add transaction in the middleware
 * Add a timeout on the request using middleware
@@ -26,9 +28,8 @@
 
 # FRONTEND TODO
 
-* Add tailwind with shadcn
-* Add dummy/offline "backend"
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
+* Add dummy/offline "backend"
 * The favorite todo is browser side
 * Create a place where you can select your todos
 

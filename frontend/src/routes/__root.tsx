@@ -11,10 +11,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         <>
             <div className="p-2 flex gap-2">
                 <Link to="/" className="[&.active]:font-bold">
-                    Home
-                </Link>{' '}
-                <Link to="/about" className="[&.active]:font-bold">
-                    About
+                    Hamburger Menu
                 </Link>
             </div>
             <hr />
