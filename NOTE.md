@@ -6,6 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # BACKEND TODO
+* Fix CORS
 * Improve frontend run command... Can't be stopped
 * Run script should check if db is up and online, before starting anything.
 * Add response for create/update on TODO
@@ -28,10 +29,18 @@
 
 # FRONTEND TODO
 
+* Fix linting
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
 * Add dummy/offline "backend"
 * The favorite todo is browser side
 * Create a place where you can select your todos
+* Handle dates and time and not only a string
+* Create list of todo items
+* Allow the creation of a todo item
+* Allow the creation of a todo
+* Allow the deletion of a todo
+* Allow the completion of a todo item
+* Allow the edition ofa todo item
 
 # TODO?
 * using test containers might be a good thing?

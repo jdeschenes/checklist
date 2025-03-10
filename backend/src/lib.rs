@@ -12,9 +12,11 @@ use routes::{
     complete_todo_item, create_todo, create_todo_item, delete_todo, delete_todo_item, get_todo,
     get_todo_item, health_check, list_todo, list_todo_items, update_todo, update_todo_item,
 };
+use axum::http::Method;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info_span};
 
 pub mod configuration;
@@ -55,6 +57,12 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
             }),
         )
         .layer(PropagateRequestIdLayer::new(x_request_id));
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any)
+        .allow_headers(Any);
     let app = Router::new()
         .route("/health_check", get(health_check))
         .route("/todo", post(create_todo))
@@ -72,6 +80,7 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
             post(complete_todo_item),
         )
         .layer(request_id_middleware)
+        .layer(cors)
         .with_state(pg_pool);
     Ok(axum::serve(listener, app))
 }
