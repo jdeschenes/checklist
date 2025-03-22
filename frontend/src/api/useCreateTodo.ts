@@ -4,9 +4,9 @@ const useCreateTodo = () => {
     const queryClient = useQueryClient()
     const mutation = useMutation({
         mutationFn: FinalTodoAPI.CreateTodo,
-        onSuccess: () => {
+        onSuccess: async () => {
             console.log('DONe')
-            queryClient.invalidateQueries({ queryKey: ['todo'] })
+            await queryClient.invalidateQueries({ queryKey: ['todo'] })
         },
     })
     return mutation

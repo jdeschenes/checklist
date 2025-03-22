@@ -1,11 +1,16 @@
-const eslint = require('@eslint/js')
-const tseslint = require('typescript-eslint')
-const reactLint = require('eslint-plugin-react')
-const eslintConfigPrettier = require('eslint-config-prettier')
-const pluginQuery = require('@tanstack/eslint-plugin-query')
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import reactLint from 'eslint-plugin-react'
+import eslintConfigPrettier from 'eslint-config-prettier'
+import pluginQuery from '@tanstack/eslint-plugin-query'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
 const ignores = ['**/*.js', 'prettier.config.mjs', 'vite.config.ts']
-const reactConfig = reactLint.configs.flat.all
+const reactConfig = reactLint.configs.flat.recommended
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 reactConfig.ignores = ignores
 reactConfig.settings = {
@@ -14,7 +19,7 @@ reactConfig.settings = {
     },
 }
 
-module.exports = tseslint.config(
+export default tseslint.config(
     {
         ...eslint.configs.recommended,
         ignores,

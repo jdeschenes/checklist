@@ -29,7 +29,7 @@ declare module '@tanstack/react-router' {
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} context={{ queryClient }} />
+            <RouterProvider context={{ queryClient }} router={router} />
             <ReactQueryDevtools />
         </QueryClientProvider>
     </React.StrictMode>

@@ -5,5 +5,5 @@ export const Route = createFileRoute('/todo/$todoId/new')({
 })
 
 function RouteComponent() {
-    return <div>Hello "/todo/$todoId/new"!</div>
+    return <div>Hello /todo/$todoId/new!</div>
 }

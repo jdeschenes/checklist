@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import useCreateTodo from '@/api/useCreateTodo'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export const Route = createFileRoute('/todo/new')({
     component: RouteComponent,
@@ -22,7 +24,10 @@ function RouteComponent() {
                 {
                     onSuccess: () => {
                         navigate({
-                            to: '/',
+                            to: '/todo/$todoId',
+                            params: {
+                                todoId: target.name.value,
+                            },
                         })
                     },
                     onError: (e) => {
@@ -34,11 +39,13 @@ function RouteComponent() {
         [createTodoMutation]
     )
     return (
-        <div>
-            <h1>Create New Todo</h1>
-            <form onSubmit={submitCallback}>
-                <input type="text" name="name" />
-                <input type="submit" value="Create" />
+        <div className="p-2 flex flex-col gap-1">
+            <h1 className="text-xl">Create New Todo</h1>
+            <form className="flex flex-col gap-2" onSubmit={submitCallback}>
+                <Input type="text" name="name" placeholder="Todo" autoFocus />
+                <Button variant="default" type="submit">
+                    Create
+                </Button>
             </form>
         </div>
     )

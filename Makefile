@@ -1,3 +1,6 @@
+.PHONY: initial-setup
+initial-setup:
+	./scripts/setup.sh
 .PHONY: start-db
 start-db:
 	./scripts/start_db.sh
