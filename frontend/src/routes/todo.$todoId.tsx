@@ -27,7 +27,7 @@ function RouteComponent() {
             ) : (
                 <ul>
                     {listTodoItemQuery.data.items.map((i) => (
-                        <li key={i.title}>{i.title}</li>
+                        <li key={i.todo_item_id}>{i.title}</li>
                     ))}
                 </ul>
             )}

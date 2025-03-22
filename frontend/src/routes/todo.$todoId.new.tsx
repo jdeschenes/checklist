@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import useCreateTodoItem from '@/api/useCreateTodoItem'
 
 export const Route = createFileRoute('/todo/$todoId/new')({
@@ -10,16 +10,32 @@ export const Route = createFileRoute('/todo/$todoId/new')({
 
 function RouteComponent() {
     const todoId = Route.useParams().todoId
+    const navigate = useNavigate()
     const createTodoItemMutation = useCreateTodoItem(todoId)
     const submitCallback = React.useCallback(
         (event: React.SyntheticEvent) => {
             event.preventDefault()
             const target = event.target as typeof event.target & {
-                name: { value: string }
+                title: { value: string }
             }
-            createTodoItemMutation.mutate({
-                todo_name: todoId,
-            })
+            createTodoItemMutation.mutate(
+                {
+                    todoId: todoId,
+                    data: {
+                        title: target.title.value,
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        navigate({
+                            to: '/todo/$todoId',
+                            params: {
+                                todoId,
+                            },
+                        })
+                    },
+                }
+            )
         },
         [createTodoItemMutation]
     )

@@ -53,6 +53,7 @@ export type CreateTodoItemResponse = {
 }
 
 type ListTodoItemSingle = {
+    todo_item_id: string
     title: string
     due_date: string
     is_complete: boolean
