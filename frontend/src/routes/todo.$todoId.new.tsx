@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import useCreateTodoItem from '@/api/useCreateTodoItem'
+import { DatePicker } from '@/components/ui/datepicker'
 
 export const Route = createFileRoute('/todo/$todoId/new')({
     component: RouteComponent,
@@ -40,8 +41,9 @@ function RouteComponent() {
         [createTodoItemMutation]
     )
     return (
-        <form className="flex flex-auto" onSubmit={submitCallback}>
+        <form className="flex flex-auto gap-2" onSubmit={submitCallback}>
             <Input type="text" name="title" placeholder="todo" autoFocus />
+            <DatePicker />
             <Button type="submit">Create</Button>
         </form>
     )

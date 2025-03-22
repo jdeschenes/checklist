@@ -29,15 +29,12 @@
 
 # FRONTEND TODO
 
+* Add tanstack form and convert the few forms to it
 * Fix linting
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
 * Add dummy/offline "backend"
 * The favorite todo is browser side
-* Create a place where you can select your todos
 * Handle dates and time and not only a string
-* Create list of todo items
-* Allow the creation of a todo item
-* Allow the creation of a todo
 * Allow the deletion of a todo
 * Allow the completion of a todo item
 * Allow the edition ofa todo item
