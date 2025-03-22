@@ -42,6 +42,16 @@ interface TodoAPI {
     ListTodo(): Promise<ListTodoResponse>
 }
 
+export type CreateTodoItemRequest = {
+    title: string
+}
+
+export type CreateTodoItemResponse = {
+    todo_item_id: string
+    title: string
+    is_complete: string
+}
+
 type ListTodoItemSingle = {
     title: string
     due_date: string
@@ -56,6 +66,10 @@ export type ListTodoItemResponse = {
 }
 
 interface TodoItemAPI {
+    CreateTodoItem(
+        todo_name: string,
+        r: CreateTodoItemRequest
+    ): Promise<CreateTodoItemResponse>
     ListTodoItem(todo_name: string): Promise<ListTodoItemResponse>
 }
 
