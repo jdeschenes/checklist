@@ -76,14 +76,14 @@ function RouteComponent() {
         }
     }, [])
     return (
-        <div className="flex flex-col gap-4 p-6">
+        <div className="flex flex-col gap-4 p-4 sm:p-6">
             <div>
                 <Outlet />
             </div>
             {listTodoItemQuery.data.items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                    <div className="text-2xl font-medium text-gray-500 mb-2">No tasks yet</div>
-                    <p className="text-gray-400 text-sm">Add a new task to get started</p>
+                <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <div className="text-lg sm:text-2xl font-medium text-gray-500 mb-2">No tasks yet</div>
+                    <p className="text-gray-400 text-sm text-center">Add a new task to get started</p>
                 </div>
             ) : (
                 <ul className="space-y-2">
@@ -95,7 +95,7 @@ function RouteComponent() {
                             <li 
                                 key={item.todo_item_id}
                                 onClick={() => handleItemClick(item.todo_item_id, item.is_complete)}
-                                className={`group flex items-center gap-3 p-4 bg-white rounded-lg border transition-all ${
+                                className={`group flex items-start sm:items-center gap-3 p-3 sm:p-4 bg-white rounded-lg border transition-all ${
                                     isClickable 
                                         ? 'cursor-pointer hover:shadow-sm' 
                                         : 'border-gray-100'
@@ -107,7 +107,7 @@ function RouteComponent() {
                                         : 'border-gray-100'
                                 }`}
                             >
-                                <div className="flex-shrink-0">
+                                <div className="flex-shrink-0 mt-0.5 sm:mt-0">
                                     {item.is_complete ? (
                                         <CheckCircle2 className="h-5 w-5 text-green-500" />
                                     ) : isPending ? (
@@ -117,13 +117,13 @@ function RouteComponent() {
                                     )}
                                 </div>
                             <div className="flex-grow min-w-0">
-                                <div className={`text-sm font-medium ${item.is_complete ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                                <div className={`text-sm sm:text-base font-medium leading-relaxed ${item.is_complete ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                                     {item.title}
                                 </div>
                                 {item.due_date && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1 w-full">
                                         <Calendar className="h-3 w-3" />
-                                        <span>Due {item.due_date}</span>
+                                        <span className="w-full">Due {item.due_date}</span>
                                     </div>
                                 )}
                             </div>

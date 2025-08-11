@@ -58,8 +58,8 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
         )
         .layer(PropagateRequestIdLayer::new(x_request_id));
     let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
+        // allow `GET`, `POST`, `PUT`, and `DELETE` when accessing the resource
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         // allow requests from any origin
         .allow_origin(Any)
         .allow_headers(Any);
