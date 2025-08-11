@@ -50,6 +50,35 @@ npm run lint     # ESLint + Prettier check
 npm run format   # Auto-format with Prettier
 ```
 
+### Git Commit Guidelines
+
+This project follows [Conventional Commits](https://conventionalcommits.org/) specification:
+
+```bash
+# Format: <type>(<scope>): <description>
+# 
+# <body>
+# 
+# <footer>
+```
+
+**Common Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, no logic changes)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Examples**:
+```bash
+feat: add todo item completion with debounced UX
+fix: resolve timezone issues in date display  
+docs: update API documentation
+refactor: simplify date formatting logic
+```
+
 ## Architecture Overview
 
 This is a full-stack todo/checklist application with:
