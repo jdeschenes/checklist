@@ -17,7 +17,7 @@ SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
 APP_USER="${APP_USER:=app}"
 APP_USER_PWD="${APP_USER_PWD:=secret}"
 APP_DB_NAME="${APP_DB_NAME:=newdbname}"
-PG_VERSION="16"
+PG_VERSION="15"
 
 if [[ -z "${SKIP_DOCKER}" ]]
 then
@@ -61,7 +61,7 @@ then
 fi
 
 >&2 echo "Postgres is up and running on port ${DB_PORT} -- running migrations now!"
-DATABASE_URL="postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}"
+DATABASE_URL="postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}?sslmode=disable"
 export DATABASE_URL
 cd backend
 sqlx database create
