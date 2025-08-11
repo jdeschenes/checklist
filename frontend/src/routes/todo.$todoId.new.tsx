@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { format } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/todo/$todoId/new')({
 function RouteComponent() {
     const todoId = Route.useParams().todoId
     const navigate = useNavigate()
+    const [selectedDate, setSelectedDate] = React.useState<Date | undefined>()
     const createTodoItemMutation = useCreateTodoItem(todoId)
     const submitCallback = React.useCallback(
         (event: React.SyntheticEvent) => {
@@ -24,6 +26,7 @@ function RouteComponent() {
                     todoId: todoId,
                     data: {
                         title: target.title.value,
+                        due_date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined,
                     },
                 },
                 {
@@ -38,13 +41,15 @@ function RouteComponent() {
                 }
             )
         },
-        [createTodoItemMutation]
+        [createTodoItemMutation, selectedDate]
     )
     return (
-        <form className="flex flex-auto gap-2" onSubmit={submitCallback}>
-            <Input type="text" name="title" placeholder="todo" autoFocus />
-            <DatePicker />
-            <Button type="submit">Create</Button>
+        <form className="flex flex-col gap-4" onSubmit={submitCallback}>
+            <Input type="text" name="title" placeholder="Enter todo item..." autoFocus className="w-full" />
+            <div className="flex gap-2 items-center">
+                <DatePicker date={selectedDate} onDateChange={setSelectedDate} />
+                <Button type="submit">Create</Button>
+            </div>
         </form>
     )
 }

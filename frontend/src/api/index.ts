@@ -52,6 +52,16 @@ export type CreateTodoItemResponse = {
     is_complete: string
 }
 
+export type GetTodoItemResponse = {
+    todo_item_id: string
+    title: string
+    due_date: string
+    is_complete: boolean
+    complete_time: string | null
+    create_time: string
+    update_time: string
+}
+
 type ListTodoItemSingle = {
     todo_item_id: string
     title: string
@@ -72,6 +82,10 @@ interface TodoItemAPI {
         r: CreateTodoItemRequest
     ): Promise<CreateTodoItemResponse>
     ListTodoItem(todo_name: string): Promise<ListTodoItemResponse>
+    CompleteTodoItem(
+        todo_name: string,
+        item_id: string
+    ): Promise<GetTodoItemResponse>
 }
 
 export const FinalTodoAPI: TodoAPI = BackendTodoAPI
