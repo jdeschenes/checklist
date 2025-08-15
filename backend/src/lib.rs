@@ -8,15 +8,18 @@ use eyre::Result;
 use sqlx::postgres::Postgres;
 use sqlx::Pool;
 
-use routes::{
-    complete_todo_item, create_todo, create_todo_item, delete_todo, delete_todo_item, get_todo,
-    get_todo_item, health_check, list_todo, list_todo_items, update_todo, update_todo_item,
-};
 use axum::http::Method;
+use routes::{
+    complete_todo_item, create_recurring_template_handler, create_todo, create_todo_item,
+    delete_recurring_template_handler, delete_todo, delete_todo_item,
+    get_recurring_template_handler, get_todo, get_todo_item, health_check,
+    list_recurring_templates_handler, list_todo, list_todo_items,
+    update_recurring_template_handler, update_todo, update_todo_item,
+};
 use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info_span};
 
 pub mod configuration;
@@ -25,6 +28,7 @@ mod error;
 mod extractors;
 mod repos;
 mod routes;
+pub mod services;
 pub mod startup;
 pub mod telemetry;
 
@@ -78,6 +82,26 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
         .route(
             "/todo/{todo_id}/item/{item_id}/complete",
             post(complete_todo_item),
+        )
+        .route(
+            "/todo/{todo_id}/recurring",
+            post(create_recurring_template_handler),
+        )
+        .route(
+            "/todo/{todo_id}/recurring",
+            get(list_recurring_templates_handler),
+        )
+        .route(
+            "/todo/{todo_id}/recurring/{template_id}",
+            get(get_recurring_template_handler),
+        )
+        .route(
+            "/todo/{todo_id}/recurring/{template_id}",
+            put(update_recurring_template_handler),
+        )
+        .route(
+            "/todo/{todo_id}/recurring/{template_id}",
+            delete(delete_recurring_template_handler),
         )
         .layer(request_id_middleware)
         .layer(cors)

@@ -40,6 +40,9 @@ make test        # Run backend Rust tests
 make golden-test # Run tests with golden file overwrite (GOLDEN_OVERWRITE=true)
 ```
 
+To get useful logging information about a particular test you can set the
+environment variable TEST_ENV=true to get logs printed to stdout
+
 ### Frontend-Specific Commands
 ```bash
 cd frontend

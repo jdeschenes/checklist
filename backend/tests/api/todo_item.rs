@@ -282,7 +282,7 @@ async fn update_todo_item_works() {
         .update_todo_item("banana", &response.todo_item_id, &valid_payload)
         .await;
     assert_response(&update_response, StatusCode::OK);
-    
+
     let value: serde_json::Value = update_response.json().await.expect("Failed to read json");
     test_app.golden.check_diff_json("update_todo_item", &value);
     let create_value: CreateResponse = serde_json::from_value(value).unwrap();

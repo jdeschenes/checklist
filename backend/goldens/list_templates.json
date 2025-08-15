@@ -1,0 +1,36 @@
+{
+  "templates": [
+    {
+      "create_time": "2023-02-01T00:00:00.123456Z",
+      "end_date": null,
+      "is_active": true,
+      "last_generated_date": "2020-10-01",
+      "recurrence_interval": {
+        "days": 1,
+        "microseconds": 0,
+        "months": 0
+      },
+      "start_date": "2020-10-01",
+      "template_id": "00000000-0000-0000-0000-000000000000",
+      "title": "Weekly task",
+      "todo_name": "recurring3",
+      "update_time": "2023-02-01T00:00:00.123456Z"
+    },
+    {
+      "create_time": "2023-02-01T00:00:00.123456Z",
+      "end_date": null,
+      "is_active": true,
+      "last_generated_date": "2020-10-01",
+      "recurrence_interval": {
+        "days": 2,
+        "microseconds": 0,
+        "months": 0
+      },
+      "start_date": "2020-10-01",
+      "template_id": "00000000-0000-0000-0000-000000000000",
+      "title": "Daily task",
+      "todo_name": "recurring3",
+      "update_time": "2023-02-01T00:00:00.123456Z"
+    }
+  ]
+}

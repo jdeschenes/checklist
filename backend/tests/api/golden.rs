@@ -7,7 +7,9 @@ use std::io::BufWriter;
 
 use serde_json::Value;
 use similar::{Algorithm, TextDiff};
-use time::{format_description::well_known::Rfc3339, macros::format_description, Date, OffsetDateTime};
+use time::{
+    format_description::well_known::Rfc3339, macros::format_description, Date, OffsetDateTime,
+};
 
 const WRITE_ENVIRONMENT_VARIABLE: &str = "GOLDEN_OVERWRITE";
 

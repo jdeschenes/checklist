@@ -36,7 +36,6 @@
 * The favorite todo is browser side
 * Handle dates and time and not only a string
 * Allow the deletion of a todo
-* Allow the completion of a todo item
 * Allow the edition ofa todo item
 
 # TODO?
