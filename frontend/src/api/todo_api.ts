@@ -35,7 +35,7 @@ export const BackendTodoAPI = {
             method: 'DELETE',
         }
         // TODO Handle failure
-        return await fetch(url, options).then((r) => r.json())
+        await fetch(url, options)
     },
     UpdateTodo: async (
         todo_name: string,

@@ -3,6 +3,7 @@ import {
     BASE_URL,
     CreateTodoItemRequest,
     CreateTodoItemResponse,
+    GetTodoItemResponse,
 } from '.'
 
 export const BackendTodoItemAPI = {
@@ -26,6 +27,16 @@ export const BackendTodoItemAPI = {
             method: 'GET',
         }
         // TODO Handle failure
+        return await fetch(url, options).then((r) => r.json())
+    },
+    CompleteTodoItem: async (
+        todo_name: string,
+        item_id: string
+    ): Promise<GetTodoItemResponse> => {
+        const url = `${BASE_URL}/todo/${todo_name}/item/${item_id}/complete`
+        const options: RequestInit = {
+            method: 'POST',
+        }
         return await fetch(url, options).then((r) => r.json())
     },
 }

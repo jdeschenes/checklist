@@ -213,6 +213,74 @@ impl TestApp {
             .await
             .expect("Failed to execute request")
     }
+
+    pub async fn post_recurring_template(
+        &self,
+        todo_name: &str,
+        payload: &JsonValue,
+    ) -> reqwest::Response {
+        self.client
+            .post(format!("{}/todo/{}/recurring", self.address, todo_name))
+            .json(payload)
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn list_recurring_templates(&self, todo_name: &str) -> reqwest::Response {
+        self.client
+            .get(format!("{}/todo/{}/recurring", self.address, todo_name))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn get_recurring_template(
+        &self,
+        todo_name: &str,
+        template_id: &str,
+    ) -> reqwest::Response {
+        self.client
+            .get(format!(
+                "{}/todo/{}/recurring/{}",
+                self.address, todo_name, template_id
+            ))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn update_recurring_template(
+        &self,
+        todo_name: &str,
+        template_id: &str,
+        payload: &JsonValue,
+    ) -> reqwest::Response {
+        self.client
+            .put(format!(
+                "{}/todo/{}/recurring/{}",
+                self.address, todo_name, template_id
+            ))
+            .json(payload)
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    pub async fn delete_recurring_template(
+        &self,
+        todo_name: &str,
+        template_id: &str,
+    ) -> reqwest::Response {
+        self.client
+            .delete(format!(
+                "{}/todo/{}/recurring/{}",
+                self.address, todo_name, template_id
+            ))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
 }
 
 pub fn assert_response(response: &reqwest::Response, status_code: reqwest::StatusCode) {

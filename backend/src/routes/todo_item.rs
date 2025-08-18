@@ -66,16 +66,22 @@ impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
                     }
                 };
                 OffsetDateTime::now_utc().to_offset(offset).date()
-            },
+            }
         };
-        Ok(Self { title: value.title, due_date })
+        Ok(Self {
+            title: value.title,
+            due_date,
+        })
     }
 }
 
 impl TryFrom<UpdateTodoItemRequest> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: UpdateTodoItemRequest) -> Result<Self, Self::Error> {
-        Ok(Self { title: value.title, due_date: value.due_date })
+        Ok(Self {
+            title: value.title,
+            due_date: value.due_date,
+        })
     }
 }
 
@@ -118,7 +124,10 @@ impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
 impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
     type Error = APIError;
     fn try_from(value: TodoItemSingleResponse) -> Result<Self, Self::Error> {
-        Ok(Self { title: value.title, due_date: value.due_date })
+        Ok(Self {
+            title: value.title,
+            due_date: value.due_date,
+        })
     }
 }
 

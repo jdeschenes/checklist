@@ -59,6 +59,12 @@ impl AsRef<str> for TodoName {
     }
 }
 
+impl From<TodoName> for String {
+    fn from(value: TodoName) -> Self {
+        value.0
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ListTodo {
     pub items: Vec<ListTodoSingle>,
