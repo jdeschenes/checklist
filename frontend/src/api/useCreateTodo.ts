@@ -1,15 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { FinalTodoAPI } from '.'
-const useCreateTodo = () => {
+import { CreateTodoRequest, FinalTodoAPI } from '.'
+export default function useCreateTodo() {
     const queryClient = useQueryClient()
     const mutation = useMutation({
-        mutationFn: FinalTodoAPI.CreateTodo,
+        mutationFn: (r: CreateTodoRequest) => FinalTodoAPI.CreateTodo(r),
         onSuccess: async () => {
-            console.log('DONe')
             await queryClient.invalidateQueries({ queryKey: ['todo'] })
         },
     })
     return mutation
 }
-
-export default useCreateTodo

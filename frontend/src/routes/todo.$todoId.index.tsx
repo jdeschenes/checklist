@@ -25,7 +25,7 @@ function RouteComponent() {
         deleteTodoMutation.mutate(todoId, {
             onSuccess: () => {
                 navigate({ to: '/' })
-            }
+            },
         })
     }, [deleteTodoMutation, todoId, navigate])
 
@@ -37,7 +37,9 @@ function RouteComponent() {
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{getTodoQuery.data.name}</h1>
+                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                        {getTodoQuery.data.name}
+                    </h1>
                     <Button
                         variant="ghost"
                         size="sm"
@@ -67,24 +69,31 @@ function RouteComponent() {
                                 onClick={handleDeleteConfirm}
                                 disabled={deleteTodoMutation.isPending}
                             >
-                                {deleteTodoMutation.isPending ? 'Deleting...' : 'Delete'}
+                                {deleteTodoMutation.isPending
+                                    ? 'Deleting...'
+                                    : 'Delete'}
                             </Button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-500">Manage your tasks and stay organized</p>
-                        <Link
-                            className={buttonVariants({ 
-                                variant: 'default',
-                                size: 'sm',
-                                className: 'gap-2 shadow-sm hover:shadow-md transition-shadow'
-                            })}
-                            to="/todo/$todoId/new"
-                            params={{ todoId }}
-                        >
-                            <Plus className="h-4 w-4" /> New Task
-                        </Link>
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm text-gray-500">
+                                Manage your tasks and stay organized
+                            </p>
+                            <Link
+                                className={buttonVariants({
+                                    variant: 'default',
+                                    size: 'sm',
+                                    className:
+                                        'gap-2 shadow-sm hover:shadow-md transition-shadow',
+                                })}
+                                to="/todo/$todoId/new"
+                                params={{ todoId }}
+                            >
+                                <Plus className="h-4 w-4" /> New Task
+                            </Link>
+                        </div>
                     </div>
                 )}
             </div>

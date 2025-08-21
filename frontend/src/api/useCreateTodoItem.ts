@@ -1,13 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { FinalTodoItemAPI } from '.'
+import { CreateTodoItemRequest, FinalTodoItemAPI } from '.'
+
+type HookInput = {
+    todoId: string
+    data: CreateTodoItemRequest
+}
+
 const useCreateTodoItem = (todoId: string) => {
     const queryClient = useQueryClient()
     const mutation = useMutation({
-        mutationFn: (x: any) =>
+        mutationFn: (x: HookInput) =>
             FinalTodoItemAPI.CreateTodoItem(x.todoId, x.data),
         onSuccess: async () => {
-            console.log('DONe')
+            // Invalidate both the todo details and the todo items list
             await queryClient.invalidateQueries({ queryKey: ['todo', todoId] })
+            await queryClient.invalidateQueries({
+                queryKey: ['todo', todoId, 'item'],
+            })
         },
     })
     return mutation
