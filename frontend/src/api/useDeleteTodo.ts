@@ -3,7 +3,7 @@ import { FinalTodoAPI } from '.'
 
 export default function useDeleteTodo() {
     const queryClient = useQueryClient()
-    
+
     return useMutation({
         mutationFn: (todoId: string) => FinalTodoAPI.DeleteTodo(todoId),
         onSuccess: () => {

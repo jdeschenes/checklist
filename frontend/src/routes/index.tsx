@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { listTodoQueryOptions } from '@/api/todoQueryOptions'
-import useCreateTodo from '@/api/useCreateTodo'
 import { buttonVariants } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
@@ -14,7 +13,6 @@ export const Route = createFileRoute('/')({
 function Index() {
     const listTodoQuery = useSuspenseQuery(listTodoQueryOptions)
     const todos = listTodoQuery.data
-    const createTodoMutation = useCreateTodo()
     return (
         <div className="p-2 flex flex-col gap-1">
             <div className="flex flex-auto my-2">

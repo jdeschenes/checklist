@@ -1,5 +1,6 @@
 import { BackendTodoAPI } from './todo_api'
 import { BackendTodoItemAPI } from './todo_item_api'
+import { BackendRecurringTemplateAPI } from './recurring_template_api'
 
 export const BASE_URL = 'http://localhost:3000'
 export type CreateTodoRequest = {
@@ -88,5 +89,40 @@ interface TodoItemAPI {
     ): Promise<GetTodoItemResponse>
 }
 
+export type RecurrenceInterval = {
+    months?: number
+    days?: number
+    microseconds?: number
+}
+
+export type CreateRecurringTemplateRequest = {
+    title: string
+    recurrence_interval: RecurrenceInterval
+    start_date?: string
+    end_date?: string
+}
+
+export type RecurringTemplateResponse = {
+    todo_name: string
+    template_id: string
+    title: string
+    recurrence_interval: RecurrenceInterval
+    start_date: string
+    end_date: string | null
+    last_generated_date: string | null
+    is_active: boolean
+    create_time: string
+    update_time: string
+}
+
+interface RecurringTemplateAPI {
+    CreateRecurringTemplate(
+        todo_name: string,
+        r: CreateRecurringTemplateRequest
+    ): Promise<RecurringTemplateResponse>
+}
+
 export const FinalTodoAPI: TodoAPI = BackendTodoAPI
 export const FinalTodoItemAPI: TodoItemAPI = BackendTodoItemAPI
+export const FinalRecurringTemplateAPI: RecurringTemplateAPI =
+    BackendRecurringTemplateAPI

@@ -4,9 +4,9 @@ import { listTodoItemsQueryOptions } from './todoItemQueryOptions'
 
 export default function useCompleteTodoItem(todoId: string) {
     const queryClient = useQueryClient()
-    
+
     return useMutation({
-        mutationFn: (itemId: string) => 
+        mutationFn: (itemId: string) =>
             FinalTodoItemAPI.CompleteTodoItem(todoId, itemId),
         onSuccess: () => {
             // Invalidate and refetch todo items to update the list
