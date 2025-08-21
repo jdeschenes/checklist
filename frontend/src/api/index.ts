@@ -45,6 +45,7 @@ interface TodoAPI {
 
 export type CreateTodoItemRequest = {
     title: string
+    due_date?: string
 }
 
 export type CreateTodoItemResponse = {
@@ -102,6 +103,14 @@ export type CreateRecurringTemplateRequest = {
     end_date?: string
 }
 
+export type UpdateRecurringTemplateRequest = {
+    title: string
+    recurrence_interval: RecurrenceInterval
+    start_date?: string
+    end_date?: string
+    is_active: boolean
+}
+
 export type RecurringTemplateResponse = {
     todo_name: string
     template_id: string
@@ -115,11 +124,31 @@ export type RecurringTemplateResponse = {
     update_time: string
 }
 
+export type ListRecurringTemplatesResponse = {
+    templates: RecurringTemplateResponse[]
+}
+
 interface RecurringTemplateAPI {
     CreateRecurringTemplate(
         todo_name: string,
         r: CreateRecurringTemplateRequest
     ): Promise<RecurringTemplateResponse>
+    ListRecurringTemplates(
+        todo_name: string
+    ): Promise<ListRecurringTemplatesResponse>
+    GetRecurringTemplate(
+        todo_name: string,
+        template_id: string
+    ): Promise<RecurringTemplateResponse>
+    UpdateRecurringTemplate(
+        todo_name: string,
+        template_id: string,
+        r: UpdateRecurringTemplateRequest
+    ): Promise<RecurringTemplateResponse>
+    DeleteRecurringTemplate(
+        todo_name: string,
+        template_id: string
+    ): Promise<void>
 }
 
 export const FinalTodoAPI: TodoAPI = BackendTodoAPI

@@ -15,157 +15,206 @@ import { Route as IndexImport } from './routes/index'
 import { Route as TodoNewImport } from './routes/todo.new'
 import { Route as TodoTodoIdImport } from './routes/todo.$todoId'
 import { Route as TodoTodoIdIndexImport } from './routes/todo.$todoId.index'
+import { Route as TodoTodoIdTemplatesImport } from './routes/todo.$todoId.templates'
 import { Route as TodoTodoIdNewImport } from './routes/todo.$todoId.new'
+import { Route as TodoTodoIdTemplateTemplateIdEditImport } from './routes/todo.$todoId.template.$templateId.edit'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => rootRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TodoNewRoute = TodoNewImport.update({
-    id: '/todo/new',
-    path: '/todo/new',
-    getParentRoute: () => rootRoute,
+  id: '/todo/new',
+  path: '/todo/new',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TodoTodoIdRoute = TodoTodoIdImport.update({
-    id: '/todo/$todoId',
-    path: '/todo/$todoId',
-    getParentRoute: () => rootRoute,
+  id: '/todo/$todoId',
+  path: '/todo/$todoId',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TodoTodoIdIndexRoute = TodoTodoIdIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => TodoTodoIdRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => TodoTodoIdRoute,
+} as any)
+
+const TodoTodoIdTemplatesRoute = TodoTodoIdTemplatesImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => TodoTodoIdRoute,
 } as any)
 
 const TodoTodoIdNewRoute = TodoTodoIdNewImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => TodoTodoIdRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TodoTodoIdRoute,
 } as any)
+
+const TodoTodoIdTemplateTemplateIdEditRoute =
+  TodoTodoIdTemplateTemplateIdEditImport.update({
+    id: '/template/$templateId/edit',
+    path: '/template/$templateId/edit',
+    getParentRoute: () => TodoTodoIdRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
-    interface FileRoutesByPath {
-        '/': {
-            id: '/'
-            path: '/'
-            fullPath: '/'
-            preLoaderRoute: typeof IndexImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/$todoId': {
-            id: '/todo/$todoId'
-            path: '/todo/$todoId'
-            fullPath: '/todo/$todoId'
-            preLoaderRoute: typeof TodoTodoIdImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/new': {
-            id: '/todo/new'
-            path: '/todo/new'
-            fullPath: '/todo/new'
-            preLoaderRoute: typeof TodoNewImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/$todoId/new': {
-            id: '/todo/$todoId/new'
-            path: '/new'
-            fullPath: '/todo/$todoId/new'
-            preLoaderRoute: typeof TodoTodoIdNewImport
-            parentRoute: typeof TodoTodoIdImport
-        }
-        '/todo/$todoId/': {
-            id: '/todo/$todoId/'
-            path: '/'
-            fullPath: '/todo/$todoId/'
-            preLoaderRoute: typeof TodoTodoIdIndexImport
-            parentRoute: typeof TodoTodoIdImport
-        }
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
     }
+    '/todo/$todoId': {
+      id: '/todo/$todoId'
+      path: '/todo/$todoId'
+      fullPath: '/todo/$todoId'
+      preLoaderRoute: typeof TodoTodoIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/todo/new': {
+      id: '/todo/new'
+      path: '/todo/new'
+      fullPath: '/todo/new'
+      preLoaderRoute: typeof TodoNewImport
+      parentRoute: typeof rootRoute
+    }
+    '/todo/$todoId/new': {
+      id: '/todo/$todoId/new'
+      path: '/new'
+      fullPath: '/todo/$todoId/new'
+      preLoaderRoute: typeof TodoTodoIdNewImport
+      parentRoute: typeof TodoTodoIdImport
+    }
+    '/todo/$todoId/templates': {
+      id: '/todo/$todoId/templates'
+      path: '/templates'
+      fullPath: '/todo/$todoId/templates'
+      preLoaderRoute: typeof TodoTodoIdTemplatesImport
+      parentRoute: typeof TodoTodoIdImport
+    }
+    '/todo/$todoId/': {
+      id: '/todo/$todoId/'
+      path: '/'
+      fullPath: '/todo/$todoId/'
+      preLoaderRoute: typeof TodoTodoIdIndexImport
+      parentRoute: typeof TodoTodoIdImport
+    }
+    '/todo/$todoId/template/$templateId/edit': {
+      id: '/todo/$todoId/template/$templateId/edit'
+      path: '/template/$templateId/edit'
+      fullPath: '/todo/$todoId/template/$templateId/edit'
+      preLoaderRoute: typeof TodoTodoIdTemplateTemplateIdEditImport
+      parentRoute: typeof TodoTodoIdImport
+    }
+  }
 }
 
 // Create and export the route tree
 
 interface TodoTodoIdRouteChildren {
-    TodoTodoIdNewRoute: typeof TodoTodoIdNewRoute
-    TodoTodoIdIndexRoute: typeof TodoTodoIdIndexRoute
+  TodoTodoIdNewRoute: typeof TodoTodoIdNewRoute
+  TodoTodoIdTemplatesRoute: typeof TodoTodoIdTemplatesRoute
+  TodoTodoIdIndexRoute: typeof TodoTodoIdIndexRoute
+  TodoTodoIdTemplateTemplateIdEditRoute: typeof TodoTodoIdTemplateTemplateIdEditRoute
 }
 
 const TodoTodoIdRouteChildren: TodoTodoIdRouteChildren = {
-    TodoTodoIdNewRoute: TodoTodoIdNewRoute,
-    TodoTodoIdIndexRoute: TodoTodoIdIndexRoute,
+  TodoTodoIdNewRoute: TodoTodoIdNewRoute,
+  TodoTodoIdTemplatesRoute: TodoTodoIdTemplatesRoute,
+  TodoTodoIdIndexRoute: TodoTodoIdIndexRoute,
+  TodoTodoIdTemplateTemplateIdEditRoute: TodoTodoIdTemplateTemplateIdEditRoute,
 }
 
 const TodoTodoIdRouteWithChildren = TodoTodoIdRoute._addFileChildren(
-    TodoTodoIdRouteChildren
+  TodoTodoIdRouteChildren,
 )
 
 export interface FileRoutesByFullPath {
-    '/': typeof IndexRoute
-    '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId/': typeof TodoTodoIdIndexRoute
+  '/': typeof IndexRoute
+  '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
+  '/todo/new': typeof TodoNewRoute
+  '/todo/$todoId/new': typeof TodoTodoIdNewRoute
+  '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
+  '/todo/$todoId/': typeof TodoTodoIdIndexRoute
+  '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
 }
 
 export interface FileRoutesByTo {
-    '/': typeof IndexRoute
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId': typeof TodoTodoIdIndexRoute
+  '/': typeof IndexRoute
+  '/todo/new': typeof TodoNewRoute
+  '/todo/$todoId/new': typeof TodoTodoIdNewRoute
+  '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
+  '/todo/$todoId': typeof TodoTodoIdIndexRoute
+  '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
 }
 
 export interface FileRoutesById {
-    __root__: typeof rootRoute
-    '/': typeof IndexRoute
-    '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId/': typeof TodoTodoIdIndexRoute
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
+  '/todo/new': typeof TodoNewRoute
+  '/todo/$todoId/new': typeof TodoTodoIdNewRoute
+  '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
+  '/todo/$todoId/': typeof TodoTodoIdIndexRoute
+  '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
 }
 
 export interface FileRouteTypes {
-    fileRoutesByFullPath: FileRoutesByFullPath
-    fullPaths:
-        | '/'
-        | '/todo/$todoId'
-        | '/todo/new'
-        | '/todo/$todoId/new'
-        | '/todo/$todoId/'
-    fileRoutesByTo: FileRoutesByTo
-    to: '/' | '/todo/new' | '/todo/$todoId/new' | '/todo/$todoId'
-    id:
-        | '__root__'
-        | '/'
-        | '/todo/$todoId'
-        | '/todo/new'
-        | '/todo/$todoId/new'
-        | '/todo/$todoId/'
-    fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/todo/$todoId'
+    | '/todo/new'
+    | '/todo/$todoId/new'
+    | '/todo/$todoId/templates'
+    | '/todo/$todoId/'
+    | '/todo/$todoId/template/$templateId/edit'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/todo/new'
+    | '/todo/$todoId/new'
+    | '/todo/$todoId/templates'
+    | '/todo/$todoId'
+    | '/todo/$todoId/template/$templateId/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/todo/$todoId'
+    | '/todo/new'
+    | '/todo/$todoId/new'
+    | '/todo/$todoId/templates'
+    | '/todo/$todoId/'
+    | '/todo/$todoId/template/$templateId/edit'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-    IndexRoute: typeof IndexRoute
-    TodoTodoIdRoute: typeof TodoTodoIdRouteWithChildren
-    TodoNewRoute: typeof TodoNewRoute
+  IndexRoute: typeof IndexRoute
+  TodoTodoIdRoute: typeof TodoTodoIdRouteWithChildren
+  TodoNewRoute: typeof TodoNewRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-    IndexRoute: IndexRoute,
-    TodoTodoIdRoute: TodoTodoIdRouteWithChildren,
-    TodoNewRoute: TodoNewRoute,
+  IndexRoute: IndexRoute,
+  TodoTodoIdRoute: TodoTodoIdRouteWithChildren,
+  TodoNewRoute: TodoNewRoute,
 }
 
 export const routeTree = rootRoute
-    ._addFileChildren(rootRouteChildren)
-    ._addFileTypes<FileRouteTypes>()
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
@@ -185,7 +234,9 @@ export const routeTree = rootRoute
       "filePath": "todo.$todoId.tsx",
       "children": [
         "/todo/$todoId/new",
-        "/todo/$todoId/"
+        "/todo/$todoId/templates",
+        "/todo/$todoId/",
+        "/todo/$todoId/template/$templateId/edit"
       ]
     },
     "/todo/new": {
@@ -195,8 +246,16 @@ export const routeTree = rootRoute
       "filePath": "todo.$todoId.new.tsx",
       "parent": "/todo/$todoId"
     },
+    "/todo/$todoId/templates": {
+      "filePath": "todo.$todoId.templates.tsx",
+      "parent": "/todo/$todoId"
+    },
     "/todo/$todoId/": {
       "filePath": "todo.$todoId.index.tsx",
+      "parent": "/todo/$todoId"
+    },
+    "/todo/$todoId/template/$templateId/edit": {
+      "filePath": "todo.$todoId.template.$templateId.edit.tsx",
       "parent": "/todo/$todoId"
     }
   }

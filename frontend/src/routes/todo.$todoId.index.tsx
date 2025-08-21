@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Clock } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { getTodoQueryOptions } from '@/api/todoQueryOptions'
 import useDeleteTodo from '@/api/useDeleteTodo'
@@ -77,22 +77,36 @@ function RouteComponent() {
                     </div>
                 ) : (
                     <div>
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                             <p className="text-sm text-gray-500">
                                 Manage your tasks and stay organized
                             </p>
-                            <Link
-                                className={buttonVariants({
-                                    variant: 'default',
-                                    size: 'sm',
-                                    className:
-                                        'gap-2 shadow-sm hover:shadow-md transition-shadow',
-                                })}
-                                to="/todo/$todoId/new"
-                                params={{ todoId }}
-                            >
-                                <Plus className="h-4 w-4" /> New Task
-                            </Link>
+                            <div className="flex flex-wrap gap-2">
+                                <Link
+                                    className={buttonVariants({
+                                        variant: 'outline',
+                                        size: 'sm',
+                                        className: 'gap-2',
+                                    })}
+                                    to="/todo/$todoId/templates"
+                                    params={{ todoId }}
+                                >
+                                    <Clock className="h-4 w-4" /> Templates
+                                </Link>
+                                <Link
+                                    className={buttonVariants({
+                                        variant: 'default',
+                                        size: 'sm',
+                                        className:
+                                            'gap-2 shadow-sm hover:shadow-md transition-shadow',
+                                    })}
+                                    to="/todo/$todoId/new"
+                                    params={{ todoId }}
+                                    search={{ recurring: false }}
+                                >
+                                    <Plus className="h-4 w-4" /> New Task
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 )}
