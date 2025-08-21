@@ -29,8 +29,16 @@ export function AppBreadcrumb() {
         isPage: boolean
     }> = []
 
-    // Always start with Home
-    if (pathname !== '/') {
+    // Always show Home breadcrumb
+    if (pathname === '/') {
+        // On home page, show Home as current page (no link)
+        breadcrumbItems.push({
+            label: 'Home',
+            href: '/',
+            isPage: true,
+        })
+    } else {
+        // On other pages, show Home as link
         breadcrumbItems.push({
             label: 'Home',
             href: '/',
@@ -70,11 +78,40 @@ export function AppBreadcrumb() {
                     href: `/todo/${todoId}/new`,
                     isPage: true,
                 })
+            } else if (segments.length === 3 && segments[2] === 'templates') {
+                // /todo/$todoId/templates
+                breadcrumbItems.push({
+                    label: todoName,
+                    href: `/todo/${todoId}`,
+                    isPage: false,
+                })
+                breadcrumbItems.push({
+                    label: 'Templates',
+                    href: `/todo/${todoId}/templates`,
+                    isPage: true,
+                })
+            } else if (segments.length === 5 && segments[2] === 'template' && segments[4] === 'edit') {
+                // /todo/$todoId/template/$templateId/edit
+                breadcrumbItems.push({
+                    label: todoName,
+                    href: `/todo/${todoId}`,
+                    isPage: false,
+                })
+                breadcrumbItems.push({
+                    label: 'Templates',
+                    href: `/todo/${todoId}/templates`,
+                    isPage: false,
+                })
+                breadcrumbItems.push({
+                    label: 'Edit Template',
+                    href: `/todo/${todoId}/template/${segments[3]}/edit`,
+                    isPage: true,
+                })
             }
         }
     }
 
-    // Don't render breadcrumb if we're on home page with no additional context
+    // Always render breadcrumb now
     if (breadcrumbItems.length === 0) {
         return null
     }

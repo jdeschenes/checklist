@@ -12,14 +12,18 @@ import { useCreateRecurringTemplate } from '@/api/useRecurringTemplateOperations
 
 export const Route = createFileRoute('/todo/$todoId/new')({
     component: RouteComponent,
+    validateSearch: (search: Record<string, unknown>) => ({
+        recurring: search.recurring === true || search.recurring === 'true',
+    }),
 })
 
 function RouteComponent() {
     const todoId = Route.useParams().todoId
+    const search = Route.useSearch()
     const navigate = useNavigate()
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>()
     const [title, setTitle] = React.useState('')
-    const [isRecurring, setIsRecurring] = React.useState(false)
+    const [isRecurring, setIsRecurring] = React.useState(search.recurring || false)
     const [recurrenceInterval, setRecurrenceInterval] =
         React.useState<RecurrenceInterval>({ days: 1 })
     const [endDate, setEndDate] = React.useState<Date | undefined>()

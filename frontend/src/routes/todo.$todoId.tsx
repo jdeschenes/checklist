@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { getTodoQueryOptions } from '@/api/todoQueryOptions'
 import { listTodoItemsQueryOptions } from '@/api/todoItemQueryOptions'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -18,9 +18,13 @@ export const Route = createFileRoute('/todo/$todoId')({
 
 function RouteComponent() {
     const todoId = Route.useParams().todoId
+    const location = useLocation()
     const listTodoItemQuery = useSuspenseQuery(
         listTodoItemsQueryOptions(todoId)
     )
+    
+    // Check if we're on a subpage (templates, template edit, new item)
+    const isOnSubPage = location.pathname !== `/todo/${todoId}`
     const completeTodoItemMutation = useCompleteTodoItem(todoId)
     const [pendingCompletions, setPendingCompletions] = React.useState<
         Set<string>
@@ -87,7 +91,7 @@ function RouteComponent() {
             <div>
                 <Outlet />
             </div>
-            {listTodoItemQuery.data.items.length === 0 ? (
+            {!isOnSubPage && (listTodoItemQuery.data.items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                     <div className="text-lg sm:text-2xl font-medium text-gray-500 mb-2">
                         No tasks yet
@@ -153,7 +157,7 @@ function RouteComponent() {
                         )
                     })}
                 </ul>
-            )}
+            ))}
         </div>
     )
 }
