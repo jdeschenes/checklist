@@ -19,7 +19,6 @@
 * Add cargo watch so that there is always a fresh copy when running the backend
   using run
 * Authentication and Authorization
-* Add recurring todos 
 * Add a test that we are not sending cookie and authorization headers in the logs
 * Add a test to check that we are sending the right logs
 * Change the assert_response to a macro to check for x-request-id, to give error message

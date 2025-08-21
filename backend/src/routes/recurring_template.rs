@@ -3,6 +3,7 @@ use eyre::Context;
 use serde::{Deserialize, Serialize};
 use sqlx::Acquire;
 use time::{Date, OffsetDateTime};
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{
@@ -10,12 +11,12 @@ use crate::{
         self, ListRecurringTemplate, NewRecurringTemplateRequest, RecurringTemplate, TodoName,
     },
     error::APIError,
-    extractors::DatabaseConnection,
+    extractors::{AppRecurringSettings, DatabaseConnection},
     repos::{
         create_recurring_template, delete_recurring_template, get_recurring_template,
         list_recurring_templates, update_recurring_template,
     },
-    services::process_single_template,
+    services::generate_advance_todos_for_template,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -133,6 +134,7 @@ impl From<ListRecurringTemplate> for ListRecurringTemplatesResponse {
 )]
 pub async fn create_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
+    AppRecurringSettings(recurring_settings): AppRecurringSettings,
     extract::Path(todo_name): extract::Path<String>,
     Json(req): Json<CreateRecurringTemplateRequest>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
@@ -142,7 +144,9 @@ pub async fn create_recurring_template_handler(
         todo_name,
         title: req.title,
         recurrence_interval: req.recurrence_interval.into(),
-        start_date: req.start_date.unwrap_or_else(|| OffsetDateTime::now_utc().date()),
+        start_date: req
+            .start_date
+            .unwrap_or_else(|| OffsetDateTime::now_utc().date()),
         end_date: req.end_date,
     };
 
@@ -153,10 +157,20 @@ pub async fn create_recurring_template_handler(
 
     let template = create_recurring_template(&mut transaction, &new_template_request).await?;
 
+    // Generate any todos that should be created within the advance window
     let template_single = (&template).into();
-    process_single_template(&mut transaction, &template_single)
-        .await
-        .context("Failed to process newly created recurring template")?;
+    let generated_count = generate_advance_todos_for_template(
+        &mut transaction,
+        &template_single,
+        recurring_settings.advance_days,
+    )
+    .await
+    .context("Failed to generate advance todos for newly created template")?;
+
+    info!(
+        "Created recurring template {} and generated {} advance todos",
+        template.template_id, generated_count
+    );
 
     transaction
         .commit()
@@ -205,6 +219,7 @@ pub async fn get_recurring_template_handler(
 )]
 pub async fn update_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
+    AppRecurringSettings(recurring_settings): AppRecurringSettings,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
     Json(req): Json<UpdateRecurringTemplateRequestJson>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
@@ -213,7 +228,9 @@ pub async fn update_recurring_template_handler(
     let update_request = crate::domain::UpdateRecurringTemplateRequest {
         title: req.title,
         recurrence_interval: req.recurrence_interval.into(),
-        start_date: req.start_date.unwrap_or_else(|| OffsetDateTime::now_utc().date()),
+        start_date: req
+            .start_date
+            .unwrap_or_else(|| OffsetDateTime::now_utc().date()),
         end_date: req.end_date,
         is_active: req.is_active,
     };
@@ -226,6 +243,22 @@ pub async fn update_recurring_template_handler(
     let template =
         update_recurring_template(&mut transaction, &todo_name, &template_id, &update_request)
             .await?;
+
+    // Generate any todos that should be created within the advance window
+    // after the template update
+    let template_single = (&template).into();
+    let generated_count = generate_advance_todos_for_template(
+        &mut transaction,
+        &template_single,
+        recurring_settings.advance_days,
+    )
+    .await
+    .context("Failed to generate advance todos for updated template")?;
+
+    info!(
+        "Updated recurring template {} and generated {} advance todos",
+        template.template_id, generated_count
+    );
 
     transaction
         .commit()

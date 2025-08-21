@@ -227,6 +227,13 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
+    pub async fn process_recurring_templates(
+        &self,
+        advance_duration: std::time::Duration,
+    ) -> eyre::Result<()> {
+        checklist::services::process_recurring_templates(&self.db_pool, advance_duration).await
+    }
+
     pub async fn list_recurring_templates(&self, todo_name: &str) -> reqwest::Response {
         self.client
             .get(format!("{}/todo/{}/recurring", self.address, todo_name))

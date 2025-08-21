@@ -24,13 +24,14 @@ pub async fn create_todo_item(
     let todo = get_todo_by_name(transaction, todo_name).await?;
     let result = sqlx::query_as!(
         TodoItem,
-        r#"INSERT INTO todo_item (todo_item_id, todo_id, title, due_date) VALUES ($1, $2, $3, $4)
+        r#"INSERT INTO todo_item (todo_item_id, todo_id, title, due_date, recurring_template_id) VALUES ($1, $2, $3, $4, $5)
            RETURNING todo_item_id, title, due_date, is_complete, complete_time, create_time, update_time
            ;"#,
         Uuid::new_v4(),
         todo.todo_id,
         req.title,
         req.due_date,
+        req.recurring_template_id,
     )
     .fetch_one(&mut **transaction)
     .await?;

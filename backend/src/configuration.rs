@@ -9,6 +9,7 @@ const CONFIGURATION_FILE: &str = "base.yaml";
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
+    pub recurring: RecurringSettings,
 }
 
 pub enum Environment {
@@ -44,6 +45,13 @@ pub struct ApplicationSettings {
     pub host: String,
     pub port: u16,
     pub validate_db_on_startup: Option<bool>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct RecurringSettings {
+    /// Duration in advance to create recurring todo items
+    #[serde(with = "humantime_serde")]
+    pub advance_days: Duration,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
