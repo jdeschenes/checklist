@@ -268,8 +268,7 @@ pub async fn get_templates_due_for_generation(
 ) -> Result<ListRecurringTemplate, APIError> {
     // Convert Duration to PgInterval
     let advance_interval =
-        PgInterval::try_from(std::time::Duration::from_secs(advance_duration.as_secs()))
-            .map_err(|e| APIError::Internal(eyre!(e).into()))?;
+        PgInterval::try_from(advance_duration).map_err(|e| APIError::Internal(eyre!(e).into()))?;
 
     match sqlx::query_as!(
         GetTemplateQuery,

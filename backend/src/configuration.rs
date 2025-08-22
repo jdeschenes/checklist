@@ -51,7 +51,7 @@ pub struct ApplicationSettings {
 pub struct RecurringSettings {
     /// Duration in advance to create recurring todo items
     #[serde(with = "humantime_serde")]
-    pub advance_days: Duration,
+    pub look_ahead_duration: Duration,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]

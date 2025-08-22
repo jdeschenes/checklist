@@ -2,4 +2,4 @@ application:
   port: 3000
 
 recurring:
-  advance_days: "7 days"
+  look_ahead_duration: "7 days"

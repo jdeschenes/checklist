@@ -162,7 +162,7 @@ pub async fn create_recurring_template_handler(
     let generated_count = generate_advance_todos_for_template(
         &mut transaction,
         &template_single,
-        recurring_settings.advance_days,
+        recurring_settings.look_ahead_duration,
     )
     .await
     .context("Failed to generate advance todos for newly created template")?;
@@ -250,7 +250,7 @@ pub async fn update_recurring_template_handler(
     let generated_count = generate_advance_todos_for_template(
         &mut transaction,
         &template_single,
-        recurring_settings.advance_days,
+        recurring_settings.look_ahead_duration,
     )
     .await
     .context("Failed to generate advance todos for updated template")?;

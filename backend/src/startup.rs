@@ -37,7 +37,7 @@ impl Application {
 
         // Setup recurring templates scheduler
         let scheduler =
-            setup_recurring_scheduler(&pool, configuration.recurring.advance_days).await?;
+            setup_recurring_scheduler(&pool, configuration.recurring.look_ahead_duration).await?;
 
         let server = run(listener, pool, configuration.recurring).await?;
         Ok(Application {
