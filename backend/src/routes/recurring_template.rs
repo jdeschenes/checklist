@@ -16,7 +16,7 @@ use crate::{
         create_recurring_template, delete_recurring_template, get_recurring_template,
         list_recurring_templates, update_recurring_template,
     },
-    services::generate_advance_todos_for_template,
+    services::process_single_template,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -159,7 +159,7 @@ pub async fn create_recurring_template_handler(
 
     // Generate any todos that should be created within the advance window
     let template_single = (&template).into();
-    let generated_count = generate_advance_todos_for_template(
+    process_single_template(
         &mut transaction,
         &template_single,
         recurring_settings.look_ahead_duration,
@@ -167,10 +167,7 @@ pub async fn create_recurring_template_handler(
     .await
     .context("Failed to generate advance todos for newly created template")?;
 
-    info!(
-        "Created recurring template {} and generated {} advance todos",
-        template.template_id, generated_count
-    );
+    info!("Created recurring template {}", template.template_id);
 
     transaction
         .commit()
@@ -247,7 +244,7 @@ pub async fn update_recurring_template_handler(
     // Generate any todos that should be created within the advance window
     // after the template update
     let template_single = (&template).into();
-    let generated_count = generate_advance_todos_for_template(
+    process_single_template(
         &mut transaction,
         &template_single,
         recurring_settings.look_ahead_duration,
@@ -255,10 +252,7 @@ pub async fn update_recurring_template_handler(
     .await
     .context("Failed to generate advance todos for updated template")?;
 
-    info!(
-        "Updated recurring template {} and generated {} advance todos",
-        template.template_id, generated_count
-    );
+    info!("Updated recurring template {}", template.template_id);
 
     transaction
         .commit()
