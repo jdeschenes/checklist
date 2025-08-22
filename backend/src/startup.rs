@@ -36,9 +36,10 @@ impl Application {
         }
 
         // Setup recurring templates scheduler
-        let scheduler = setup_recurring_scheduler(&pool).await?;
+        let scheduler =
+            setup_recurring_scheduler(&pool, configuration.recurring.look_ahead_duration).await?;
 
-        let server = run(listener, pool).await?;
+        let server = run(listener, pool, configuration.recurring).await?;
         Ok(Application {
             server,
             port,
@@ -65,7 +66,10 @@ pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
         .connect_lazy_with(configuration.connection_options())
 }
 
-async fn setup_recurring_scheduler(pool: &PgPool) -> Result<JobScheduler> {
+async fn setup_recurring_scheduler(
+    pool: &PgPool,
+    advance_duration: std::time::Duration,
+) -> Result<JobScheduler> {
     let scheduler = JobScheduler::new()
         .await
         .context("Failed to create job scheduler")?;
@@ -75,7 +79,7 @@ async fn setup_recurring_scheduler(pool: &PgPool) -> Result<JobScheduler> {
         let pool = pool_clone.clone();
         Box::pin(async move {
             info!("Starting daily recurring templates job");
-            if let Err(e) = process_recurring_templates(&pool).await {
+            if let Err(e) = process_recurring_templates(&pool, advance_duration).await {
                 error!("Recurring templates processing failed: {}", e);
             } else {
                 info!("Daily recurring templates job completed successfully");

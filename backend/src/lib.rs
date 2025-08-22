@@ -8,6 +8,8 @@ use eyre::Result;
 use sqlx::postgres::Postgres;
 use sqlx::Pool;
 
+use crate::configuration::RecurringSettings;
+
 use axum::http::Method;
 use routes::{
     complete_todo_item, create_recurring_template_handler, create_todo, create_todo_item,
@@ -34,9 +36,19 @@ pub mod telemetry;
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: Pool<Postgres>,
+    pub recurring_settings: RecurringSettings,
+}
+
 pub type Server = Serve<tokio::net::TcpListener, Router, Router>;
 
-pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> Result<Server> {
+pub async fn run(
+    listener: tokio::net::TcpListener,
+    pg_pool: Pool<Postgres>,
+    recurring_settings: RecurringSettings,
+) -> Result<Server> {
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
     let request_id_middleware = ServiceBuilder::new()
         .layer(SetRequestIdLayer::new(
@@ -105,6 +117,9 @@ pub async fn run(listener: tokio::net::TcpListener, pg_pool: Pool<Postgres>) -> 
         )
         .layer(request_id_middleware)
         .layer(cors)
-        .with_state(pg_pool);
+        .with_state(AppState {
+            pool: pg_pool,
+            recurring_settings,
+        });
     Ok(axum::serve(listener, app))
 }

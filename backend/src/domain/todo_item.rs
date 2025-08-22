@@ -5,6 +5,7 @@ use uuid::Uuid;
 pub struct NewTodoItemRequest {
     pub title: String,
     pub due_date: Date,
+    pub recurring_template_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone)]

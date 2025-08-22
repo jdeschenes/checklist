@@ -1,2 +1,5 @@
 application:
   port: 3000
+
+recurring:
+  look_ahead_duration: "7 days"

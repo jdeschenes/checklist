@@ -71,6 +71,7 @@ impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
         Ok(Self {
             title: value.title,
             due_date,
+            recurring_template_id: None, // Regular todo items are not linked to templates
         })
     }
 }

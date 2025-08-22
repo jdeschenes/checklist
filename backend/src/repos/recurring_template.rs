@@ -1,5 +1,6 @@
 use eyre::eyre;
 use sqlx::{postgres::types::PgInterval, PgTransaction};
+use std::time::Duration;
 use time::Date;
 use uuid::Uuid;
 
@@ -263,7 +264,12 @@ pub async fn delete_recurring_template(
 pub async fn get_templates_due_for_generation(
     transaction: &mut PgTransaction<'_>,
     current_date: Date,
+    advance_duration: Duration,
 ) -> Result<ListRecurringTemplate, APIError> {
+    // Convert Duration to PgInterval
+    let advance_interval =
+        PgInterval::try_from(advance_duration).map_err(|e| APIError::Internal(eyre!(e).into()))?;
+
     match sqlx::query_as!(
         GetTemplateQuery,
         r#"SELECT r.template_id, t.name as todo_name, r.title, r.recurrence_period, r.start_date, r.end_date, r.last_generated_date,
@@ -271,15 +277,37 @@ pub async fn get_templates_due_for_generation(
            FROM recurring_template as r
            INNER JOIN todo as t ON t.todo_id = r.todo_id
            WHERE r.is_active = TRUE
-             AND (r.end_date IS NULL OR r.end_date >= $1)
-             AND (r.last_generated_date IS NULL OR $1::date >= (r.last_generated_date + r.recurrence_period)::date)
-             AND $1::date >= r.start_date"#,
+             AND (r.end_date IS NULL OR r.end_date >= ($1::date + $2::interval)::date)
+             AND (r.last_generated_date IS NULL OR $1::date >= (r.last_generated_date + r.recurrence_period - $2::interval)::date)
+             AND $1::date >= (r.start_date - $2::interval)::date"#,
         current_date,
+        advance_interval,
     )
     .fetch_all(&mut **transaction)
     .await
     {
         Ok(result) => Ok(result.try_into()?),
+        Err(err) => Err(APIError::Internal(err.into())),
+    }
+}
+
+#[tracing::instrument(name = "Check if active todo exists for template", skip(transaction))]
+pub async fn check_active_todo_exists_for_template(
+    transaction: &mut PgTransaction<'_>,
+    template_id: &Uuid,
+) -> Result<bool, APIError> {
+    match sqlx::query!(
+        r#"SELECT EXISTS(
+            SELECT 1 FROM todo_item ti
+            WHERE ti.recurring_template_id = $1
+            AND ti.is_complete = FALSE
+        ) as exists"#,
+        template_id,
+    )
+    .fetch_one(&mut **transaction)
+    .await
+    {
+        Ok(result) => Ok(result.exists.unwrap_or(false)),
         Err(err) => Err(APIError::Internal(err.into())),
     }
 }
