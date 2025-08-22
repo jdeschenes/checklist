@@ -7,14 +7,16 @@ import { DatePicker } from '@/components/ui/datepicker'
 import { IntervalPicker } from '@/components/ui/interval-picker'
 import { Save } from 'lucide-react'
 import { RecurrenceInterval, UpdateRecurringTemplateRequest } from '@/api'
-import { 
-    useGetRecurringTemplate, 
-    useUpdateRecurringTemplate 
+import {
+    useGetRecurringTemplate,
+    useUpdateRecurringTemplate,
 } from '@/api/useRecurringTemplateOperations'
 
-export const Route = createFileRoute('/todo/$todoId/template/$templateId/edit')({
-    component: RouteComponent,
-})
+export const Route = createFileRoute('/todo/$todoId/template/$templateId/edit')(
+    {
+        component: RouteComponent,
+    }
+)
 
 function RouteComponent() {
     const { todoId, templateId } = Route.useParams()
@@ -25,7 +27,8 @@ function RouteComponent() {
     const [title, setTitle] = React.useState('')
     const [startDate, setStartDate] = React.useState<Date | undefined>()
     const [endDate, setEndDate] = React.useState<Date | undefined>()
-    const [recurrenceInterval, setRecurrenceInterval] = React.useState<RecurrenceInterval>({ days: 1 })
+    const [recurrenceInterval, setRecurrenceInterval] =
+        React.useState<RecurrenceInterval>({ days: 1 })
     const [isActive, setIsActive] = React.useState(true)
 
     // Initialize form with existing template data
@@ -33,7 +36,11 @@ function RouteComponent() {
         if (templateQuery.data) {
             setTitle(templateQuery.data.title)
             setStartDate(new Date(templateQuery.data.start_date))
-            setEndDate(templateQuery.data.end_date ? new Date(templateQuery.data.end_date) : undefined)
+            setEndDate(
+                templateQuery.data.end_date
+                    ? new Date(templateQuery.data.end_date)
+                    : undefined
+            )
             setRecurrenceInterval(templateQuery.data.recurrence_interval)
             setIsActive(templateQuery.data.is_active)
         }
@@ -50,7 +57,9 @@ function RouteComponent() {
             const updateRequest: UpdateRecurringTemplateRequest = {
                 title: titleValue.trim(),
                 recurrence_interval: recurrenceInterval,
-                start_date: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+                start_date: startDate
+                    ? format(startDate, 'yyyy-MM-dd')
+                    : undefined,
                 end_date: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
                 is_active: isActive,
             }
@@ -101,9 +110,12 @@ function RouteComponent() {
         return (
             <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
                 <div className="text-center py-12">
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">Template not found</h3>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                        Template not found
+                    </h3>
                     <p className="mt-1 text-sm text-gray-500">
-                        The template you're looking for doesn't exist or has been deleted.
+                        The template you're looking for doesn't exist or has
+                        been deleted.
                     </p>
                 </div>
             </div>
@@ -125,11 +137,16 @@ function RouteComponent() {
                     <div className="flex gap-2">
                         <Button
                             type="submit"
-                            disabled={!title.trim() || updateTemplateMutation.isPending}
+                            disabled={
+                                !title.trim() ||
+                                updateTemplateMutation.isPending
+                            }
                             className="gap-2"
                         >
                             <Save className="h-4 w-4" />
-                            {updateTemplateMutation.isPending ? 'Saving...' : 'Save Template'}
+                            {updateTemplateMutation.isPending
+                                ? 'Saving...'
+                                : 'Save Template'}
                         </Button>
                     </div>
                 </div>
@@ -228,10 +245,11 @@ function RouteComponent() {
                     {templateQuery.data?.last_generated_date && (
                         <div className="text-sm text-gray-500 p-3 bg-blue-50 border border-blue-200 rounded-md">
                             <strong>Last Generated:</strong>{' '}
-                            {new Date(templateQuery.data.last_generated_date).toLocaleDateString()}
+                            {new Date(
+                                templateQuery.data.last_generated_date
+                            ).toLocaleDateString()}
                         </div>
                     )}
-
                 </div>
             </div>
         </form>

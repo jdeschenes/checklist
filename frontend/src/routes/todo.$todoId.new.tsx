@@ -23,7 +23,9 @@ function RouteComponent() {
     const navigate = useNavigate()
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>()
     const [title, setTitle] = React.useState('')
-    const [isRecurring, setIsRecurring] = React.useState(search.recurring || false)
+    const [isRecurring, setIsRecurring] = React.useState(
+        search.recurring || false
+    )
     const [recurrenceInterval, setRecurrenceInterval] =
         React.useState<RecurrenceInterval>({ days: 1 })
     const [endDate, setEndDate] = React.useState<Date | undefined>()

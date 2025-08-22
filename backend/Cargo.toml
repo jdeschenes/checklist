@@ -35,6 +35,9 @@ tower-http = { version = "0.6.2", features = ["request-id", "trace", "cors"] }
 tower = "0.5.2"
 time = { version = "0.3.37", features = ["local-offset", "parsing", "serde-human-readable", "serde-well-known"] }
 tokio-cron-scheduler = "0.14.0"
+oauth2 = "4.4.2"
+jsonwebtoken = "9.3.0"
+urlencoding = "2.1"
 
 [dev-dependencies]
 claims = "0.8.0"

@@ -358,7 +358,8 @@ async fn create_recurring_template_fails() {
     for case in cases {
         let mut req = app
             .client
-            .post(format!("{}/todo/{}/recurring", address, todo_name));
+            .post(format!("{}/todo/{}/recurring", address, todo_name))
+            .header("Authorization", app.get_auth_header());
         if let Some(ref json) = case.json {
             req = req.json(json);
         }

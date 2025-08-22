@@ -1,21 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { 
-    FinalRecurringTemplateAPI, 
+import {
+    FinalRecurringTemplateAPI,
+    FinalTodoItemAPI,
     CreateRecurringTemplateRequest,
-    UpdateRecurringTemplateRequest 
+    UpdateRecurringTemplateRequest,
 } from '.'
 
 export const useListRecurringTemplates = (todoName: string) => {
     return useQuery({
         queryKey: ['recurring-templates', todoName],
-        queryFn: () => FinalRecurringTemplateAPI.ListRecurringTemplates(todoName),
+        queryFn: () =>
+            FinalRecurringTemplateAPI.ListRecurringTemplates(todoName),
     })
 }
 
-export const useGetRecurringTemplate = (todoName: string, templateId: string) => {
+export const useGetRecurringTemplate = (
+    todoName: string,
+    templateId: string
+) => {
     return useQuery({
         queryKey: ['recurring-template', todoName, templateId],
-        queryFn: () => FinalRecurringTemplateAPI.GetRecurringTemplate(todoName, templateId),
+        queryFn: () =>
+            FinalRecurringTemplateAPI.GetRecurringTemplate(
+                todoName,
+                templateId
+            ),
         enabled: !!todoName && !!templateId,
     })
 }
@@ -38,6 +47,10 @@ export const useCreateRecurringTemplate = () => {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ['recurring-templates', variables.todo_name],
+            })
+            // Invalidate todo items since creating a template can generate advance todo items
+            queryClient.invalidateQueries({
+                queryKey: ['todo', variables.todo_name, 'item'],
             })
         },
     })
@@ -66,7 +79,15 @@ export const useUpdateRecurringTemplate = () => {
                 queryKey: ['recurring-templates', variables.todo_name],
             })
             queryClient.invalidateQueries({
-                queryKey: ['recurring-template', variables.todo_name, variables.template_id],
+                queryKey: [
+                    'recurring-template',
+                    variables.todo_name,
+                    variables.template_id,
+                ],
+            })
+            // Invalidate todo items since updating a template can generate new todo items
+            queryClient.invalidateQueries({
+                queryKey: ['todo', variables.todo_name, 'item'],
             })
         },
     })
@@ -92,7 +113,11 @@ export const useDeleteRecurringTemplate = () => {
                 queryKey: ['recurring-templates', variables.todo_name],
             })
             queryClient.removeQueries({
-                queryKey: ['recurring-template', variables.todo_name, variables.template_id],
+                queryKey: [
+                    'recurring-template',
+                    variables.todo_name,
+                    variables.template_id,
+                ],
             })
         },
     })

@@ -37,7 +37,7 @@ async fn create_todo_works() {
 #[tokio::test]
 async fn create_todo_fails() {
     let test_app = spawn_app().await;
-    let address = test_app.address;
+    let address = &test_app.address;
 
     struct FailCall {
         expected_status_code: StatusCode,
@@ -65,7 +65,10 @@ async fn create_todo_fails() {
     ];
     // Forgot to include a body
     for case in cases {
-        let mut req = test_app.client.post(format!("{}/todo", address));
+        let mut req = test_app
+            .client
+            .post(format!("{}/todo", address))
+            .header("Authorization", test_app.get_auth_header());
         if let Some(ref json) = case.json {
             req = req.json(json);
         }

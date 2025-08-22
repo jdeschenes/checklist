@@ -3,3 +3,16 @@ application:
 
 recurring:
   look_ahead_duration: "7 days"
+
+auth:
+  type: "google_oauth"  # Choose: "jwt" or "google_oauth"
+  jwt_secret: "your-secret-key-here"
+  jwt_expiration_hours: 24
+  google_oauth:
+    client_id: "your-google-client-id"
+    client_secret: "your-google-client-secret"
+    redirect_uri: "http://localhost:3000/auth/google/callback"
+    # Optional: OAuth URLs (defaults to Google's standard endpoints)
+    # auth_url: "https://accounts.google.com/o/oauth2/v2/auth"
+    # token_url: "https://www.googleapis.com/oauth2/v3/token"
+    # userinfo_url: "https://www.googleapis.com/oauth2/v2/userinfo"

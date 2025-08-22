@@ -11,7 +11,7 @@ use crate::{
         self, ListRecurringTemplate, NewRecurringTemplateRequest, RecurringTemplate, TodoName,
     },
     error::APIError,
-    extractors::{AppRecurringSettings, DatabaseConnection},
+    extractors::{AppRecurringSettings, AuthenticatedUser, DatabaseConnection},
     repos::{
         create_recurring_template, delete_recurring_template, get_recurring_template,
         list_recurring_templates, update_recurring_template,
@@ -135,6 +135,7 @@ impl From<ListRecurringTemplate> for ListRecurringTemplatesResponse {
 pub async fn create_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
     AppRecurringSettings(recurring_settings): AppRecurringSettings,
+    AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path(todo_name): extract::Path<String>,
     Json(req): Json<CreateRecurringTemplateRequest>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
@@ -155,7 +156,8 @@ pub async fn create_recurring_template_handler(
         .await
         .context("Failed to acquire a Postgres connection from the pool")?;
 
-    let template = create_recurring_template(&mut transaction, &new_template_request).await?;
+    let template =
+        create_recurring_template(&mut transaction, &new_template_request, user_id).await?;
 
     // Generate any todos that should be created within the advance window
     let template_single = (&template).into();
@@ -163,6 +165,7 @@ pub async fn create_recurring_template_handler(
         &mut transaction,
         &template_single,
         recurring_settings.look_ahead_duration,
+        user_id,
     )
     .await
     .context("Failed to generate advance todos for newly created template")?;
@@ -187,6 +190,7 @@ pub async fn create_recurring_template_handler(
 )]
 pub async fn get_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
+    AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
@@ -196,7 +200,8 @@ pub async fn get_recurring_template_handler(
         .await
         .context("Failed to acquire a Postgres connection from the pool")?;
 
-    let template = get_recurring_template(&mut transaction, &todo_name, &template_id).await?;
+    let template =
+        get_recurring_template(&mut transaction, &todo_name, &template_id, user_id).await?;
 
     transaction
         .commit()
@@ -217,6 +222,7 @@ pub async fn get_recurring_template_handler(
 pub async fn update_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
     AppRecurringSettings(recurring_settings): AppRecurringSettings,
+    AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
     Json(req): Json<UpdateRecurringTemplateRequestJson>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
@@ -237,9 +243,14 @@ pub async fn update_recurring_template_handler(
         .await
         .context("Failed to acquire a Postgres connection from the pool")?;
 
-    let template =
-        update_recurring_template(&mut transaction, &todo_name, &template_id, &update_request)
-            .await?;
+    let template = update_recurring_template(
+        &mut transaction,
+        &todo_name,
+        &template_id,
+        &update_request,
+        user_id,
+    )
+    .await?;
 
     // Generate any todos that should be created within the advance window
     // after the template update
@@ -248,6 +259,7 @@ pub async fn update_recurring_template_handler(
         &mut transaction,
         &template_single,
         recurring_settings.look_ahead_duration,
+        user_id,
     )
     .await
     .context("Failed to generate advance todos for updated template")?;
@@ -269,6 +281,7 @@ pub async fn update_recurring_template_handler(
 )]
 pub async fn list_recurring_templates_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
+    AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path(todo_name): extract::Path<String>,
 ) -> Result<Json<ListRecurringTemplatesResponse>, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
@@ -278,7 +291,7 @@ pub async fn list_recurring_templates_handler(
         .await
         .context("Failed to acquire a Postgres connection from the pool")?;
 
-    let templates = list_recurring_templates(&mut transaction, &todo_name).await?;
+    let templates = list_recurring_templates(&mut transaction, &todo_name, user_id).await?;
 
     transaction
         .commit()
@@ -298,6 +311,7 @@ pub async fn list_recurring_templates_handler(
 )]
 pub async fn delete_recurring_template_handler(
     DatabaseConnection(mut conn): DatabaseConnection,
+    AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
 ) -> Result<StatusCode, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
@@ -307,7 +321,7 @@ pub async fn delete_recurring_template_handler(
         .await
         .context("Failed to acquire a Postgres connection from the pool")?;
 
-    delete_recurring_template(&mut transaction, &todo_name, &template_id).await?;
+    delete_recurring_template(&mut transaction, &todo_name, &template_id, user_id).await?;
 
     transaction
         .commit()

@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::domain;
 use crate::domain::NewTodoItemRequest;
 use crate::error::APIError;
-use crate::extractors::DatabaseConnection;
+use crate::extractors::{AuthenticatedUser, DatabaseConnection};
 use crate::repos;
 
 #[derive(Debug, Deserialize)]
@@ -141,6 +141,7 @@ impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
 )]
 pub async fn list_todo_items(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<Json<ListTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
@@ -149,7 +150,7 @@ pub async fn list_todo_items(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let result = repos::list_todo_items(&mut transaction, &todo_name)
+    let result = repos::list_todo_items(&mut transaction, &todo_name, user.user_id)
         .await?
         .into();
     transaction
@@ -168,6 +169,7 @@ pub async fn list_todo_items(
 )]
 pub async fn create_todo_item(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
     Json(payload): Json<CreateTodoItemRequest>,
 ) -> Result<Json<CreateTodoItemResponse>, APIError> {
@@ -178,7 +180,7 @@ pub async fn create_todo_item(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_item = repos::create_todo_item(&mut transaction, &todo_name, &todo)
+    let todo_item = repos::create_todo_item(&mut transaction, &todo_name, &todo, user.user_id)
         .await?
         .into();
     transaction
@@ -198,6 +200,7 @@ pub async fn create_todo_item(
 )]
 pub async fn get_todo_item(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<GetTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
@@ -206,7 +209,7 @@ pub async fn get_todo_item(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_item = repos::get_todo_item(&mut transaction, &todo_name, &todo_item)
+    let todo_item = repos::get_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id)
         .await?
         .into();
     transaction
@@ -226,6 +229,7 @@ pub async fn get_todo_item(
 )]
 pub async fn update_todo_item(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
     Json(payload): Json<UpdateTodoItemRequest>,
 ) -> Result<Json<UpdateTodoItemResponse>, APIError> {
@@ -236,9 +240,15 @@ pub async fn update_todo_item(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_item = repos::update_todo_item(&mut transaction, &todo_name, &todo_item, &item)
-        .await?
-        .into();
+    let todo_item = repos::update_todo_item(
+        &mut transaction,
+        &todo_name,
+        &todo_item,
+        &item,
+        user.user_id,
+    )
+    .await?
+    .into();
     transaction
         .commit()
         .await
@@ -256,6 +266,7 @@ pub async fn update_todo_item(
 )]
 pub async fn delete_todo_item(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<(), APIError> {
     let todo_name = todo_str.try_into()?;
@@ -264,7 +275,7 @@ pub async fn delete_todo_item(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    repos::delete_todo_item(&mut transaction, &todo_name, &todo_item).await?;
+    repos::delete_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id).await?;
     transaction
         .commit()
         .await
@@ -282,6 +293,7 @@ pub async fn delete_todo_item(
 )]
 pub async fn complete_todo_item(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<GetTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
@@ -290,9 +302,10 @@ pub async fn complete_todo_item(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_item = repos::complete_todo_item(&mut transaction, &todo_name, &todo_item)
-        .await?
-        .into();
+    let todo_item =
+        repos::complete_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id)
+            .await?
+            .into();
     transaction
         .commit()
         .await

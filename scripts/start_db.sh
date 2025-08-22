@@ -67,3 +67,8 @@ cd backend
 sqlx database create
 sqlx migrate run
 >&2 echo "Postgres has been migrated, ready to go!"
+
+cd ..
+
+# Add authorized user to database
+./scripts/add_authorized_user.sh

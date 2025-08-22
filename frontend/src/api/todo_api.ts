@@ -6,58 +6,53 @@ import {
     UpdateTodoRequest,
     UpdateTodoResponse,
     ListTodoResponse,
-    BASE_URL,
 } from '.'
+import { 
+    authenticatedPost, 
+    authenticatedGet, 
+    authenticatedPut, 
+    authenticatedDelete,
+    authenticatedFetch
+} from './authenticated-client'
 
 export const BackendTodoAPI = {
     CreateTodo: async (r: CreateTodoRequest): Promise<CreateTodoResponse> => {
-        const url = `${BASE_URL}/todo`
-        const options: RequestInit = {
+        console.log('CreateTodo API call - Request:', r)
+        console.log('Making POST request to /todo')
+        
+        const response = await authenticatedFetch('/todo', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(r),
+        })
+        
+        console.log('CreateTodo API response status:', response.status)
+        console.log('CreateTodo API response:', response)
+        
+        if (!response.ok) {
+            const errorText = await response.text()
+            console.error('CreateTodo API error response:', errorText)
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
         }
-        // TODO Handle failure
-        await fetch(url, options)
+        
+        // Backend returns empty response for create todo
+        return undefined as CreateTodoResponse
     },
     GetTodo: async (todo_name: string): Promise<GetTodoResponse> => {
-        const url = `${BASE_URL}/todo/${todo_name}`
-        const options: RequestInit = {
-            method: 'GET',
-        }
-        return await fetch(url, options).then((r) => r.json())
+        return await authenticatedGet<GetTodoResponse>(`/todo/${todo_name}`)
     },
     DeleteTodo: async (todo_name: string): Promise<DeleteTodoResponse> => {
-        const url = `${BASE_URL}/todo/${todo_name}`
-        const options: RequestInit = {
-            method: 'DELETE',
-        }
-        // TODO Handle failure
-        await fetch(url, options)
+        await authenticatedDelete(`/todo/${todo_name}`)
     },
     UpdateTodo: async (
         todo_name: string,
         r: UpdateTodoRequest
     ): Promise<UpdateTodoResponse> => {
-        const url = `${BASE_URL}/todo/${todo_name}`
-        const options: RequestInit = {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(r),
-        }
-        // TODO Handle failure
-        await fetch(url, options).then((r) => r.json())
+        await authenticatedPut(`/todo/${todo_name}`, r)
     },
     ListTodo: async (): Promise<ListTodoResponse> => {
-        const url = `${BASE_URL}/todo`
-        const options: RequestInit = {
-            method: 'GET',
-        }
-        // TODO Handle failure
-        return await fetch(url, options).then((r) => r.json())
+        return await authenticatedGet<ListTodoResponse>('/todo')
     },
 }

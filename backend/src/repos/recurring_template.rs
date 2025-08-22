@@ -54,15 +54,16 @@ impl TryFrom<GetTemplateQuery> for RecurringTemplate {
 pub async fn create_recurring_template(
     transaction: &mut PgTransaction<'_>,
     req: &NewRecurringTemplateRequest,
+    user_id: i32,
 ) -> Result<RecurringTemplate, APIError> {
-    let todo = get_todo_by_name(transaction, &req.todo_name).await?;
+    let todo = get_todo_by_name(transaction, &req.todo_name, user_id).await?;
     let template_id = Uuid::new_v4();
 
     match sqlx::query_as!(
         GetTemplateQuery,
         r#"WITH insert_qry AS (
-            INSERT INTO recurring_template (template_id, todo_id, title, recurrence_period, start_date, end_date)
-           VALUES ($1, $2, $3, $4::interval, $5, $6)
+            INSERT INTO recurring_template (template_id, todo_id, title, recurrence_period, start_date, end_date, user_id)
+           VALUES ($1, $2, $3, $4::interval, $5, $6, $7)
            RETURNING template_id, todo_id, title, recurrence_period, start_date, end_date, last_generated_date, 
                      is_active, create_time, update_time)
             SELECT i.template_id, t.name as todo_name, i.title, i.recurrence_period, i.start_date, i.end_date, i.last_generated_date,
@@ -76,6 +77,7 @@ pub async fn create_recurring_template(
         Into::<PgInterval>::into(req.recurrence_interval.clone()),
         req.start_date,
         req.end_date,
+        user_id,
     )
     .fetch_one(&mut **transaction)
     .await
@@ -97,8 +99,9 @@ pub async fn get_recurring_template(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     template_id: &Uuid,
+    user_id: i32,
 ) -> Result<RecurringTemplate, APIError> {
-    let _ = get_todo_by_name(transaction, todo_name).await?;
+    let _ = get_todo_by_name(transaction, todo_name, user_id).await?;
 
     match sqlx::query_as!(
         GetTemplateQuery,
@@ -131,8 +134,9 @@ pub async fn update_recurring_template(
     todo_name: &TodoName,
     template_id: &Uuid,
     req: &UpdateRecurringTemplateRequest,
+    user_id: i32,
 ) -> Result<RecurringTemplate, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
 
     match sqlx::query_as!(
         GetTemplateQuery,
@@ -207,8 +211,9 @@ impl TryFrom<GetTemplateQuery> for ListRecurringTemplateSingle {
 pub async fn list_recurring_templates(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
+    user_id: i32,
 ) -> Result<ListRecurringTemplate, APIError> {
-    let _ = get_todo_by_name(transaction, todo_name).await?;
+    let _ = get_todo_by_name(transaction, todo_name, user_id).await?;
 
     match sqlx::query_as!(
         GetTemplateQuery,
@@ -236,8 +241,9 @@ pub async fn delete_recurring_template(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     template_id: &Uuid,
+    user_id: i32,
 ) -> Result<(), APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
 
     let result = sqlx::query!(
         r#"DELETE FROM recurring_template

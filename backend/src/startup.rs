@@ -7,9 +7,11 @@ use tokio::net::TcpListener;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing::{error, info};
 
+use crate::auth::JwtService;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::services::process_recurring_templates;
 use crate::{run, Server};
+use secrecy::ExposeSecret;
 
 pub struct Application {
     server: Server,
@@ -39,7 +41,27 @@ impl Application {
         let scheduler =
             setup_recurring_scheduler(&pool, configuration.recurring.look_ahead_duration).await?;
 
-        let server = run(listener, pool, configuration.recurring).await?;
+        // Setup JWT service based on auth configuration
+        let jwt_service = match &configuration.auth {
+            crate::configuration::AuthSettings::Jwt {
+                jwt_secret,
+                jwt_expiration_hours,
+            } => JwtService::new(jwt_secret.expose_secret(), *jwt_expiration_hours),
+            crate::configuration::AuthSettings::GoogleOAuth {
+                jwt_secret,
+                jwt_expiration_hours,
+                ..
+            } => JwtService::new(jwt_secret.expose_secret(), *jwt_expiration_hours),
+        };
+
+        let server = run(
+            listener,
+            pool,
+            configuration.recurring,
+            configuration.auth,
+            jwt_service,
+        )
+        .await?;
         Ok(Application {
             server,
             port,

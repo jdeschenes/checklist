@@ -47,7 +47,30 @@ pub async fn process_recurring_templates(pool: &PgPool, advance_duration: Durati
     let mut error_count = 0;
 
     for template in templates.items {
-        match process_single_template(&mut transaction, &template, advance_duration).await {
+        // Get user_id from the todo table
+        let user_id = match sqlx::query!(
+            "SELECT user_id FROM todo WHERE name = $1",
+            template.todo_name.as_ref()
+        )
+        .fetch_one(&mut *transaction)
+        .await
+        {
+            Ok(row) => row.user_id,
+            Err(e) => {
+                error_count += 1;
+                error!(
+                    "Failed to get user_id for todo {} template: {} ({}): {}",
+                    template.todo_name.as_ref(),
+                    template.title,
+                    template.template_id,
+                    e
+                );
+                continue;
+            }
+        };
+
+        match process_single_template(&mut transaction, &template, advance_duration, user_id).await
+        {
             Ok(_) => {
                 generated_count += 1;
                 info!(
@@ -91,6 +114,7 @@ pub async fn process_single_template(
     transaction: &mut sqlx::PgTransaction<'_>,
     template: &ListRecurringTemplateSingle,
     advance_duration: Duration,
+    user_id: i32,
 ) -> Result<()> {
     let current_date = OffsetDateTime::now_utc().date();
 
@@ -136,7 +160,7 @@ pub async fn process_single_template(
         recurring_template_id: Some(template.template_id),
     };
 
-    create_todo_item(transaction, &template.todo_name, &new_item_request)
+    create_todo_item(transaction, &template.todo_name, &new_item_request, user_id)
         .await
         .context("Failed to create todo item from template")?;
 
