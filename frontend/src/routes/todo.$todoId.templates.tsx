@@ -3,7 +3,10 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus, Edit, Trash2, Clock, Play, Pause } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { getTodoQueryOptions } from '@/api/todoQueryOptions'
-import { useListRecurringTemplates, useDeleteRecurringTemplate } from '@/api/useRecurringTemplateOperations'
+import {
+    useListRecurringTemplates,
+    useDeleteRecurringTemplate,
+} from '@/api/useRecurringTemplateOperations'
 import { formatDistanceToNow } from 'date-fns'
 import * as React from 'react'
 
@@ -11,16 +14,20 @@ export const Route = createFileRoute('/todo/$todoId/templates')({
     component: RouteComponent,
 })
 
-function formatRecurrenceInterval(interval: { months?: number; days?: number; microseconds?: number }) {
+function formatRecurrenceInterval(interval: {
+    months?: number
+    days?: number
+    microseconds?: number
+}) {
     const parts: string[] = []
-    
+
     if (interval.months && interval.months > 0) {
         parts.push(`${interval.months} month${interval.months > 1 ? 's' : ''}`)
     }
     if (interval.days && interval.days > 0) {
         parts.push(`${interval.days} day${interval.days > 1 ? 's' : ''}`)
     }
-    
+
     return parts.join(', ') || 'Never'
 }
 
@@ -30,23 +37,28 @@ function RouteComponent() {
     const getTodoQuery = useSuspenseQuery(getTodoQueryOptions(todoId))
     const templatesQuery = useListRecurringTemplates(todoId)
     const deleteTemplateMutation = useDeleteRecurringTemplate()
-    
-    const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null)
+
+    const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(
+        null
+    )
 
     const handleDeleteClick = React.useCallback((templateId: string) => {
         setDeleteConfirmId(templateId)
     }, [])
 
-    const handleDeleteConfirm = React.useCallback((templateId: string) => {
-        deleteTemplateMutation.mutate(
-            { todo_name: todoId, template_id: templateId },
-            {
-                onSuccess: () => {
-                    setDeleteConfirmId(null)
-                },
-            }
-        )
-    }, [deleteTemplateMutation, todoId])
+    const handleDeleteConfirm = React.useCallback(
+        (templateId: string) => {
+            deleteTemplateMutation.mutate(
+                { todo_name: todoId, template_id: templateId },
+                {
+                    onSuccess: () => {
+                        setDeleteConfirmId(null)
+                    },
+                }
+            )
+        },
+        [deleteTemplateMutation, todoId]
+    )
 
     const handleDeleteCancel = React.useCallback(() => {
         setDeleteConfirmId(null)
@@ -69,7 +81,8 @@ function RouteComponent() {
                             className={buttonVariants({
                                 variant: 'default',
                                 size: 'sm',
-                                className: 'gap-2 shadow-sm hover:shadow-md transition-shadow',
+                                className:
+                                    'gap-2 shadow-sm hover:shadow-md transition-shadow',
                             })}
                             to="/todo/$todoId/new"
                             params={{ todoId }}
@@ -83,7 +96,9 @@ function RouteComponent() {
                 {templatesQuery.data?.templates.length === 0 ? (
                     <div className="text-center py-12">
                         <Clock className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No templates</h3>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">
+                            No templates
+                        </h3>
                         <p className="mt-1 text-sm text-gray-500">
                             Get started by creating a recurring template
                         </p>
@@ -131,52 +146,87 @@ function RouteComponent() {
                                         </div>
                                         <div className="space-y-1 text-sm text-gray-500">
                                             <p>
-                                                <span className="font-medium">Repeats:</span> Every{' '}
-                                                {formatRecurrenceInterval(template.recurrence_interval)}
+                                                <span className="font-medium">
+                                                    Repeats:
+                                                </span>{' '}
+                                                Every{' '}
+                                                {formatRecurrenceInterval(
+                                                    template.recurrence_interval
+                                                )}
                                             </p>
                                             <p>
-                                                <span className="font-medium">Start Date:</span>{' '}
-                                                {new Date(template.start_date).toLocaleDateString()}
+                                                <span className="font-medium">
+                                                    Start Date:
+                                                </span>{' '}
+                                                {new Date(
+                                                    template.start_date
+                                                ).toLocaleDateString()}
                                             </p>
                                             {template.end_date && (
                                                 <p>
-                                                    <span className="font-medium">End Date:</span>{' '}
-                                                    {new Date(template.end_date).toLocaleDateString()}
+                                                    <span className="font-medium">
+                                                        End Date:
+                                                    </span>{' '}
+                                                    {new Date(
+                                                        template.end_date
+                                                    ).toLocaleDateString()}
                                                 </p>
                                             )}
                                             {template.last_generated_date && (
                                                 <p>
-                                                    <span className="font-medium">Last Generated:</span>{' '}
-                                                    {formatDistanceToNow(new Date(template.last_generated_date), { addSuffix: true })}
+                                                    <span className="font-medium">
+                                                        Last Generated:
+                                                    </span>{' '}
+                                                    {formatDistanceToNow(
+                                                        new Date(
+                                                            template.last_generated_date
+                                                        ),
+                                                        { addSuffix: true }
+                                                    )}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 ml-4">
-                                        {deleteConfirmId === template.template_id ? (
+                                        {deleteConfirmId ===
+                                        template.template_id ? (
                                             <div className="flex items-center gap-2">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={handleDeleteCancel}
-                                                    disabled={deleteTemplateMutation.isPending}
+                                                    disabled={
+                                                        deleteTemplateMutation.isPending
+                                                    }
                                                 >
                                                     Cancel
                                                 </Button>
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    onClick={() => handleDeleteConfirm(template.template_id)}
-                                                    disabled={deleteTemplateMutation.isPending}
+                                                    onClick={() =>
+                                                        handleDeleteConfirm(
+                                                            template.template_id
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        deleteTemplateMutation.isPending
+                                                    }
                                                 >
-                                                    {deleteTemplateMutation.isPending ? 'Deleting...' : 'Delete'}
+                                                    {deleteTemplateMutation.isPending
+                                                        ? 'Deleting...'
+                                                        : 'Delete'}
                                                 </Button>
                                             </div>
                                         ) : (
                                             <>
                                                 <Link
                                                     to="/todo/$todoId/template/$templateId/edit"
-                                                    params={{ todoId, templateId: template.template_id }}
+                                                    params={{
+                                                        todoId,
+                                                        templateId:
+                                                            template.template_id,
+                                                    }}
                                                     className="inline-flex items-center justify-center h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                                                 >
                                                     <Edit className="h-4 w-4" />
@@ -184,7 +234,11 @@ function RouteComponent() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleDeleteClick(template.template_id)}
+                                                    onClick={() =>
+                                                        handleDeleteClick(
+                                                            template.template_id
+                                                        )
+                                                    }
                                                     className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
                                                 >
                                                     <Trash2 className="h-4 w-4" />

@@ -14,8 +14,8 @@ use axum::http::Method;
 use routes::{
     complete_todo_item, create_recurring_template_handler, create_todo, create_todo_item,
     delete_recurring_template_handler, delete_todo, delete_todo_item,
-    get_recurring_template_handler, get_todo, get_todo_item, health_check,
-    list_recurring_templates_handler, list_todo, list_todo_items,
+    get_recurring_template_handler, get_todo, get_todo_item, google_callback, google_login,
+    health_check, list_recurring_templates_handler, list_todo, list_todo_items,
     update_recurring_template_handler, update_todo, update_todo_item,
 };
 use tower::ServiceBuilder;
@@ -24,6 +24,7 @@ use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetReques
 use tower_http::trace::TraceLayer;
 use tracing::{error, info_span};
 
+pub mod auth;
 pub mod configuration;
 mod domain;
 mod error;
@@ -40,6 +41,8 @@ const REQUEST_ID_HEADER: &str = "x-request-id";
 pub struct AppState {
     pub pool: Pool<Postgres>,
     pub recurring_settings: RecurringSettings,
+    pub auth: configuration::AuthSettings,
+    pub jwt_service: auth::JwtService,
 }
 
 pub type Server = Serve<tokio::net::TcpListener, Router, Router>;
@@ -48,6 +51,8 @@ pub async fn run(
     listener: tokio::net::TcpListener,
     pg_pool: Pool<Postgres>,
     recurring_settings: RecurringSettings,
+    auth: configuration::AuthSettings,
+    jwt_service: auth::JwtService,
 ) -> Result<Server> {
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
     let request_id_middleware = ServiceBuilder::new()
@@ -79,8 +84,21 @@ pub async fn run(
         // allow requests from any origin
         .allow_origin(Any)
         .allow_headers(Any);
-    let app = Router::new()
-        .route("/health_check", get(health_check))
+    let mut app = Router::new().route("/health_check", get(health_check));
+
+    // Conditionally add authentication routes based on auth type
+    match &auth {
+        configuration::AuthSettings::GoogleOAuth { .. } => {
+            app = app
+                .route("/auth/google", get(google_login))
+                .route("/auth/google/callback", get(google_callback));
+        }
+        configuration::AuthSettings::Jwt { .. } => {
+            // JWT auth doesn't need special login routes - tokens are handled via the extractor
+        }
+    }
+
+    let app = app
         .route("/todo", post(create_todo))
         .route("/todo", get(list_todo))
         .route("/todo/{todo_id}", delete(delete_todo))
@@ -120,6 +138,8 @@ pub async fn run(
         .with_state(AppState {
             pool: pg_pool,
             recurring_settings,
+            auth,
+            jwt_service,
         });
     Ok(axum::serve(listener, app))
 }

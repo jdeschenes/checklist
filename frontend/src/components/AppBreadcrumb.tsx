@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { getTodoQueryOptions } from '@/api/todoQueryOptions'
 import {
     Breadcrumb,
@@ -16,12 +16,14 @@ export function AppBreadcrumb() {
 
     // Parse route segments
     const segments = pathname.split('/').filter(Boolean)
-    
+
     // For todo routes, get the todo name if we have a todoId
     const todoId = segments[1]
-    const todoQuery = todoId && segments[0] === 'todo' 
-        ? useSuspenseQuery(getTodoQueryOptions(todoId))
-        : null
+    const shouldFetchTodo = Boolean(todoId && segments[0] === 'todo')
+    const todoQuery = useQuery({
+        ...getTodoQueryOptions(todoId || 'dummy'),
+        enabled: shouldFetchTodo,
+    })
 
     const breadcrumbItems: Array<{
         label: string
@@ -58,7 +60,7 @@ export function AppBreadcrumb() {
         } else if (segments.length >= 2 && segments[1] !== 'new') {
             // /todo/$todoId or /todo/$todoId/new
             const todoName = todoQuery?.data?.name || todoId
-            
+
             if (segments.length === 2) {
                 // /todo/$todoId
                 breadcrumbItems.push({
@@ -90,7 +92,11 @@ export function AppBreadcrumb() {
                     href: `/todo/${todoId}/templates`,
                     isPage: true,
                 })
-            } else if (segments.length === 5 && segments[2] === 'template' && segments[4] === 'edit') {
+            } else if (
+                segments.length === 5 &&
+                segments[2] === 'template' &&
+                segments[4] === 'edit'
+            ) {
                 // /todo/$todoId/template/$templateId/edit
                 breadcrumbItems.push({
                     label: todoName,

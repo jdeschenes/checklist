@@ -10,7 +10,7 @@ use crate::domain;
 use crate::domain::NewTodoRequest;
 use crate::domain::{ListTodo, ListTodoSingle, Todo};
 use crate::error::APIError;
-use crate::extractors::DatabaseConnection;
+use crate::extractors::{AuthenticatedUser, DatabaseConnection};
 use crate::repos;
 
 #[derive(Debug, Deserialize)]
@@ -101,6 +101,7 @@ impl From<ListTodo> for ListTodoResponse {
 )]
 pub async fn create_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     Json(payload): Json<CreateTodoRequest>,
 ) -> Result<(), APIError> {
     let todo = payload.try_into()?;
@@ -108,7 +109,7 @@ pub async fn create_todo(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    repos::create_todo(&mut transaction, &todo).await?;
+    repos::create_todo(&mut transaction, &todo, user.user_id).await?;
     transaction
         .commit()
         .await
@@ -125,6 +126,7 @@ pub async fn create_todo(
 )]
 pub async fn get_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<Json<GetTodoResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
@@ -132,7 +134,7 @@ pub async fn get_todo(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_response = repos::get_todo_by_name(&mut transaction, &todo_name)
+    let todo_response = repos::get_todo_by_name(&mut transaction, &todo_name, user.user_id)
         .await?
         .into();
     Ok(Json(todo_response))
@@ -147,6 +149,7 @@ pub async fn get_todo(
 )]
 pub async fn delete_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<(), APIError> {
     let todo_name = todo_str.try_into()?;
@@ -154,7 +157,7 @@ pub async fn delete_todo(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    repos::delete_todo_by_name(&mut transaction, &todo_name).await?;
+    repos::delete_todo_by_name(&mut transaction, &todo_name, user.user_id).await?;
     transaction
         .commit()
         .await
@@ -172,6 +175,7 @@ pub async fn delete_todo(
 )]
 pub async fn update_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
     Json(payload): Json<UpdateTodoRequest>,
 ) -> Result<(), APIError> {
@@ -181,7 +185,7 @@ pub async fn update_todo(
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    repos::update_todo(&mut transaction, &todo_name, &todo).await?;
+    repos::update_todo(&mut transaction, &todo_name, &todo, user.user_id).await?;
     transaction
         .commit()
         .await
@@ -195,11 +199,14 @@ pub async fn update_todo(
 )]
 pub async fn list_todo(
     DatabaseConnection(mut conn): DatabaseConnection,
+    user: AuthenticatedUser,
 ) -> Result<Json<ListTodoResponse>, APIError> {
     let mut transaction = conn
         .begin()
         .await
         .context("Failed to acquire transaction")?;
-    let todo_response = repos::list_todo(&mut transaction).await?.into();
+    let todo_response = repos::list_todo(&mut transaction, user.user_id)
+        .await?
+        .into();
     Ok(Json(todo_response))
 }

@@ -10,6 +10,7 @@ pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
     pub recurring: RecurringSettings,
+    pub auth: AuthSettings,
 }
 
 pub enum Environment {
@@ -66,6 +67,47 @@ pub struct DatabaseSettings {
     pub pool_acquire_timeout: Duration,
     pub max_connections: u32,
     pub require_ssl: bool,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(tag = "type")]
+pub enum AuthSettings {
+    #[serde(rename = "jwt")]
+    Jwt {
+        jwt_secret: secrecy::SecretString,
+        jwt_expiration_hours: u64,
+    },
+    #[serde(rename = "google_oauth")]
+    GoogleOAuth {
+        jwt_secret: secrecy::SecretString,
+        jwt_expiration_hours: u64,
+        google_oauth: GoogleOAuthSettings,
+    },
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct GoogleOAuthSettings {
+    pub client_id: String,
+    pub client_secret: secrecy::SecretString,
+    pub redirect_uri: String,
+    #[serde(default = "default_auth_url")]
+    pub auth_url: String,
+    #[serde(default = "default_token_url")]
+    pub token_url: String,
+    #[serde(default = "default_userinfo_url")]
+    pub userinfo_url: String,
+}
+
+fn default_auth_url() -> String {
+    "https://accounts.google.com/o/oauth2/v2/auth".to_string()
+}
+
+fn default_token_url() -> String {
+    "https://www.googleapis.com/oauth2/v3/token".to_string()
+}
+
+fn default_userinfo_url() -> String {
+    "https://www.googleapis.com/oauth2/v2/userinfo".to_string()
 }
 
 impl DatabaseSettings {

@@ -11,40 +11,70 @@ export const Route = createFileRoute('/todo/new')({
 function RouteComponent() {
     const createTodoMutation = useCreateTodo()
     const navigate = useNavigate()
+    const [error, setError] = React.useState<string | null>(null)
+    
     const submitCallback = React.useCallback(
-        (event: React.SyntheticEvent) => {
+        (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault()
-            const target = event.target as typeof event.target & {
-                name: { value: string }
+            event.stopPropagation()
+            
+            setError(null)
+            
+            const formData = new FormData(event.currentTarget)
+            const todoName = formData.get('name') as string
+            
+            if (!todoName || todoName.trim() === '') {
+                setError('Todo name is required')
+                return
             }
+            
             createTodoMutation.mutate(
                 {
-                    name: target.name.value,
+                    name: todoName.trim(),
                 },
                 {
                     onSuccess: () => {
-                        navigate({
-                            to: '/todo/$todoId',
-                            params: {
-                                todoId: target.name.value,
-                            },
-                        })
+                        const trimmedName = todoName.trim()
+                        setTimeout(() => {
+                            navigate({
+                                to: '/todo/$todoId',
+                                params: {
+                                    todoId: trimmedName,
+                                },
+                                replace: true,
+                            })
+                        }, 100)
                     },
-                    onError: (e) => {
-                        console.log('ERROR', e)
+                    onError: (error) => {
+                        setError(error instanceof Error ? error.message : 'Failed to create todo')
                     },
                 }
             )
         },
-        [createTodoMutation]
+        [createTodoMutation, navigate]
     )
     return (
         <div className="p-2 flex flex-col gap-1">
             <h1 className="text-xl">Create New Todo</h1>
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded text-sm">
+                    {error}
+                </div>
+            )}
             <form className="flex flex-col gap-2" onSubmit={submitCallback}>
-                <Input type="text" name="name" placeholder="Todo" autoFocus />
-                <Button variant="default" type="submit">
-                    Create
+                <Input 
+                    type="text" 
+                    name="name" 
+                    placeholder="Todo" 
+                    autoFocus 
+                    disabled={createTodoMutation.isPending}
+                />
+                <Button 
+                    variant="default" 
+                    type="submit" 
+                    disabled={createTodoMutation.isPending}
+                >
+                    {createTodoMutation.isPending ? 'Creating...' : 'Create'}
                 </Button>
             </form>
         </div>

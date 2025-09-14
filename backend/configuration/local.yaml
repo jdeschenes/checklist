@@ -9,3 +9,21 @@ database:
   pool_acquire_timeout: 1s
   max_connections: 10
   require_ssl: false
+
+auth:
+  type: "google_oauth"  # Use JWT authentication for local development
+  jwt_secret: "dev-secret-key-change-in-production"
+  jwt_expiration_hours: 24
+  google_oauth:
+    client_id: "773283860418-1h4shl4rf8jqvb8ouoeof8e9r0isdl9d.apps.googleusercontent.com"
+    redirect_uri: "http://localhost:3000/auth/google/callback"
+
+# Example of Google OAuth configuration (change type to "google_oauth" to use):
+# auth:
+#   type: "google_oauth"
+#   jwt_secret: "dev-secret-key-change-in-production"
+#   jwt_expiration_hours: 24
+#   google_oauth:
+#     client_id: "your-google-client-id-here"
+#     client_secret: "your-google-client-secret-here"
+#     redirect_uri: "http://localhost:3000/auth/google/callback"

@@ -20,11 +20,12 @@ pub async fn create_todo_item(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     req: &NewTodoItemRequest,
+    user_id: i32,
 ) -> Result<TodoItem, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     let result = sqlx::query_as!(
         TodoItem,
-        r#"INSERT INTO todo_item (todo_item_id, todo_id, title, due_date, recurring_template_id) VALUES ($1, $2, $3, $4, $5)
+        r#"INSERT INTO todo_item (todo_item_id, todo_id, title, due_date, recurring_template_id, user_id) VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING todo_item_id, title, due_date, is_complete, complete_time, create_time, update_time
            ;"#,
         Uuid::new_v4(),
@@ -32,6 +33,7 @@ pub async fn create_todo_item(
         req.title,
         req.due_date,
         req.recurring_template_id,
+        user_id,
     )
     .fetch_one(&mut **transaction)
     .await?;
@@ -46,8 +48,9 @@ pub async fn get_todo_item(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     todo_item: &Uuid,
+    user_id: i32,
 ) -> Result<TodoItem, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     match sqlx::query_as!(
         TodoItem,
         r#"SELECT todo_item_id, title, is_complete, due_date, complete_time, create_time, update_time
@@ -79,8 +82,9 @@ pub async fn update_todo_item(
     todo_name: &TodoName,
     todo_item: &Uuid,
     req: &UpdateTodoItemRequest,
+    user_id: i32,
 ) -> Result<TodoItem, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     let todo_id = todo.todo_id;
     get_todo_item_for_update(transaction, &todo_id, todo_item).await?;
     match sqlx::query_as!(
@@ -122,8 +126,9 @@ impl From<Vec<ListTodoItemSingle>> for ListTodoItem {
 pub async fn list_todo_items(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
+    user_id: i32,
 ) -> Result<ListTodoItem, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     match sqlx::query_as!(
         ListTodoItemSingle,
         r#"SELECT todo_item_id, title, is_complete, due_date, complete_time, create_time, update_time
@@ -192,8 +197,9 @@ pub async fn complete_todo_item(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     todo_item: &Uuid,
+    user_id: i32,
 ) -> Result<TodoItem, APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     let todo_id = todo.todo_id;
     get_todo_item_for_update(transaction, &todo_id, todo_item).await?;
 
@@ -230,8 +236,9 @@ pub async fn delete_todo_item(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     todo_item: &Uuid,
+    user_id: i32,
 ) -> Result<(), APIError> {
-    let todo = get_todo_by_name(transaction, todo_name).await?;
+    let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     let result = sqlx::query!(
         r#"DELETE from todo_item
            WHERE

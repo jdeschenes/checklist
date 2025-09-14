@@ -10,22 +10,29 @@ use crate::{
 pub async fn create_todo(
     transaction: &mut PgTransaction<'_>,
     req: &NewTodoRequest,
+    user_id: i32,
 ) -> Result<(), APIError> {
     match sqlx::query!(
-        r#"INSERT INTO todo (todo_id, name) VALUES ($1, $2)
-           ON CONFLICT (name) DO NOTHING
+        r#"INSERT INTO todo (todo_id, name, user_id) VALUES ($1, $2, $3)
            RETURNING name;"#,
         Uuid::new_v4(),
         req.name.as_ref(),
+        user_id,
     )
     .fetch_one(&mut **transaction)
     .await
     {
         Ok(_) => Ok(()),
-        Err(sqlx::Error::RowNotFound) => Err(APIError::AlreadyExists(format!(
-            "TODO: '{}' already exists",
-            req.name.as_ref(),
-        ))),
+        Err(sqlx::Error::Database(e)) => {
+            if e.is_unique_violation() {
+                Err(APIError::AlreadyExists(format!(
+                    "TODO: '{}' already exists",
+                    req.name.as_ref()
+                )))
+            } else {
+                Err(APIError::Internal(sqlx::Error::Database(e).into()))
+            }
+        }
         Err(err) => Err(APIError::Internal(err.into())),
     }
 }
@@ -50,15 +57,17 @@ impl TryFrom<GetTodoQuery> for Todo {
     }
 }
 
-#[tracing::instrument(name = "Create todo in the database", skip(transaction))]
+#[tracing::instrument(name = "Get todo by name in the database", skip(transaction))]
 pub async fn get_todo_by_name(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
+    user_id: i32,
 ) -> Result<Todo, APIError> {
     match sqlx::query_as!(
         GetTodoQuery,
-        r#"SELECT todo_id, name, create_time, update_time from todo WHERE name = $1;"#,
-        todo_name.as_ref()
+        r#"SELECT todo_id, name, create_time, update_time from todo WHERE name = $1 AND user_id = $2;"#,
+        todo_name.as_ref(),
+        user_id
     )
     .fetch_one(&mut **transaction)
     .await
@@ -76,11 +85,12 @@ pub async fn get_todo_by_name(
 pub async fn delete_todo_by_name(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
+    user_id: i32,
 ) -> Result<(), APIError> {
-    let r = sqlx::query_as!(
-        GetTodoQuery,
-        r#"DELETE from todo WHERE name = $1;"#,
-        todo_name.as_ref()
+    let r = sqlx::query!(
+        r#"DELETE from todo WHERE name = $1 AND user_id = $2;"#,
+        todo_name.as_ref(),
+        user_id
     )
     .execute(&mut **transaction)
     .await?;
@@ -101,13 +111,15 @@ pub async fn update_todo(
     transaction: &mut PgTransaction<'_>,
     todo_name: &TodoName,
     req: &UpdateTodoRequest,
+    user_id: i32,
 ) -> Result<(), APIError> {
     match sqlx::query!(
         r#"UPDATE todo SET
-            name = $2
-            WHERE name = $1
+            name = $3
+            WHERE name = $1 AND user_id = $2
             RETURNING name;"#,
         todo_name.as_ref(),
+        user_id,
         req.name.as_ref(),
     )
     .fetch_one(&mut **transaction)
@@ -159,10 +171,14 @@ impl TryFrom<ListTodoQuery> for ListTodoSingle {
 }
 
 #[tracing::instrument(name = "list todo in the database", skip(transaction))]
-pub async fn list_todo(transaction: &mut PgTransaction<'_>) -> Result<ListTodo, APIError> {
+pub async fn list_todo(
+    transaction: &mut PgTransaction<'_>,
+    user_id: i32,
+) -> Result<ListTodo, APIError> {
     match sqlx::query_as!(
         ListTodoQuery,
-        r#"SELECT name, create_time, update_time from todo;"#,
+        r#"SELECT name, create_time, update_time from todo WHERE user_id = $1;"#,
+        user_id
     )
     .fetch_all(&mut **transaction)
     .await
