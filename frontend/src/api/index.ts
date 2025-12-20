@@ -2,7 +2,8 @@ import { BackendTodoAPI } from './todo_api'
 import { BackendTodoItemAPI } from './todo_item_api'
 import { BackendRecurringTemplateAPI } from './recurring_template_api'
 
-export const BASE_URL = 'http://localhost:3000'
+const DEFAULT_BASE_URL = 'http://localhost:3000'
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_BASE_URL
 export type CreateTodoRequest = {
     name: string
 }

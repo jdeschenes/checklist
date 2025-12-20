@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM recurring_template\n           WHERE todo_id = $1 AND template_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "76a6d32d0e07c524e294a1e9f0982bbb1b61e5b088bf07a199e97f7daa7b11c9"
+}

@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+
+BACKUP_ROOT="{{ backup_mount_point }}"
+DB_NAME="{{ postgresql_db_name }}"
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+TMP_DIR="${BACKUP_ROOT}/tmp"
+DAILY_DIR="${BACKUP_ROOT}/daily"
+WEEKLY_DIR="${BACKUP_ROOT}/weekly"
+RETENTION_DAILY={{ backup_daily_keep }}
+RETENTION_WEEKLY={{ backup_weekly_keep }}
+export PGPORT="{{ postgresql_port }}"
+
+if ! mountpoint -q "${BACKUP_ROOT}"; then
+  echo "Backup target not mounted: ${BACKUP_ROOT}" >&2
+  exit 1
+fi
+
+umask 077
+mkdir -p "${TMP_DIR}" "${DAILY_DIR}" "${WEEKLY_DIR}"
+
+BACKUP_FILE="${TMP_DIR}/${DB_NAME}-${TIMESTAMP}.dump"
+
+# Run as postgres (cron user) to avoid password prompts; defaults to local socket.
+pg_dump -Fc -f "${BACKUP_FILE}" "{{ postgresql_db_name }}"
+
+DEST_FILE="${DAILY_DIR}/${DB_NAME}-${TIMESTAMP}.dump"
+mv "${BACKUP_FILE}" "${DEST_FILE}"
+
+# Prune daily backups beyond retention
+ls -1t "${DAILY_DIR}"/${DB_NAME}-*.dump 2>/dev/null | tail -n +$((RETENTION_DAILY + 1)) | xargs -r rm --
+
+# Copy to weekly on Sundays
+if [ "$(date +%u)" -eq {{ backup_weekly_day_number }} ]; then
+  WEEKLY_FILE="${WEEKLY_DIR}/${DB_NAME}-${TIMESTAMP}.dump"
+  cp "${DEST_FILE}" "${WEEKLY_FILE}"
+  ls -1t "${WEEKLY_DIR}"/${DB_NAME}-*.dump 2>/dev/null | tail -n +$((RETENTION_WEEKLY + 1)) | xargs -r rm --
+fi

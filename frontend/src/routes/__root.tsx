@@ -21,8 +21,10 @@ function RootComponent() {
     }
 
     // Routes that don't require authentication
-    const publicRoutes = ['/login', '/auth/callback']
-    const isPublicRoute = publicRoutes.includes(location.pathname)
+    const isPublicRoute =
+        location.pathname === '/login' ||
+        location.pathname.startsWith('/login/') ||
+        location.pathname.startsWith('/auth/callback')
 
     const content = (
         <>
@@ -55,7 +57,7 @@ function RootComponent() {
                 </header>
             )}
             <Outlet />
-            <TanStackRouterDevtools />
+            {import.meta.env.DEV ? <TanStackRouterDevtools /> : null}
         </>
     )
 

@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.template_id, t.name as todo_name, r.title, r.recurrence_period, r.start_date, r.end_date, r.last_generated_date,\n                  r.is_active, r.create_time, r.update_time\n           FROM recurring_template as r\n           INNER JOIN todo as t ON t.todo_id = r.todo_id\n           WHERE r.is_active = TRUE\n             AND (r.end_date IS NULL OR r.end_date >= ($1::date + $2::interval)::date)\n             AND (r.last_generated_date IS NULL OR $1::date >= (r.last_generated_date + r.recurrence_period - $2::interval)::date)\n             AND $1::date >= (r.start_date - $2::interval)::date",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "template_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "todo_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "recurrence_period",
+        "type_info": "Interval"
+      },
+      {
+        "ordinal": 4,
+        "name": "start_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "end_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_generated_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Interval"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e43fbe84c121503d1ac632710fd39b7e26eb64bf20c7d8008ffadfc3d446f6ed"
+}

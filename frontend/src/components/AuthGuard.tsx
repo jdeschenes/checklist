@@ -13,8 +13,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Store current location for redirect after login
-      const currentPath = window.location.pathname + window.location.search
-      if (currentPath !== '/login' && currentPath !== '/auth/callback') {
+      const pathOnly = window.location.pathname
+      const currentPath = pathOnly + window.location.search
+      if (
+        pathOnly !== '/login' &&
+        !pathOnly.startsWith('/login/') &&
+        !pathOnly.startsWith('/auth/callback')
+      ) {
         localStorage.setItem('checklist_redirect_after_login', currentPath)
       }
       

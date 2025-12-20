@@ -1,0 +1,51 @@
+# Application defaults
+app_name: checklist
+app_user: deploy
+app_group: "{{ app_user }}"
+app_dir: /opt/checklist
+app_binary: checklist
+app_service_name: checklist
+app_port: 3000
+backend_domain: checklist.deschenes.me
+frontend_domain: todo.deschenes.me
+frontend_dir: "{{ app_dir }}/frontend"
+run_db_migrations: true
+app_env:
+  APP_ENVIRONMENT: production
+  APP_APPLICATION__HOST: "127.0.0.1"
+  APP_APPLICATION__PORT: "{{ app_port }}"
+  APP_AUTH__GOOGLE_OAUTH__CLIENT_SECRET: "{{ google_oauth_client_secret }}"
+  APP_DATABASE__HOST: "127.0.0.1"
+  APP_DATABASE__PORT: "{{ postgresql_port }}"
+  APP_DATABASE__USER: "{{ postgresql_db_user }}"
+  APP_DATABASE__PASSWORD: "{{ postgresql_db_password }}"
+  APP_DATABASE__DATABASE: "{{ postgresql_db_name }}"
+  APP_DATABASE__POOL_ACQUIRE_TIMEOUT: "1s"
+  APP_DATABASE__MAX_CONNECTIONS: "10"
+  APP_DATABASE__REQUIRE_SSL: "false"
+app_env_file: "/etc/{{ app_service_name }}.env"
+
+# Postgres defaults
+postgresql_version: 17
+postgresql_listen_addresses: "127.0.0.1"
+postgresql_port: 5432
+postgresql_db_name: checklist
+postgresql_db_user: checklist
+postgresql_db_password: CHANGE_ME
+# Database locale/collation (must exist on target and be compatible with the cluster)
+postgresql_db_lc_collate: "en_US.UTF-8"
+postgresql_db_lc_ctype: "en_US.UTF-8"
+postgresql_hba_local_method: md5
+postgresql_custom_conf: "/etc/postgresql/{{ postgresql_version }}/main/conf.d/custom.conf"
+
+# Backup defaults (NFS paths filled in later)
+backup_enabled: false
+backup_nfs_server: ""
+backup_nfs_export: ""
+backup_mount_point: /mnt/db-backups
+backup_daily_keep: 7
+backup_weekly_keep: 4
+backup_weekly_day_number: 7  # ISO day of week (1=Mon, 7=Sun)
+backup_timezone: America/New_York
+backup_cron_minute: "0"
+backup_cron_hour: "4"

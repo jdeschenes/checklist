@@ -81,6 +81,15 @@ impl Application {
     }
 }
 
+pub async fn run_migrations(configuration: &Settings) -> Result<()> {
+    let pool = get_connection_pool(&configuration.database);
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .context("Failed to run migrations")?;
+    Ok(())
+}
+
 pub fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new()
         .max_connections(configuration.max_connections)

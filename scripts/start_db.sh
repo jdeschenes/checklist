@@ -70,5 +70,8 @@ sqlx migrate run
 
 cd ..
 
+>&2 echo "Generating .sqlx for offline builds..."
+./scripts/prepare_sqlx.sh
+
 # Add authorized user to database
 ./scripts/add_authorized_user.sh

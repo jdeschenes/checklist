@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT todo_item_id, is_complete\n            FROM todo_item\n            WHERE\n                todo_id = $1\n                AND todo_item_id = $2\n            FOR UPDATE;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "todo_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_complete",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "99bb5b086fae8064b76f2eefed3823f6a4b8eec54861ac7b1422acc3f8310b40"
+}

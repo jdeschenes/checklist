@@ -1,0 +1,9 @@
+- hosts: vm
+  become: true
+  gather_facts: true
+  roles:
+    - base
+    - postgres
+    - { role: backup, when: backup_enabled | bool }
+    - app
+    - web

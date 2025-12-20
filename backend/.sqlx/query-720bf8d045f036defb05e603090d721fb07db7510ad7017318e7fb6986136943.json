@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH insert_qry AS (\n            INSERT INTO recurring_template (template_id, todo_id, title, recurrence_period, start_date, end_date, user_id)\n           VALUES ($1, $2, $3, $4::interval, $5, $6, $7)\n           RETURNING template_id, todo_id, title, recurrence_period, start_date, end_date, last_generated_date, \n                     is_active, create_time, update_time)\n            SELECT i.template_id, t.name as todo_name, i.title, i.recurrence_period, i.start_date, i.end_date, i.last_generated_date,\n              i.is_active, i.create_time, i.update_time\n            FROM insert_qry as i\n            INNER JOIN todo as t ON t.todo_id = i.todo_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "template_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "todo_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "recurrence_period",
+        "type_info": "Interval"
+      },
+      {
+        "ordinal": 4,
+        "name": "start_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "end_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_generated_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Interval",
+        "Date",
+        "Date",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "720bf8d045f036defb05e603090d721fb07db7510ad7017318e7fb6986136943"
+}

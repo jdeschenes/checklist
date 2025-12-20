@@ -33,7 +33,7 @@ function Login() {
     
     // Store current intended destination for after login
     const currentPath = window.location.pathname + window.location.search
-    if (currentPath !== '/login') {
+    if (currentPath !== '/login' && !currentPath.startsWith('/login/')) {
       localStorage.setItem('checklist_redirect_after_login', currentPath)
     }
     
