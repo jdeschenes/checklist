@@ -24,7 +24,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       }
       
       // Navigate to login page using React Router
-      navigate({ to: '/login' })
+      void navigate({ to: '/login' })
     }
   }, [isAuthenticated, isLoading, navigate])
 

@@ -10,7 +10,7 @@ export default function useCompleteTodoItem(todoId: string) {
             FinalTodoItemAPI.CompleteTodoItem(todoId, itemId),
         onSuccess: () => {
             // Invalidate and refetch todo items to update the list
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: listTodoItemsQueryOptions(todoId).queryKey,
             })
         },

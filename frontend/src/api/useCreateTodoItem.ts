@@ -11,10 +11,10 @@ const useCreateTodoItem = (todoId: string) => {
     const mutation = useMutation({
         mutationFn: (x: HookInput) =>
             FinalTodoItemAPI.CreateTodoItem(x.todoId, x.data),
-        onSuccess: async () => {
+        onSuccess: () => {
             // Invalidate both the todo details and the todo items list
-            await queryClient.invalidateQueries({ queryKey: ['todo', todoId] })
-            await queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({ queryKey: ['todo', todoId] })
+            void queryClient.invalidateQueries({
                 queryKey: ['todo', todoId, 'item'],
             })
         },

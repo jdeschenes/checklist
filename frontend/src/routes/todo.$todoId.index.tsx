@@ -24,7 +24,7 @@ function RouteComponent() {
     const handleDeleteConfirm = React.useCallback(() => {
         deleteTodoMutation.mutate(todoId, {
             onSuccess: () => {
-                navigate({ to: '/' })
+                void navigate({ to: '/' })
             },
         })
     }, [deleteTodoMutation, todoId, navigate])

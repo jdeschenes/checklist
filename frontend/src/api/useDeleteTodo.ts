@@ -8,7 +8,7 @@ export default function useDeleteTodo() {
         mutationFn: (todoId: string) => FinalTodoAPI.DeleteTodo(todoId),
         onSuccess: () => {
             // Invalidate todo list to refresh after deletion
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['todos'],
             })
         },

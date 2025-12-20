@@ -8,7 +8,6 @@ import {
     ListTodoResponse,
 } from '.'
 import { 
-    authenticatedPost, 
     authenticatedGet, 
     authenticatedPut, 
     authenticatedDelete,
