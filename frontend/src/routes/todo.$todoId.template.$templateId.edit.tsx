@@ -72,7 +72,7 @@ function RouteComponent() {
                 },
                 {
                     onSuccess: () => {
-                        navigate({
+                        void navigate({
                             to: '/todo/$todoId/templates',
                             params: { todoId },
                         })
@@ -114,8 +114,8 @@ function RouteComponent() {
                         Template not found
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">
-                        The template you're looking for doesn't exist or has
-                        been deleted.
+                        The template you&apos;re looking for doesn&apos;t exist
+                        or has been deleted.
                     </p>
                 </div>
             </div>
@@ -238,7 +238,7 @@ function RouteComponent() {
                             Template is active
                         </label>
                         <span className="text-xs text-gray-500">
-                            (Inactive templates won't generate new items)
+                            (Inactive templates won&apos;t generate new items)
                         </span>
                     </div>
 

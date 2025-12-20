@@ -20,7 +20,7 @@ function Login() {
       
       // Use React Router navigation for internal routes, window.location for external
       if (redirectPath.startsWith('/')) {
-        navigate({ to: redirectPath as any })
+        void navigate({ to: redirectPath })
       } else {
         window.location.href = redirectPath
       }

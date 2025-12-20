@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus, Edit, Trash2, Clock, Play, Pause } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -33,7 +33,6 @@ function formatRecurrenceInterval(interval: {
 
 function RouteComponent() {
     const todoId = Route.useParams().todoId
-    const navigate = useNavigate()
     const getTodoQuery = useSuspenseQuery(getTodoQueryOptions(todoId))
     const templatesQuery = useListRecurringTemplates(todoId)
     const deleteTemplateMutation = useDeleteRecurringTemplate()

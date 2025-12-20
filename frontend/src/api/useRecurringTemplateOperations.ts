@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     FinalRecurringTemplateAPI,
-    FinalTodoItemAPI,
     CreateRecurringTemplateRequest,
     UpdateRecurringTemplateRequest,
 } from '.'
@@ -45,11 +44,11 @@ export const useCreateRecurringTemplate = () => {
                 template
             ),
         onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['recurring-templates', variables.todo_name],
             })
             // Invalidate todo items since creating a template can generate advance todo items
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['todo', variables.todo_name, 'item'],
             })
         },
@@ -75,10 +74,10 @@ export const useUpdateRecurringTemplate = () => {
                 template
             ),
         onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['recurring-templates', variables.todo_name],
             })
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: [
                     'recurring-template',
                     variables.todo_name,
@@ -86,7 +85,7 @@ export const useUpdateRecurringTemplate = () => {
                 ],
             })
             // Invalidate todo items since updating a template can generate new todo items
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['todo', variables.todo_name, 'item'],
             })
         },
@@ -109,7 +108,7 @@ export const useDeleteRecurringTemplate = () => {
                 template_id
             ),
         onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
                 queryKey: ['recurring-templates', variables.todo_name],
             })
             queryClient.removeQueries({

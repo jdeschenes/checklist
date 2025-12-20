@@ -4,8 +4,8 @@ export default function useCreateTodo() {
     const queryClient = useQueryClient()
     const mutation = useMutation({
         mutationFn: (r: CreateTodoRequest) => FinalTodoAPI.CreateTodo(r),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['todo'] })
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['todo'] })
         },
     })
     return mutation

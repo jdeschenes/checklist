@@ -13,7 +13,7 @@ function AuthCallback() {
   const handledRef = useRef(false)
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const handleCallback = () => {
       if (handledRef.current) {
         return
       }

@@ -58,7 +58,7 @@ function RouteComponent() {
                     },
                     {
                         onSuccess: () => {
-                            navigate({
+                            void navigate({
                                 to: '/todo/$todoId',
                                 params: {
                                     todoId,
@@ -81,7 +81,7 @@ function RouteComponent() {
                     },
                     {
                         onSuccess: () => {
-                            navigate({
+                            void navigate({
                                 to: '/todo/$todoId',
                                 params: {
                                     todoId,

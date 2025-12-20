@@ -17,7 +17,7 @@ function RootComponent() {
 
     const handleLogout = () => {
         logout()
-        navigate({ to: '/login' })
+        void navigate({ to: '/login' })
     }
 
     // Routes that don't require authentication

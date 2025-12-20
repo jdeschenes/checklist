@@ -36,7 +36,7 @@ function RouteComponent() {
                     onSuccess: () => {
                         const trimmedName = todoName.trim()
                         setTimeout(() => {
-                            navigate({
+                            void navigate({
                                 to: '/todo/$todoId',
                                 params: {
                                     todoId: trimmedName,
