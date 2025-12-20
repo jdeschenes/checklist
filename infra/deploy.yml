@@ -1,0 +1,91 @@
+- hosts: vm
+  become: true
+  gather_facts: false
+  vars:
+    app_binary_path: "{{ binary_path | default('') }}"
+    frontend_assets_path: "{{ frontend_dist_path | default('') }}"
+  tasks:
+    - name: Ensure binary_path is provided
+      ansible.builtin.assert:
+        that:
+          - app_binary_path | length > 0
+        fail_msg: "Pass binary_path=/path/to/binary when running deploy.yml"
+
+    - name: Ensure application directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0755"
+
+    - name: Ensure configuration directory exists
+      ansible.builtin.file:
+        path: "{{ app_dir }}/configuration"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0755"
+
+    - name: Copy configuration files
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../backend/configuration/"
+        dest: "{{ app_dir }}/configuration/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0644"
+
+    - name: Render environment file
+      ansible.builtin.copy:
+        dest: "{{ app_env_file }}"
+        content: |
+          {% for key, value in app_env.items() -%}
+          {{ key }}={{ value }}
+          {% endfor -%}
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0640"
+      when: app_env | length > 0
+
+    - name: Copy application binary
+      ansible.builtin.copy:
+        src: "{{ app_binary_path }}"
+        dest: "{{ app_dir }}/{{ app_binary }}"
+        mode: "0755"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+
+    - name: Run database migrations
+      ansible.builtin.command:
+        cmd: "{{ app_dir }}/{{ app_binary }} --migrate"
+        chdir: "{{ app_dir }}"
+      environment: "{{ app_env }}"
+      become_user: "{{ app_user }}"
+      when: run_db_migrations | bool
+      changed_when: false
+
+    - name: Ensure frontend directory exists
+      ansible.builtin.file:
+        path: "{{ frontend_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0755"
+      when: frontend_assets_path | length > 0
+
+    - name: Copy frontend assets
+      ansible.builtin.copy:
+        src: "{{ frontend_assets_path }}/"
+        dest: "{{ frontend_dir }}/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: "0644"
+        directory_mode: "0755"
+      when: frontend_assets_path | length > 0
+
+    - name: Reload systemd and restart service
+      ansible.builtin.systemd:
+        name: "{{ app_service_name }}"
+        daemon_reload: true
+        enabled: true
+        state: restarted

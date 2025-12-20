@@ -1,0 +1,32 @@
+- name: Ensure application directory exists
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0755"
+
+- name: Render environment file
+  ansible.builtin.copy:
+    dest: "{{ app_env_file }}"
+    content: |
+      {% for key, value in app_env.items() -%}
+      {{ key }}={{ value }}
+      {% endfor -%}
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+  when: app_env | length > 0
+
+- name: Install systemd unit
+  ansible.builtin.template:
+    src: app.service.j2
+    dest: "/etc/systemd/system/{{ app_service_name }}.service"
+    mode: "0644"
+  notify: restart app
+
+- name: Enable service
+  ansible.builtin.systemd:
+    name: "{{ app_service_name }}"
+    daemon_reload: true
+    enabled: true

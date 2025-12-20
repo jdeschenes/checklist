@@ -1,2 +1,11 @@
 application:
   host: 0.0.0.0
+
+auth:
+  type: "google_oauth"  # Use JWT authentication for local development
+  jwt_secret: "dev-secret-key-change-in-production"
+  jwt_expiration_hours: 24
+  google_oauth:
+    client_id: "773283860418-1h4shl4rf8jqvb8ouoeof8e9r0isdl9d.apps.googleusercontent.com"
+    redirect_uri: "https://checklist.deschenes.me/auth/google/callback"
+    frontend_callback_url: "https://todo.deschenes.me/auth/callback"

@@ -10,6 +10,7 @@ use oauth2::{
 };
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
+use tracing::{error, warn};
 use urlencoding;
 
 use crate::{domain::User, repos::UserRepository, AppState};
@@ -50,11 +51,17 @@ pub async fn google_callback(
     let client = create_oauth_client(&state);
 
     // Exchange authorization code for access token
-    let token_result = client
+    let token_result = match client
         .exchange_code(AuthorizationCode::new(params.code))
         .request_async(async_http_client)
         .await
-        .map_err(|_| StatusCode::BAD_REQUEST)?;
+    {
+        Ok(token_result) => token_result,
+        Err(err) => {
+            error!(error = %err, "OAuth token exchange failed");
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
 
     // Get user info from Google
     let google_oauth = match &state.auth {
@@ -62,14 +69,21 @@ pub async fn google_callback(
         _ => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
-    let user_info = get_google_user_info(
+    let user_info = match get_google_user_info(
         token_result.access_token().secret(),
         &google_oauth.userinfo_url,
     )
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    {
+        Ok(user_info) => user_info,
+        Err(err) => {
+            error!(error = %err, "Failed to fetch Google user info");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    };
 
     if !user_info.verified_email {
+        warn!(email = %user_info.email, "Google user email not verified");
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -79,20 +93,34 @@ pub async fn google_callback(
         Ok(Some(user)) => user,
         Ok(None) => {
             // User not found - return 403 Forbidden
+            warn!(email = %user_info.email, "OAuth user not authorized");
             return Err(StatusCode::FORBIDDEN);
         }
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(err) => {
+            error!(error = %err, "Failed to lookup OAuth user");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
     };
 
     // Generate JWT token
-    let token = state
+    let token = match state
         .jwt_service
         .generate_token(user.user_id, &user.email)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    {
+        Ok(token) => token,
+        Err(err) => {
+            error!(error = %err, "Failed to generate JWT token");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    };
 
     // Redirect to frontend callback with token and user data as query parameters
+    let frontend_callback_base = &google_oauth.frontend_callback_url;
+    let query_sep = if frontend_callback_base.contains('?') { "&" } else { "?" };
     let frontend_callback_url = format!(
-        "http://localhost:5173/auth/callback?token={}&user_id={}&email={}",
+        "{}{}token={}&user_id={}&email={}",
+        frontend_callback_base,
+        query_sep,
         urlencoding::encode(&token),
         urlencoding::encode(&user.user_id.to_string()),
         urlencoding::encode(&user.email)
@@ -133,6 +161,14 @@ async fn get_google_user_info(access_token: &str, userinfo_url: &str) -> Result<
         .bearer_auth(access_token)
         .send()
         .await?;
+
+    let status = response.status();
+    if !status.is_success() {
+        return Err(eyre::eyre!(
+            "Google userinfo request failed with status {}",
+            status
+        ));
+    }
 
     let user_info: GoogleUserInfo = response.json().await?;
     Ok(user_info)

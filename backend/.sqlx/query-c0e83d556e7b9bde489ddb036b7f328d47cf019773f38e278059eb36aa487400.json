@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH update_qry as (\n            UPDATE recurring_template SET\n               title = $3,\n               recurrence_period = $4::interval,\n               start_date = $5,\n               end_date = $6,\n               is_active = $7\n           WHERE todo_id = $1 AND template_id = $2\n           RETURNING template_id, todo_id, title, recurrence_period, start_date, end_date, last_generated_date,\n                     is_active, create_time, update_time)\n        SELECT u.template_id, t.name as todo_name, u.title, u.recurrence_period, u.start_date, u.end_date, u.last_generated_date,\n                  u.is_active, u.create_time, u.update_time\n        FROM update_qry as u\n        INNER JOIN todo as t ON t.todo_id = u.todo_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "template_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "todo_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "recurrence_period",
+        "type_info": "Interval"
+      },
+      {
+        "ordinal": 4,
+        "name": "start_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "end_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_generated_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Interval",
+        "Date",
+        "Date",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c0e83d556e7b9bde489ddb036b7f328d47cf019773f38e278059eb36aa487400"
+}

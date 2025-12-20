@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n            SELECT 1 FROM todo_item ti\n            WHERE ti.recurring_template_id = $1\n            AND ti.is_complete = FALSE\n        ) as exists",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dd8e683eb122ff9df1e523effa219f43905b7819c8ef85f5a7f26a02c6d963ff"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE from todo_item\n           WHERE\n              todo_id = $1\n              AND todo_item_id = $2;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d83705191ea7a8d76965734066048123ec7261577f65897f091ca05d3e30d1be"
+}

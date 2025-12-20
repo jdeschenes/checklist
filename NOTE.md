@@ -5,6 +5,12 @@
 * talk about golden testing
 * Verify initial DB connection at startup. Avoid a broken container
 
+# DEPLOY TODO
+* Add a subdomain to host
+* Add backups script and access to the backup folder
+* Add a script to deploy the app
+* Verify that the app is running
+
 # BACKEND TODO
 * Fix CORS
 * Improve frontend run command... Can't be stopped

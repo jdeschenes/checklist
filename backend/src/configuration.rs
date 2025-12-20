@@ -90,6 +90,8 @@ pub struct GoogleOAuthSettings {
     pub client_id: String,
     pub client_secret: secrecy::SecretString,
     pub redirect_uri: String,
+    #[serde(default = "default_frontend_callback_url")]
+    pub frontend_callback_url: String,
     #[serde(default = "default_auth_url")]
     pub auth_url: String,
     #[serde(default = "default_token_url")]
@@ -100,6 +102,10 @@ pub struct GoogleOAuthSettings {
 
 fn default_auth_url() -> String {
     "https://accounts.google.com/o/oauth2/v2/auth".to_string()
+}
+
+fn default_frontend_callback_url() -> String {
+    "http://localhost:5173/auth/callback".to_string()
 }
 
 fn default_token_url() -> String {

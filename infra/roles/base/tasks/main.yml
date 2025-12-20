@@ -1,0 +1,46 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - sudo
+      - rsync
+      - tar
+      - curl
+      - ca-certificates
+      - acl
+      - python3-apt
+      - python3-psycopg2
+    state: present
+
+- name: Ensure application group exists
+  ansible.builtin.group:
+    name: "{{ app_group }}"
+    system: true
+
+- name: Ensure application user exists with sudo
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    groups: sudo
+    append: true
+    create_home: true
+    shell: /bin/bash
+
+- name: Allow passwordless sudo for application user
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ app_user }}"
+    content: "{{ app_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0755"

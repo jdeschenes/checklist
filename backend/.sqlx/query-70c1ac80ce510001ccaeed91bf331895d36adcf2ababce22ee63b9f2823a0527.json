@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE todo_item SET\n              is_complete = TRUE,\n              complete_time = NOW()\n           WHERE\n              todo_id = $1\n              AND todo_item_id = $2\n           RETURNING todo_item_id, title, due_date, is_complete, complete_time, create_time, update_time\n            ;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "todo_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "due_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_complete",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "complete_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "70c1ac80ce510001ccaeed91bf331895d36adcf2ababce22ee63b9f2823a0527"
+}

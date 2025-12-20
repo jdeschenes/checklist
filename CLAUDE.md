@@ -19,7 +19,7 @@ make initial-setup  # Or ./scripts/setup.sh
 
 ### Database Management
 ```bash
-make start-db    # Start PostgreSQL in Docker
+make start-db    # Start PostgreSQL in Docker and generate .sqlx
 make stop-db     # Stop PostgreSQL container
 ```
 

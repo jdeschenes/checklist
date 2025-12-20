@@ -1,0 +1,6 @@
+# Managed by Ansible
+local   all             postgres                                peer
+local   {{ postgresql_db_name }}   {{ postgresql_db_user }}      {{ postgresql_hba_local_method }}
+local   all             all                                     peer
+host    {{ postgresql_db_name }}   {{ postgresql_db_user }}      127.0.0.1/32            {{ postgresql_hba_local_method }}
+host    {{ postgresql_db_name }}   {{ postgresql_db_user }}      ::1/128                 {{ postgresql_hba_local_method }}

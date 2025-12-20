@@ -1,0 +1,45 @@
+- hosts: vm
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Identify Postgres service states
+      ansible.builtin.set_fact:
+        postgres_service_states: "{{ ansible_facts.services | dict2items | selectattr('key', 'match', '^postgresql(@.+)?\\.service$') | map(attribute='value.state') | list }}"
+
+    - name: Verify Postgres service is running
+      ansible.builtin.assert:
+        that:
+          - postgres_service_states | intersect(['running']) | length > 0
+        fail_msg: "Postgres service is not running"
+
+    - name: Check Postgres readiness via local socket
+      ansible.builtin.command:
+        cmd: "pg_isready -h {{ postgresql_socket_dir | default('/var/run/postgresql') }} -p {{ postgresql_port }} -d {{ postgresql_check_db | default(postgresql_db_name) }} -U {{ postgresql_db_user }}"
+      environment:
+        PGPASSWORD: "{{ postgresql_db_password }}"
+      register: pg_isready
+      changed_when: false
+      failed_when: false
+
+    - name: Verify Postgres accepts connections
+      ansible.builtin.assert:
+        that:
+          - pg_isready.rc == 0
+        fail_msg: "pg_isready failed (rc={{ pg_isready.rc }}): {{ pg_isready.stdout | default('') }} {{ pg_isready.stderr | default('') }}"
+
+    - name: Identify app service state
+      ansible.builtin.set_fact:
+        app_service_unit: "{{ app_service_name }}.service"
+
+    - name: Read app service state
+      ansible.builtin.set_fact:
+        app_service_state: "{{ (ansible_facts.services[app_service_unit].state if app_service_unit in ansible_facts.services else 'missing') }}"
+
+    - name: Verify app service is running
+      ansible.builtin.assert:
+        that:
+          - app_service_state == 'running'
+        fail_msg: "App service {{ app_service_name }} is not running (state={{ app_service_state }})"

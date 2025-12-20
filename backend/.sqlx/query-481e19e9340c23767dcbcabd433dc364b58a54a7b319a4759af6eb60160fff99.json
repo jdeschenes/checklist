@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE recurring_template SET last_generated_date = $2\n           WHERE template_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Date"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "481e19e9340c23767dcbcabd433dc364b58a54a7b319a4759af6eb60160fff99"
+}

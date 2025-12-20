@@ -1,0 +1,78 @@
+- name: Skip backup setup when disabled
+  ansible.builtin.meta: end_role
+  when: not (backup_enabled | bool)
+
+- name: Ensure NFS backup settings are provided
+  ansible.builtin.assert:
+    that:
+      - backup_nfs_server | length > 0
+      - backup_nfs_export | length > 0
+      - (backup_weekly_day_number | int) >= 1
+      - (backup_weekly_day_number | int) <= 7
+    fail_msg: "Set backup_nfs_server and backup_nfs_export before running backups"
+
+- name: Install NFS client tools
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+
+- name: Ensure backup mount point exists
+  ansible.builtin.file:
+    path: "{{ backup_mount_point }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Mount NFS export
+  ansible.posix.mount:
+    src: "{{ backup_nfs_server }}:{{ backup_nfs_export }}"
+    path: "{{ backup_mount_point }}"
+    fstype: nfs
+    opts: defaults,_netdev
+    state: mounted
+
+- name: Create backup directories on NFS share
+  ansible.builtin.file:
+    path: "{{ backup_mount_point }}/{{ item }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+  loop:
+    - daily
+    - weekly
+    - tmp
+
+- name: Install backup script
+  ansible.builtin.template:
+    src: pg_backup.sh.j2
+    dest: /usr/local/sbin/pg_backup.sh
+    mode: "0750"
+    owner: postgres
+    group: postgres
+
+- name: Ensure backup log exists
+  ansible.builtin.file:
+    path: /var/log/pg_backup.log
+    state: touch
+    owner: postgres
+    group: postgres
+    mode: "0640"
+
+- name: Set timezone for backup cron
+  ansible.builtin.cron:
+    name: TZ
+    env: true
+    value: "{{ backup_timezone }}"
+    user: postgres
+    cron_file: pg_backup
+
+- name: Schedule daily database backup
+  ansible.builtin.cron:
+    name: "Daily Postgres backup"
+    minute: "{{ backup_cron_minute }}"
+    hour: "{{ backup_cron_hour }}"
+    user: postgres
+    job: "/usr/local/sbin/pg_backup.sh >> /var/log/pg_backup.log 2>&1"
+    cron_file: pg_backup
