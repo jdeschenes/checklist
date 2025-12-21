@@ -6,12 +6,11 @@ use axum::{
 use eyre::Result;
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
-    ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl,
+    ClientSecret, CsrfToken, RedirectUrl, RequestTokenError, Scope, TokenResponse, TokenUrl,
 };
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
-use urlencoding;
 
 use crate::{domain::User, repos::UserRepository, AppState};
 
@@ -58,7 +57,35 @@ pub async fn google_callback(
     {
         Ok(token_result) => token_result,
         Err(err) => {
-            error!(error = %err, "OAuth token exchange failed");
+            match &err {
+                RequestTokenError::ServerResponse(server_error) => {
+                    error!(
+                        error = %server_error.error(),
+                        error_description = ?server_error.error_description(),
+                        error_uri = ?server_error.error_uri(),
+                        "OAuth token exchange failed with server response"
+                    );
+                }
+                RequestTokenError::Request(request_error) => {
+                    error!(
+                        error = %request_error,
+                        "OAuth token exchange request failed"
+                    );
+                }
+                RequestTokenError::Parse(parse_error, body) => {
+                    error!(
+                        error = %parse_error,
+                        body = %String::from_utf8_lossy(body),
+                        "OAuth token exchange failed to parse response"
+                    );
+                }
+                RequestTokenError::Other(message) => {
+                    error!(
+                        error = %message,
+                        "OAuth token exchange failed with unexpected error"
+                    );
+                }
+            }
             return Err(StatusCode::BAD_REQUEST);
         }
     };

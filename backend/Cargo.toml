@@ -14,6 +14,7 @@ name = "checklist"
 axum = "0.8.1"
 color-eyre = "0.6.3"
 config = "0.15.7"
+dotenvy = "0.15.7"
 eyre = "0.6.12"
 secrecy = { version = "0.10.3", features = ["serde"] }
 tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros"] }

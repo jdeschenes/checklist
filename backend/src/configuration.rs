@@ -100,6 +100,26 @@ pub struct GoogleOAuthSettings {
     pub userinfo_url: String,
 }
 
+fn validate_settings(settings: &Settings) -> Result<()> {
+    if let AuthSettings::GoogleOAuth { google_oauth, .. } = &settings.auth {
+        let mut missing = Vec::new();
+        if google_oauth.client_id.is_empty() {
+            missing.push("auth.google_oauth.client_id");
+        }
+        if google_oauth.client_secret.expose_secret().is_empty() {
+            missing.push("auth.google_oauth.client_secret");
+        }
+        if !missing.is_empty() {
+            bail!(
+                "Google OAuth is enabled but the following settings are missing or placeholders: {}",
+                missing.join(", ")
+            );
+        }
+    }
+
+    Ok(())
+}
+
 fn default_auth_url() -> String {
     "https://accounts.google.com/o/oauth2/v2/auth".to_string()
 }
@@ -155,7 +175,9 @@ pub fn get_configuration() -> Result<Settings> {
         )
         .build()
         .context("Building settings")?;
-    settings
+    let settings = settings
         .try_deserialize::<Settings>()
-        .context("Deserialize settings")
+        .context("Deserialize settings")?;
+    validate_settings(&settings).context("Validate settings")?;
+    Ok(settings)
 }
