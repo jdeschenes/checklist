@@ -14,6 +14,7 @@ pub struct Settings {
 }
 
 pub enum Environment {
+    Test,
     Local,
     Production,
 }
@@ -21,6 +22,7 @@ pub enum Environment {
 impl Environment {
     pub fn as_str(&self) -> &'static str {
         match self {
+            Environment::Test => "test",
             Environment::Local => "local",
             Environment::Production => "production",
         }
@@ -31,10 +33,11 @@ impl TryFrom<String> for Environment {
     type Error = Report;
     fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
+            "test" => Ok(Self::Test),
             "local" => Ok(Self::Local),
             "production" => Ok(Self::Production),
             _ => bail!(
-                "`{}` is not a supported environment. Use either `local` or `production`",
+                "`{}` is not a supported environment. Use either `test`, `local` or `production`",
                 value
             ),
         }
@@ -153,13 +156,9 @@ impl DatabaseSettings {
     }
 }
 
-pub fn get_configuration() -> Result<Settings> {
+pub fn get_configuration(environment: Environment) -> Result<Settings> {
     let base_path = std::env::current_dir().context("Failed to determine the current directory")?;
     let configuration_directory = base_path.join("configuration");
-    let environment: Environment = std::env::var("APP_ENVIRONMENT")
-        .unwrap_or_else(|_| "local".into())
-        .try_into()
-        .expect("Failed to parse APP_ENVIRONMENT");
     let environment_file = format!("{}.yaml", environment.as_str());
     let settings = config::Config::builder()
         .add_source(config::File::from(

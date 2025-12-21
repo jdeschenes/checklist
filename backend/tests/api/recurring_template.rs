@@ -553,7 +553,9 @@ async fn recurring_template_fails_nonexistent_todo() {
 }
 
 async fn create_todo(app: &TestApp, todo_name: &str) {
-    let response = app.post_todo(&json!({"name": todo_name})).await;
+    let response = app
+        .post_todo(&json!({"name": todo_name, "visibility": "private"}))
+        .await;
 
     if response.status() != 200 {
         eprintln!(

@@ -7,7 +7,6 @@ use checklist::telemetry::{get_subscriber, init_subscriber};
 use secrecy::{ExposeSecret, SecretString};
 use serde_json::Value as JsonValue;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use uuid::Uuid;
 
 use crate::golden::GoldenTest;
 
@@ -17,7 +16,7 @@ pub struct TestApp {
     pub client: reqwest::Client,
     pub db_pool: PgPool,
     pub jwt_service: JwtService,
-    pub test_user_id: String,
+    pub test_user_id: i32,
 }
 
 static TRACING: LazyLock<()> = LazyLock::new(|| {
@@ -77,7 +76,8 @@ async fn spawn_app_with_config(valid_app: bool) -> TestApp {
     LazyLock::force(&TRACING);
 
     let mut configuration = {
-        let mut c = get_configuration().expect("Unable to read configuration");
+        let mut c = get_configuration(checklist::configuration::Environment::Test)
+            .expect("Unable to read configuration");
         c.database.database = uuid::Uuid::new_v4().to_string();
         c.application.port = 0;
         c
@@ -106,16 +106,12 @@ async fn spawn_app_with_config(valid_app: bool) -> TestApp {
         } => JwtService::new(jwt_secret.expose_secret(), *jwt_expiration_hours),
     };
 
-    // Create a test user ID for authentication
-    let test_user_id = Uuid::new_v4().to_string();
-
-    // Create test user in database to satisfy foreign key constraints
-    sqlx::query!(
-        "INSERT INTO users (user_id, email, create_time, update_time) VALUES ($1, $2, NOW(), NOW())",
-        test_user_id,
+    // Create test user in database and get auto-generated user_id
+    let test_user_id: i32 = sqlx::query_scalar!(
+        "INSERT INTO users (email) VALUES ($1) RETURNING user_id",
         "test@example.com"
     )
-    .execute(&db_pool)
+    .fetch_one(&db_pool)
     .await
     .expect("Failed to create test user");
 
@@ -138,10 +134,31 @@ impl TestApp {
     pub fn get_auth_header(&self) -> String {
         let token = self
             .jwt_service
-            .generate_token(&self.test_user_id.to_string(), "test@example.com")
+            .generate_token(self.test_user_id, "test@example.com")
             .expect("Failed to generate test JWT token");
         format!("Bearer {}", token)
     }
+
+    /// Generate JWT token for a specific user
+    pub fn get_auth_header_for_user(&self, user_id: i32, email: &str) -> String {
+        let token = self
+            .jwt_service
+            .generate_token(user_id, email)
+            .expect("Failed to generate JWT token");
+        format!("Bearer {}", token)
+    }
+
+    /// Create a new user and return their user_id
+    pub async fn create_user(&self, email: &str) -> i32 {
+        sqlx::query_scalar!(
+            "INSERT INTO users (email) VALUES ($1) RETURNING user_id",
+            email
+        )
+        .fetch_one(&self.db_pool)
+        .await
+        .expect("Failed to create user")
+    }
+
     pub async fn post_todo(&self, payload: &JsonValue) -> reqwest::Response {
         self.client
             .post(format!("{}/todo", self.address))

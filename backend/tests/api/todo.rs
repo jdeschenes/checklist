@@ -14,12 +14,14 @@ async fn create_todo_works() {
     #[derive(Debug, Serialize, Deserialize)]
     struct CaseInout {
         name: String,
+        visibility: String,
     }
 
     let test_app = spawn_app().await;
     let test_case = (
         CaseInout {
             name: "banana".to_string(),
+            visibility: "private".to_string(),
         },
         "banana",
     );
@@ -53,12 +55,15 @@ async fn create_todo_fails() {
             expected_status_code: StatusCode::UNPROCESSABLE_ENTITY,
         },
         FailCall {
-            json: Some(serde_json::from_str(r#"{"name": ""}"#).unwrap()),
+            json: Some(serde_json::from_str(r#"{"name": "", "visibility": "private"}"#).unwrap()),
             expected_status_code: StatusCode::BAD_REQUEST,
         },
         FailCall {
             json: Some(
-                serde_json::from_str(r#"{"name": "12345678901234567890123456789"}"#).unwrap(),
+                serde_json::from_str(
+                    r#"{"name": "12345678901234567890123456789", "visibility": "private"}"#,
+                )
+                .unwrap(),
             ),
             expected_status_code: StatusCode::BAD_REQUEST,
         },
@@ -86,7 +91,8 @@ async fn create_todo_fails() {
 #[tokio::test]
 async fn create_todo_fails_if_already_exists() {
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -100,7 +106,8 @@ async fn create_todo_fails_if_already_exists() {
 #[tokio::test]
 async fn get_todo() {
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -115,11 +122,40 @@ async fn get_todo() {
 async fn list_todo() {
     let test_app = spawn_app().await;
     for i in 0..50 {
-        let payload: serde_json::Value =
-            serde_json::from_str(&format!(r#"{{"name": "banana{i}"}}"#)).unwrap();
+        let payload: serde_json::Value = serde_json::from_str(&format!(
+            r#"{{"name": "banana{i}", "visibility": "private"}}"#
+        ))
+        .unwrap();
         let create_response = test_app.post_todo(&payload).await;
         assert_response(&create_response, StatusCode::OK);
     }
+
+    // Create a second user
+    let second_user_id = test_app.create_user("second@example.com").await;
+
+    // Create a private todo owned by the second user (should NOT appear in first user's list)
+    sqlx::query(
+        r#"INSERT INTO todo (todo_id, name, user_id, visibility) VALUES ($1, $2, $3, $4::todo_visibility)"#
+    )
+    .bind(uuid::Uuid::new_v4())
+    .bind("private_other_user")
+    .bind(second_user_id)
+    .bind("private")
+    .execute(&test_app.db_pool)
+    .await
+    .expect("Failed to create private todo for second user");
+
+    // Create a public todo owned by the second user (SHOULD appear in first user's list)
+    sqlx::query(
+        r#"INSERT INTO todo (todo_id, name, user_id, visibility) VALUES ($1, $2, $3, $4::todo_visibility)"#
+    )
+    .bind(uuid::Uuid::new_v4())
+    .bind("public_other_user")
+    .bind(second_user_id)
+    .bind("public")
+    .execute(&test_app.db_pool)
+    .await
+    .expect("Failed to create public todo for second user");
 
     let list_response = test_app.list_todo().await;
     assert_response(&list_response, StatusCode::OK);
@@ -130,14 +166,16 @@ async fn list_todo() {
 #[tokio::test]
 async fn test_update_todo_works() {
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
     let get_response = test_app.get_todo("banana").await;
     assert_response(&get_response, StatusCode::OK);
 
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana2", "visibility": "private"}"#).unwrap();
     let update_response = test_app.update_todo("banana", &payload).await;
     assert_response(&update_response, StatusCode::OK);
 
@@ -151,11 +189,13 @@ async fn test_update_todo_works() {
 #[tokio::test]
 async fn update_todo_fails() {
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana2"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana2", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -164,7 +204,8 @@ async fn update_todo_fails() {
             "TODO_NOT_EXISTS",
             "NOT_EXISTS",
             serde_json::json!({
-                "name": "banana"
+                "name": "banana",
+                "visibility": "private"
             }),
             StatusCode::NOT_FOUND,
         ),
@@ -172,7 +213,8 @@ async fn update_todo_fails() {
             "TODO_ALREADY_EXISTS",
             "banana2",
             serde_json::json!({
-                "name": "banana"
+                "name": "banana",
+                "visibility": "private"
             }),
             StatusCode::BAD_REQUEST,
         ),
@@ -186,7 +228,8 @@ async fn update_todo_fails() {
 #[tokio::test]
 async fn delete_todo_works() {
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -201,7 +244,8 @@ async fn delete_todo_works() {
 async fn delete_todo_fails() {
     // Todo does not exist
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -218,7 +262,8 @@ async fn todo_fails_if_fatal_database_error() {
         .await
         .expect("Failed to create column");
 
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::INTERNAL_SERVER_ERROR);
 }
@@ -227,7 +272,8 @@ async fn todo_fails_if_fatal_database_error() {
 async fn delete_todo_also_deletes_items() {
     // Todo does not exist
     let test_app = spawn_app().await;
-    let payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_response = test_app.post_todo(&payload).await;
     assert_response(&create_response, StatusCode::OK);
 
@@ -249,4 +295,52 @@ async fn delete_todo_also_deletes_items() {
         .get_todo_item("banana", todo_item.unwrap().todo_item_id.as_str())
         .await;
     assert_response(&todo_item_response, StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn get_public_todo_owned_by_another_user_succeeds() {
+    let test_app = spawn_app().await;
+
+    // Create a second user
+    let second_user_id = test_app.create_user("second@example.com").await;
+
+    // Create a public todo owned by the second user
+    sqlx::query(
+        r#"INSERT INTO todo (todo_id, name, user_id, visibility) VALUES ($1, $2, $3, $4::todo_visibility)"#
+    )
+    .bind(uuid::Uuid::new_v4())
+    .bind("public_todo")
+    .bind(second_user_id)
+    .bind("public")
+    .execute(&test_app.db_pool)
+    .await
+    .expect("Failed to create public todo for second user");
+
+    // First user (test user) should be able to access the public todo
+    let get_response = test_app.get_todo("public_todo").await;
+    assert_response(&get_response, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn get_private_todo_owned_by_another_user_fails() {
+    let test_app = spawn_app().await;
+
+    // Create a second user
+    let second_user_id = test_app.create_user("second@example.com").await;
+
+    // Create a private todo owned by the second user
+    sqlx::query(
+        r#"INSERT INTO todo (todo_id, name, user_id, visibility) VALUES ($1, $2, $3, $4::todo_visibility)"#
+    )
+    .bind(uuid::Uuid::new_v4())
+    .bind("private_todo")
+    .bind(second_user_id)
+    .bind("private")
+    .execute(&test_app.db_pool)
+    .await
+    .expect("Failed to create private todo for second user");
+
+    // First user (test user) should NOT be able to access the private todo
+    let get_response = test_app.get_todo("private_todo").await;
+    assert_response(&get_response, StatusCode::NOT_FOUND);
 }

@@ -34,63 +34,91 @@ function RouteComponent() {
     >(new Set())
     const [quickTitle, setQuickTitle] = React.useState('')
     const [quickError, setQuickError] = React.useState<string | null>(null)
-    const timeoutRefs = React.useRef<
-        Map<string, ReturnType<typeof setTimeout>>
-    >(new Map())
+    const completionTimeoutRef = React.useRef<ReturnType<
+        typeof setTimeout
+    > | null>(null)
+    const pendingCompletionsRef = React.useRef(pendingCompletions)
+    const inFlightCompletionsRef = React.useRef<Set<string>>(new Set())
+
+    React.useEffect(() => {
+        pendingCompletionsRef.current = pendingCompletions
+    }, [pendingCompletions])
+
+    const clearCompletionTimeout = React.useCallback(() => {
+        if (completionTimeoutRef.current) {
+            clearTimeout(completionTimeoutRef.current)
+            completionTimeoutRef.current = null
+        }
+    }, [])
+
+    const resetCompletionWindow = React.useCallback(() => {
+        clearCompletionTimeout()
+
+        const pending = Array.from(pendingCompletionsRef.current).filter(
+            (itemId) => !inFlightCompletionsRef.current.has(itemId)
+        )
+
+        if (pending.length === 0) {
+            return
+        }
+
+        completionTimeoutRef.current = setTimeout(() => {
+            const itemsToComplete = Array.from(
+                pendingCompletionsRef.current
+            ).filter((itemId) => !inFlightCompletionsRef.current.has(itemId))
+
+            if (itemsToComplete.length === 0) {
+                return
+            }
+
+            itemsToComplete.forEach((itemId) => {
+                inFlightCompletionsRef.current.add(itemId)
+                completeTodoItemMutation.mutate(itemId, {
+                    onSettled: () => {
+                        inFlightCompletionsRef.current.delete(itemId)
+                        setPendingCompletions((prev) => {
+                            if (!prev.has(itemId)) {
+                                return prev
+                            }
+                            const newSet = new Set(prev)
+                            newSet.delete(itemId)
+                            return newSet
+                        })
+                    },
+                })
+            })
+        }, 1000)
+    }, [clearCompletionTimeout, completeTodoItemMutation])
+
+    React.useEffect(() => {
+        resetCompletionWindow()
+    }, [pendingCompletions, resetCompletionWindow])
 
     const handleItemClick = React.useCallback(
         (itemId: string, isComplete: boolean) => {
-            // Don't handle click if already completed
             if (isComplete) return
 
-            // Check if item is currently pending
-            const isPending = pendingCompletions.has(itemId)
+            setPendingCompletions((prev) => {
+                const newSet = new Set(prev)
 
-            if (isPending) {
-                // Cancel the pending completion
-                const existingTimeout = timeoutRefs.current.get(itemId)
-                if (existingTimeout) {
-                    clearTimeout(existingTimeout)
-                    timeoutRefs.current.delete(itemId)
+                if (newSet.has(itemId)) {
+                    newSet.delete(itemId)
+                } else {
+                    newSet.add(itemId)
                 }
 
-                // Remove from pending completions
-                setPendingCompletions((prev) => {
-                    const newSet = new Set(prev)
-                    newSet.delete(itemId)
-                    return newSet
-                })
-            } else {
-                // Start pending completion
-                setPendingCompletions((prev) => new Set(prev).add(itemId))
-
-                // Set timeout for 1 second debounce
-                const timeout = setTimeout(() => {
-                    completeTodoItemMutation.mutate(itemId, {
-                        onSettled: () => {
-                            // Remove from pending completions when API call completes
-                            setPendingCompletions((prev) => {
-                                const newSet = new Set(prev)
-                                newSet.delete(itemId)
-                                return newSet
-                            })
-                            timeoutRefs.current.delete(itemId)
-                        },
-                    })
-                }, 1000)
-
-                timeoutRefs.current.set(itemId, timeout)
-            }
+                return newSet
+            })
         },
-        [completeTodoItemMutation, pendingCompletions]
+        []
     )
 
-    // Cleanup timeouts on unmount
+    // Cleanup debounce timeout on unmount
     React.useEffect(() => {
         return () => {
-            timeoutRefs.current.forEach((timeout) => clearTimeout(timeout))
+            clearCompletionTimeout()
         }
-    }, [])
+    }, [clearCompletionTimeout])
 
     const handleQuickAddSubmit = React.useCallback(
         (event: React.FormEvent<HTMLFormElement>) => {
@@ -102,6 +130,7 @@ function RouteComponent() {
             setQuickError(null)
             const submittedTitle = trimmedTitle
             setQuickTitle('')
+            resetCompletionWindow()
             createTodoItemMutation.mutate(
                 {
                     todoId,
@@ -123,7 +152,7 @@ function RouteComponent() {
                 }
             )
         },
-        [createTodoItemMutation, quickTitle, todoId]
+        [createTodoItemMutation, quickTitle, resetCompletionWindow, todoId]
     )
 
     return (
@@ -152,9 +181,7 @@ function RouteComponent() {
                             autoComplete="off"
                         />
                         {quickError && (
-                            <p className="text-sm text-red-600">
-                                {quickError}
-                            </p>
+                            <p className="text-sm text-red-600">{quickError}</p>
                         )}
                     </form>
                     {listTodoItemQuery.data.items.length === 0 ? (

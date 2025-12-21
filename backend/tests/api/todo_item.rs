@@ -20,7 +20,8 @@ struct ListResponse {
 async fn create_todo_item_works() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -48,7 +49,8 @@ async fn create_todo_item_works() {
 async fn create_todo_item_with_due_date() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -73,7 +75,8 @@ async fn create_todo_item_with_due_date() {
 async fn create_todo_item_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -107,7 +110,8 @@ async fn create_todo_item_fails() {
 async fn get_todo_item_works() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -140,7 +144,8 @@ async fn get_todo_item_works() {
 async fn get_todo_item_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -188,7 +193,8 @@ async fn get_todo_item_fails() {
 async fn list_todo_items_works() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -209,7 +215,8 @@ async fn list_todo_items_works() {
 async fn list_todo_items_only_show_incomplete() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -240,7 +247,8 @@ async fn list_todo_items_only_show_incomplete() {
 async fn list_todo_items_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -255,7 +263,8 @@ async fn list_todo_items_fails() {
 async fn update_todo_item_works() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -293,7 +302,8 @@ async fn update_todo_item_works() {
 async fn update_todo_item_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -363,7 +373,8 @@ async fn update_todo_item_fails() {
 async fn update_todo_item_fails_if_already_complete() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -403,7 +414,8 @@ async fn complete_todo_item_works() {
     // Implement datetime parsing
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -438,7 +450,8 @@ async fn complete_todo_item_works() {
 async fn complete_todo_item_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -487,7 +500,8 @@ async fn complete_todo_item_fails() {
 async fn complete_todo_item_fails_if_already_complete() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -519,7 +533,8 @@ async fn complete_todo_item_fails_if_already_complete() {
 async fn delete_todo_item_works() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 
@@ -551,7 +566,8 @@ async fn delete_todo_item_works() {
 async fn delete_todo_item_fails() {
     let test_app = spawn_app().await;
 
-    let todo_payload: serde_json::Value = serde_json::from_str(r#"{"name": "banana"}"#).unwrap();
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
     let create_todo_response = test_app.post_todo(&todo_payload).await;
     assert_response(&create_todo_response, StatusCode::OK);
 

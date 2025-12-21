@@ -13,9 +13,35 @@ use crate::error::APIError;
 use crate::extractors::{AuthenticatedUser, DatabaseConnection};
 use crate::repos;
 
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TodoVisibility {
+    Public,
+    Private,
+}
+
+impl From<TodoVisibility> for domain::TodoVisibility {
+    fn from(value: TodoVisibility) -> Self {
+        match value {
+            TodoVisibility::Public => Self::Public,
+            TodoVisibility::Private => Self::Private,
+        }
+    }
+}
+
+impl From<domain::TodoVisibility> for TodoVisibility {
+    fn from(value: domain::TodoVisibility) -> Self {
+        match value {
+            domain::TodoVisibility::Public => Self::Public,
+            domain::TodoVisibility::Private => Self::Private,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CreateTodoRequest {
     pub name: String,
+    pub visibility: TodoVisibility,
 }
 
 impl TryFrom<CreateTodoRequest> for NewTodoRequest {
@@ -23,6 +49,7 @@ impl TryFrom<CreateTodoRequest> for NewTodoRequest {
     fn try_from(value: CreateTodoRequest) -> Result<Self, Self::Error> {
         Ok(Self {
             name: value.name.try_into()?,
+            visibility: value.visibility.into(),
         })
     }
 }
@@ -30,6 +57,7 @@ impl TryFrom<CreateTodoRequest> for NewTodoRequest {
 #[derive(Debug, Deserialize)]
 pub struct UpdateTodoRequest {
     pub name: String,
+    pub visibility: TodoVisibility,
 }
 
 impl TryFrom<UpdateTodoRequest> for domain::UpdateTodoRequest {
@@ -37,6 +65,7 @@ impl TryFrom<UpdateTodoRequest> for domain::UpdateTodoRequest {
     fn try_from(value: UpdateTodoRequest) -> Result<Self, Self::Error> {
         Ok(Self {
             name: value.name.try_into()?,
+            visibility: value.visibility.into(),
         })
     }
 }
@@ -44,6 +73,7 @@ impl TryFrom<UpdateTodoRequest> for domain::UpdateTodoRequest {
 #[derive(Debug, Serialize)]
 pub struct GetTodoResponse {
     pub name: String,
+    pub visibility: TodoVisibility,
     #[serde(with = "time::serde::rfc3339")]
     pub create_time: OffsetDateTime,
     #[serde(with = "time::serde::rfc3339")]
@@ -54,6 +84,7 @@ impl From<Todo> for GetTodoResponse {
     fn from(value: Todo) -> Self {
         Self {
             name: value.name.as_ref().to_string(),
+            visibility: value.visibility.into(),
             create_time: value.create_time,
             update_time: value.update_time,
         }
@@ -68,6 +99,7 @@ pub struct ListTodoResponse {
 #[derive(Debug, Serialize)]
 pub struct ListTodoSingleItem {
     name: String,
+    visibility: TodoVisibility,
     #[serde(with = "time::serde::rfc3339")]
     pub create_time: OffsetDateTime,
     #[serde(with = "time::serde::rfc3339")]
@@ -78,6 +110,7 @@ impl From<ListTodoSingle> for ListTodoSingleItem {
     fn from(value: ListTodoSingle) -> Self {
         Self {
             name: value.name.as_ref().to_string(),
+            visibility: value.visibility.into(),
             create_time: value.create_time,
             update_time: value.update_time,
         }

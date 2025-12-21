@@ -8,4 +8,3 @@ pub struct User {
     pub create_time: OffsetDateTime,
     pub update_time: OffsetDateTime,
 }
-

@@ -4,14 +4,18 @@ import { BackendRecurringTemplateAPI } from './recurring_template_api'
 
 const DEFAULT_BASE_URL = 'http://localhost:3000'
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_BASE_URL
+export type TodoVisibility = 'public' | 'private'
+
 export type CreateTodoRequest = {
     name: string
+    visibility: TodoVisibility
 }
 
 export type CreateTodoResponse = void
 
 export type ListTodoSingleItem = {
     name: string
+    visibility: TodoVisibility
     create_time: string
     update_time: string
 }
@@ -22,12 +26,14 @@ export type ListTodoResponse = {
 
 export type GetTodoResponse = {
     name: string
+    visibility: TodoVisibility
     create_time: string
     update_time: string
 }
 
 export type UpdateTodoRequest = {
     name: string
+    visibility: TodoVisibility
 }
 
 export type UpdateTodoResponse = void

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import useCreateTodo from '@/api/useCreateTodo'
+import type { TodoVisibility } from '@/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -12,25 +13,29 @@ function RouteComponent() {
     const createTodoMutation = useCreateTodo()
     const navigate = useNavigate()
     const [error, setError] = React.useState<string | null>(null)
-    
+
     const submitCallback = React.useCallback(
         (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault()
             event.stopPropagation()
-            
+
             setError(null)
-            
+
             const formData = new FormData(event.currentTarget)
             const todoName = formData.get('name') as string
-            
+            const visibilityValue = formData.get('visibility')
+            const visibility: TodoVisibility =
+                visibilityValue === 'on' ? 'private' : 'public'
+
             if (!todoName || todoName.trim() === '') {
                 setError('Todo name is required')
                 return
             }
-            
+
             createTodoMutation.mutate(
                 {
                     name: todoName.trim(),
+                    visibility,
                 },
                 {
                     onSuccess: () => {
@@ -46,7 +51,11 @@ function RouteComponent() {
                         }, 100)
                     },
                     onError: (error) => {
-                        setError(error instanceof Error ? error.message : 'Failed to create todo')
+                        setError(
+                            error instanceof Error
+                                ? error.message
+                                : 'Failed to create todo'
+                        )
                     },
                 }
             )
@@ -62,16 +71,29 @@ function RouteComponent() {
                 </div>
             )}
             <form className="flex flex-col gap-2" onSubmit={submitCallback}>
-                <Input 
-                    type="text" 
-                    name="name" 
-                    placeholder="Todo" 
-                    autoFocus 
-                    disabled={createTodoMutation.isPending}
-                />
-                <Button 
-                    variant="default" 
-                    type="submit" 
+                <div className="flex items-center gap-3">
+                    <Input
+                        type="text"
+                        name="name"
+                        placeholder="Todo"
+                        autoFocus
+                        disabled={createTodoMutation.isPending}
+                        className="flex-1"
+                    />
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                            id="visibility"
+                            name="visibility"
+                            type="checkbox"
+                            disabled={createTodoMutation.isPending}
+                            className="h-4 w-4 accent-gray-800"
+                        />
+                        Private
+                    </label>
+                </div>
+                <Button
+                    variant="default"
+                    type="submit"
                     disabled={createTodoMutation.isPending}
                 >
                     {createTodoMutation.isPending ? 'Creating...' : 'Create'}
