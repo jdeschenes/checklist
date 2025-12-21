@@ -4,11 +4,11 @@ import {
     RecurringTemplateResponse,
     ListRecurringTemplatesResponse,
 } from '.'
-import { 
-    authenticatedPost, 
-    authenticatedGet, 
-    authenticatedPut, 
-    authenticatedDelete 
+import {
+    authenticatedPost,
+    authenticatedGet,
+    authenticatedPut,
+    authenticatedDelete,
 } from './authenticated-client'
 
 export const BackendRecurringTemplateAPI = {
@@ -16,20 +16,27 @@ export const BackendRecurringTemplateAPI = {
         todo_name: string,
         r: CreateRecurringTemplateRequest
     ): Promise<RecurringTemplateResponse> => {
-        return await authenticatedPost<RecurringTemplateResponse>(`/todo/${todo_name}/recurring`, r)
+        return await authenticatedPost<RecurringTemplateResponse>(
+            `/todo/${todo_name}/recurring`,
+            r
+        )
     },
 
     ListRecurringTemplates: async (
         todo_name: string
     ): Promise<ListRecurringTemplatesResponse> => {
-        return await authenticatedGet<ListRecurringTemplatesResponse>(`/todo/${todo_name}/recurring`)
+        return await authenticatedGet<ListRecurringTemplatesResponse>(
+            `/todo/${todo_name}/recurring`
+        )
     },
 
     GetRecurringTemplate: async (
         todo_name: string,
         template_id: string
     ): Promise<RecurringTemplateResponse> => {
-        return await authenticatedGet<RecurringTemplateResponse>(`/todo/${todo_name}/recurring/${template_id}`)
+        return await authenticatedGet<RecurringTemplateResponse>(
+            `/todo/${todo_name}/recurring/${template_id}`
+        )
     },
 
     UpdateRecurringTemplate: async (
@@ -37,7 +44,10 @@ export const BackendRecurringTemplateAPI = {
         template_id: string,
         r: UpdateRecurringTemplateRequest
     ): Promise<RecurringTemplateResponse> => {
-        return await authenticatedPut<RecurringTemplateResponse>(`/todo/${todo_name}/recurring/${template_id}`, r)
+        return await authenticatedPut<RecurringTemplateResponse>(
+            `/todo/${todo_name}/recurring/${template_id}`,
+            r
+        )
     },
 
     DeleteRecurringTemplate: async (

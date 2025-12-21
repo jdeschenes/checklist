@@ -130,10 +130,7 @@ pub async fn google_callback(
     };
 
     // Generate JWT token
-    let token = match state
-        .jwt_service
-        .generate_token(user.user_id, &user.email)
-    {
+    let token = match state.jwt_service.generate_token(user.user_id, &user.email) {
         Ok(token) => token,
         Err(err) => {
             error!(error = %err, "Failed to generate JWT token");
@@ -143,7 +140,11 @@ pub async fn google_callback(
 
     // Redirect to frontend callback with token and user data as query parameters
     let frontend_callback_base = &google_oauth.frontend_callback_url;
-    let query_sep = if frontend_callback_base.contains('?') { "&" } else { "?" };
+    let query_sep = if frontend_callback_base.contains('?') {
+        "&"
+    } else {
+        "?"
+    };
     let frontend_callback_url = format!(
         "{}{}token={}&user_id={}&email={}",
         frontend_callback_base,

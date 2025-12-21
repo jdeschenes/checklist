@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \n            name\n            , visibility as \"visibility: TodoVisibility\"\n            , create_time\n            , update_time \n            FROM todo WHERE (user_id = $1 AND visibility = 'private') OR visibility = 'public';",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "visibility: TodoVisibility",
+        "type_info": {
+          "Custom": {
+            "name": "todo_visibility",
+            "kind": {
+              "Enum": [
+                "public",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a325c828704832a01e3373547bd50da34d4b676592bb69c710ebce351ca97586"
+}

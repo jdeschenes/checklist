@@ -134,10 +134,10 @@ async fn routes_return_403_when_user_does_not_exist() {
     let test_app = spawn_app().await;
 
     // Generate a JWT token for a user that doesn't exist in the database
-    let nonexistent_user_id = uuid::Uuid::new_v4();
+    let nonexistent_user_id = 999999;
     let token = test_app
         .jwt_service
-        .generate_token(&nonexistent_user_id.to_string(), "nonexistent@example.com")
+        .generate_token(nonexistent_user_id, "nonexistent@example.com")
         .expect("Failed to generate test JWT token");
     let auth_header = format!("Bearer {}", token);
 

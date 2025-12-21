@@ -2,7 +2,9 @@ use sqlx::PgTransaction;
 use uuid::Uuid;
 
 use crate::{
-    domain::{ListTodo, ListTodoSingle, NewTodoRequest, Todo, TodoName, UpdateTodoRequest},
+    domain::{
+        ListTodo, ListTodoSingle, NewTodoRequest, Todo, TodoName, TodoVisibility, UpdateTodoRequest,
+    },
     error::APIError,
 };
 
@@ -13,11 +15,12 @@ pub async fn create_todo(
     user_id: i32,
 ) -> Result<(), APIError> {
     match sqlx::query!(
-        r#"INSERT INTO todo (todo_id, name, user_id) VALUES ($1, $2, $3)
+        r#"INSERT INTO todo (todo_id, name, user_id, visibility) VALUES ($1, $2, $3, $4)
            RETURNING name;"#,
         Uuid::new_v4(),
         req.name.as_ref(),
         user_id,
+        req.visibility.clone() as _,
     )
     .fetch_one(&mut **transaction)
     .await
@@ -41,6 +44,7 @@ pub async fn create_todo(
 struct GetTodoQuery {
     todo_id: Uuid,
     name: String,
+    visibility: crate::domain::TodoVisibility,
     create_time: sqlx::types::time::OffsetDateTime,
     update_time: sqlx::types::time::OffsetDateTime,
 }
@@ -51,6 +55,7 @@ impl TryFrom<GetTodoQuery> for Todo {
         Ok(Self {
             todo_id: value.todo_id,
             name: value.name.try_into()?,
+            visibility: value.visibility,
             create_time: value.create_time,
             update_time: value.update_time,
         })
@@ -65,7 +70,7 @@ pub async fn get_todo_by_name(
 ) -> Result<Todo, APIError> {
     match sqlx::query_as!(
         GetTodoQuery,
-        r#"SELECT todo_id, name, create_time, update_time from todo WHERE name = $1 AND user_id = $2;"#,
+        r#"SELECT todo_id, name, visibility as "visibility: TodoVisibility", create_time, update_time from todo WHERE name = $1 AND ((user_id = $2 AND visibility = 'private') OR visibility = 'public');"#,
         todo_name.as_ref(),
         user_id
     )
@@ -116,11 +121,13 @@ pub async fn update_todo(
     match sqlx::query!(
         r#"UPDATE todo SET
             name = $3
+            , visibility = $4
             WHERE name = $1 AND user_id = $2
             RETURNING name;"#,
         todo_name.as_ref(),
         user_id,
         req.name.as_ref(),
+        req.visibility.clone() as _,
     )
     .fetch_one(&mut **transaction)
     .await
@@ -146,6 +153,7 @@ pub async fn update_todo(
 #[derive(Debug)]
 struct ListTodoQuery {
     name: String,
+    visibility: crate::domain::TodoVisibility,
     create_time: sqlx::types::time::OffsetDateTime,
     update_time: sqlx::types::time::OffsetDateTime,
 }
@@ -164,6 +172,7 @@ impl TryFrom<ListTodoQuery> for ListTodoSingle {
     fn try_from(value: ListTodoQuery) -> Result<Self, Self::Error> {
         Ok(Self {
             name: value.name.try_into()?,
+            visibility: value.visibility,
             create_time: value.create_time,
             update_time: value.update_time,
         })
@@ -177,7 +186,12 @@ pub async fn list_todo(
 ) -> Result<ListTodo, APIError> {
     match sqlx::query_as!(
         ListTodoQuery,
-        r#"SELECT name, create_time, update_time from todo WHERE user_id = $1;"#,
+        r#"SELECT 
+            name
+            , visibility as "visibility: TodoVisibility"
+            , create_time
+            , update_time 
+            FROM todo WHERE (user_id = $1 AND visibility = 'private') OR visibility = 'public';"#,
         user_id
     )
     .fetch_all(&mut **transaction)

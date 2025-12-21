@@ -1,6 +1,6 @@
 use eyre::{Context, Result};
 
-use checklist::configuration::{get_configuration, AuthSettings, Settings};
+use checklist::configuration::{get_configuration, AuthSettings, Environment, Settings};
 use checklist::startup::{run_migrations, Application};
 use checklist::telemetry::{get_subscriber, init_subscriber};
 use tracing::{info, warn};
@@ -39,8 +39,7 @@ fn log_startup_configuration(configuration: &Settings) {
         } => {
             info!(
                 auth_type = "jwt",
-                jwt_expiration_hours,
-                "Auth configuration loaded"
+                jwt_expiration_hours, "Auth configuration loaded"
             );
         }
         AuthSettings::GoogleOAuth {
@@ -50,8 +49,7 @@ fn log_startup_configuration(configuration: &Settings) {
         } => {
             info!(
                 auth_type = "google_oauth",
-                jwt_expiration_hours,
-                "Auth configuration loaded"
+                jwt_expiration_hours, "Auth configuration loaded"
             );
             info!(
                 client_id = %google_oauth.client_id,
@@ -83,7 +81,11 @@ async fn main() -> Result<()> {
         Ok(path) => info!(path = %path.display(), "Loaded environment file"),
         Err(err) => warn!(path = %env_file, error = %err, "Failed to load environment file"),
     }
-    let configuration = get_configuration().context("Failed to read configuration")?;
+    let environment: Environment = std::env::var("APP_ENVIRONMENT")
+        .unwrap_or_else(|_| "local".into())
+        .try_into()
+        .expect("Failed to parse APP_ENVIRONMENT");
+    let configuration = get_configuration(environment).context("Failed to read configuration")?;
     log_startup_configuration(&configuration);
     let run_migrations_only = std::env::args()
         .skip(1)

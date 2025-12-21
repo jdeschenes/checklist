@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT todo_id, name, create_time, update_time from todo WHERE name = $1 AND user_id = $2;",
+  "query": "SELECT todo_id, name, visibility as \"visibility: TodoVisibility\", create_time, update_time from todo WHERE name = $1 AND user_id = $2;",
   "describe": {
     "columns": [
       {
@@ -15,11 +15,26 @@
       },
       {
         "ordinal": 2,
+        "name": "visibility: TodoVisibility",
+        "type_info": {
+          "Custom": {
+            "name": "todo_visibility",
+            "kind": {
+              "Enum": [
+                "public",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
         "name": "create_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "update_time",
         "type_info": "Timestamptz"
       }
@@ -34,8 +49,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "1841eb26e46ce28d685162d73bf20874ca7207f1ab6e1bc09d26f029ec7c028d"
+  "hash": "93395a586c5e2143180f3687084815139d7a7e5be9a3204b36c56127813b1e4a"
 }

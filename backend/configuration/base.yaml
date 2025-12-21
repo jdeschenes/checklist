@@ -5,8 +5,8 @@ recurring:
   look_ahead_duration: "7 days"
 
 auth:
-  type: "google_oauth"  # Choose: "jwt" or "google_oauth"
-  jwt_secret: ""
+  type: "jwt"  # Choose: "jwt" or "google_oauth"
+  jwt_secret: "test-secret-key-change-in-production"
   jwt_expiration_hours: 24
   google_oauth:
     client_id: ""

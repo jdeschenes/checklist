@@ -3,20 +3,30 @@ use uuid::Uuid;
 
 use crate::error::APIError;
 
+#[derive(Debug, Clone, sqlx::Type)]
+#[sqlx(type_name = "todo_visibility", rename_all = "snake_case")]
+pub enum TodoVisibility {
+    Public,
+    Private,
+}
+
 #[derive(Debug, Clone)]
 pub struct NewTodoRequest {
     pub name: TodoName,
+    pub visibility: TodoVisibility,
 }
 
 #[derive(Debug, Clone)]
 pub struct UpdateTodoRequest {
     pub name: TodoName,
+    pub visibility: TodoVisibility,
 }
 
 #[derive(Debug, Clone)]
 pub struct Todo {
     pub todo_id: Uuid,
     pub name: TodoName,
+    pub visibility: TodoVisibility,
     pub create_time: OffsetDateTime,
     pub update_time: OffsetDateTime,
 }
@@ -65,6 +75,45 @@ impl From<TodoName> for String {
     }
 }
 
+impl TryFrom<String> for TodoVisibility {
+    type Error = APIError;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "public" => Ok(Self::Public),
+            "private" => Ok(Self::Private),
+            _ => Err(APIError::BadRequest(format!("Invalid visibility: {}", s))),
+        }
+    }
+}
+
+impl TryFrom<&str> for TodoVisibility {
+    type Error = APIError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let s = value.to_string();
+        s.try_into()
+    }
+}
+
+impl AsRef<str> for TodoVisibility {
+    fn as_ref(&self) -> &str {
+        match self {
+            TodoVisibility::Public => "public",
+            TodoVisibility::Private => "private",
+        }
+    }
+}
+
+impl From<TodoVisibility> for String {
+    fn from(value: TodoVisibility) -> Self {
+        match value {
+            TodoVisibility::Public => "public".to_string(),
+            TodoVisibility::Private => "private".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ListTodo {
     pub items: Vec<ListTodoSingle>,
@@ -73,6 +122,7 @@ pub struct ListTodo {
 #[derive(Debug, Clone)]
 pub struct ListTodoSingle {
     pub name: TodoName,
+    pub visibility: TodoVisibility,
     pub create_time: OffsetDateTime,
     pub update_time: OffsetDateTime,
 }

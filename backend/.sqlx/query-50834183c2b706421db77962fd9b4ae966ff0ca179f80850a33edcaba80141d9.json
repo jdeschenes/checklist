@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE todo SET\n            name = $3\n            , visibility = $4\n            WHERE name = $1 AND user_id = $2\n            RETURNING name;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "todo_visibility",
+            "kind": {
+              "Enum": [
+                "public",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "50834183c2b706421db77962fd9b4ae966ff0ca179f80850a33edcaba80141d9"
+}

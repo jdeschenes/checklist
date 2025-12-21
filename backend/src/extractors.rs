@@ -72,7 +72,9 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         match user_exists {
-            Some(user) => Ok(AuthenticatedUser{ user_id: user.user_id }),
+            Some(user) => Ok(AuthenticatedUser {
+                user_id: user.user_id,
+            }),
             None => Err(StatusCode::FORBIDDEN),
         }
     }
