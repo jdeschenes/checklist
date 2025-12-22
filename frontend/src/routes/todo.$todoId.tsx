@@ -156,13 +156,13 @@ function RouteComponent() {
     )
 
     return (
-        <div className="flex flex-col gap-4 p-4 sm:p-6">
+        <div className="flex flex-col gap-1 p-4 sm:p-6">
             <div>
                 <Outlet />
             </div>
             {!isOnSubPage && (
-                <div className="space-y-4">
-                    <form onSubmit={handleQuickAddSubmit} className="space-y-2">
+                <div className="space-y-3">
+                    <form onSubmit={handleQuickAddSubmit}>
                         <label htmlFor="quick-add" className="sr-only">
                             Add a task
                         </label>

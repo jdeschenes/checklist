@@ -34,7 +34,7 @@ function RouteComponent() {
     }, [])
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-2">
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
@@ -77,10 +77,7 @@ function RouteComponent() {
                     </div>
                 ) : (
                     <div>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                            <p className="text-sm text-gray-500">
-                                Manage your tasks and stay organized
-                            </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-1">
                             <div className="flex flex-wrap gap-2">
                                 <Link
                                     className={buttonVariants({
