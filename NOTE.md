@@ -6,10 +6,7 @@
 * Verify initial DB connection at startup. Avoid a broken container
 
 # DEPLOY TODO
-* Add a subdomain to host
 * Add backups script and access to the backup folder
-* Add a script to deploy the app
-* Verify that the app is running
 
 # BACKEND TODO
 * Fix CORS
@@ -34,6 +31,7 @@
 
 # FRONTEND TODO
 
+* Add a redirect if todo is not found
 * Add tanstack form and convert the few forms to it
 * Fix linting
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
