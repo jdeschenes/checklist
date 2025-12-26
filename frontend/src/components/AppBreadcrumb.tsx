@@ -76,7 +76,7 @@ export function AppBreadcrumb() {
                     isPage: false,
                 })
                 breadcrumbItems.push({
-                    label: 'New Item',
+                    label: 'New Task',
                     href: `/todo/${todoId}/new`,
                     isPage: true,
                 })
@@ -130,7 +130,9 @@ export function AppBreadcrumb() {
                         {index > 0 && <BreadcrumbSeparator />}
                         <BreadcrumbItem>
                             {item.isPage ? (
-                                <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                                <BreadcrumbPage className="font-semibold">
+                                    {item.label}
+                                </BreadcrumbPage>
                             ) : (
                                 <BreadcrumbLink asChild>
                                     <Link to={item.href}>{item.label}</Link>
