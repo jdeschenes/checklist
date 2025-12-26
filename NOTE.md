@@ -14,14 +14,9 @@
 * Run script should check if db is up and online, before starting anything.
 * Add response for create/update on TODO
 * Add transaction in the middleware
-* Add a timeout on the request using middleware
-* Add max body size middleware
-* Add compression middleware(?)
-* Add max request threshold using middleware(?)
 * Add CI and all the checks
 * Add cargo watch so that there is always a fresh copy when running the backend
   using run
-* Authentication and Authorization
 * Add a test that we are not sending cookie and authorization headers in the logs
 * Add a test to check that we are sending the right logs
 * Change the assert_response to a macro to check for x-request-id, to give error message
@@ -33,7 +28,6 @@
 
 * Add a redirect if todo is not found
 * Add tanstack form and convert the few forms to it
-* Fix linting
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
 * Add dummy/offline "backend"
 * The favorite todo is browser side

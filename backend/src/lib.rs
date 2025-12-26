@@ -1,12 +1,15 @@
 use axum::{
-    http::{HeaderName, Request},
+    error_handling::HandleErrorLayer,
+    extract::DefaultBodyLimit,
+    http::{HeaderName, Request, StatusCode},
     routing::{delete, get, post, put},
     serve::Serve,
-    Router,
+    BoxError, Router,
 };
 use eyre::Result;
 use sqlx::postgres::Postgres;
 use sqlx::Pool;
+use std::time::Duration;
 
 use crate::configuration::RecurringSettings;
 
@@ -18,6 +21,7 @@ use routes::{
     health_check, list_recurring_templates_handler, list_todo, list_todo_items,
     update_recurring_template_handler, update_todo, update_todo_item,
 };
+use tower::timeout::TimeoutLayer;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
@@ -36,6 +40,8 @@ pub mod startup;
 pub mod telemetry;
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
+const MAX_BODY_BYTES: usize = 1024 * 1024;
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Clone)]
 pub struct AppState {
@@ -55,7 +61,7 @@ pub async fn run(
     jwt_service: auth::JwtService,
 ) -> Result<Server> {
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
-    let request_id_middleware = ServiceBuilder::new()
+    let request_middleware = ServiceBuilder::new()
         .layer(SetRequestIdLayer::new(
             x_request_id.clone(),
             MakeRequestUuid,
@@ -77,7 +83,15 @@ pub async fn run(
                 }
             }),
         )
-        .layer(PropagateRequestIdLayer::new(x_request_id));
+        .layer(PropagateRequestIdLayer::new(x_request_id))
+        .layer(HandleErrorLayer::new(|error: BoxError| async move {
+            if error.is::<tower::timeout::error::Elapsed>() {
+                StatusCode::REQUEST_TIMEOUT
+            } else {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        }))
+        .layer(TimeoutLayer::new(REQUEST_TIMEOUT));
     let cors = CorsLayer::new()
         // allow `GET`, `POST`, `PUT`, and `DELETE` when accessing the resource
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -133,7 +147,8 @@ pub async fn run(
             "/todo/{todo_id}/recurring/{template_id}",
             delete(delete_recurring_template_handler),
         )
-        .layer(request_id_middleware)
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
+        .layer(request_middleware)
         .layer(cors)
         .with_state(AppState {
             pool: pg_pool,
