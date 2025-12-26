@@ -89,6 +89,27 @@ async fn create_todo_fails() {
 }
 
 #[tokio::test]
+async fn create_todo_rejects_large_payloads() {
+    let test_app = spawn_app().await;
+    let large_name = "a".repeat(1024 * 1024 + 1024);
+    let payload = serde_json::json!({
+        "name": large_name,
+        "visibility": "private",
+    });
+
+    let response = test_app
+        .client
+        .post(format!("{}/todo", test_app.address))
+        .header("Authorization", test_app.get_auth_header())
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to execute request");
+
+    assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}
+
+#[tokio::test]
 async fn create_todo_fails_if_already_exists() {
     let test_app = spawn_app().await;
     let payload: serde_json::Value =
