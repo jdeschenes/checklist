@@ -161,7 +161,7 @@ function RouteComponent() {
                 <Outlet />
             </div>
             {!isOnSubPage && (
-                <div className="space-y-3">
+                <div className="space-y-3 mt-2">
                     <form onSubmit={handleQuickAddSubmit}>
                         <label htmlFor="quick-add" className="sr-only">
                             Add a task

@@ -1,8 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus, Trash2, Clock } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { getTodoQueryOptions } from '@/api/todoQueryOptions'
 import useDeleteTodo from '@/api/useDeleteTodo'
 import * as React from 'react'
 
@@ -13,7 +11,6 @@ export const Route = createFileRoute('/todo/$todoId/')({
 function RouteComponent() {
     const todoId = Route.useParams().todoId
     const navigate = useNavigate()
-    const getTodoQuery = useSuspenseQuery(getTodoQueryOptions(todoId))
     const deleteTodoMutation = useDeleteTodo()
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false)
 
@@ -34,12 +31,42 @@ function RouteComponent() {
     }, [])
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-2">
+        <div className="p-1 sm:p-6 mb-1">
             <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                        {getTodoQuery.data.name}
-                    </h1>
+                <div
+                    className={`flex flex-wrap items-center gap-3 ${
+                        showDeleteConfirm ? 'justify-end' : 'justify-between'
+                    }`}
+                >
+                    {!showDeleteConfirm && (
+                        <div className="flex flex-wrap gap-2">
+                            <Link
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    size: 'sm',
+                                    className: 'gap-2',
+                                })}
+                                to="/todo/$todoId/templates"
+                                params={{ todoId }}
+                            >
+                                <Clock className="h-4 w-4" /> Templates
+                            </Link>
+                            <Link
+                                className={buttonVariants({
+                                    variant: 'default',
+                                    size: 'sm',
+                                    className:
+                                        'gap-2 shadow-sm hover:shadow-md transition-shadow',
+                                })}
+                                to="/todo/$todoId/new"
+                                params={{ todoId }}
+                                search={{ recurring: false }}
+                            >
+                                <Plus className="h-4 w-4" />
+                                Task
+                            </Link>
+                        </div>
+                    )}
                     <Button
                         variant="ghost"
                         size="sm"
@@ -75,38 +102,7 @@ function RouteComponent() {
                             </Button>
                         </div>
                     </div>
-                ) : (
-                    <div>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-1">
-                            <div className="flex flex-wrap gap-2">
-                                <Link
-                                    className={buttonVariants({
-                                        variant: 'outline',
-                                        size: 'sm',
-                                        className: 'gap-2',
-                                    })}
-                                    to="/todo/$todoId/templates"
-                                    params={{ todoId }}
-                                >
-                                    <Clock className="h-4 w-4" /> Templates
-                                </Link>
-                                <Link
-                                    className={buttonVariants({
-                                        variant: 'default',
-                                        size: 'sm',
-                                        className:
-                                            'gap-2 shadow-sm hover:shadow-md transition-shadow',
-                                    })}
-                                    to="/todo/$todoId/new"
-                                    params={{ todoId }}
-                                    search={{ recurring: false }}
-                                >
-                                    <Plus className="h-4 w-4" /> New Task
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                ) : null}
             </div>
         </div>
     )

@@ -2,11 +2,10 @@ import * as React from 'react'
 import { format } from 'date-fns'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import useCreateTodoItem from '@/api/useCreateTodoItem'
 import { DatePicker } from '@/components/ui/datepicker'
 import { IntervalPicker } from '@/components/ui/interval-picker'
-import { ArrowLeft } from 'lucide-react'
 import { RecurrenceInterval } from '@/api'
 import { useCreateRecurringTemplate } from '@/api/useRecurringTemplateOperations'
 
@@ -108,22 +107,7 @@ function RouteComponent() {
         <form onSubmit={handleFormSubmit}>
             <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div className="space-y-1">
-                        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                            New Task
-                        </h1>
-                        <p className="text-sm text-gray-500">
-                            Add a new item to your todo list
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Link
-                            to="/todo/$todoId"
-                            params={{ todoId }}
-                            className="inline-flex items-center justify-center h-9 w-9 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
+                    <div className="flex space-y-1">
                         <Button
                             type="submit"
                             disabled={

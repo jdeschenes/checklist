@@ -1,8 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus, Edit, Trash2, Clock, Play, Pause } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { getTodoQueryOptions } from '@/api/todoQueryOptions'
 import {
     useListRecurringTemplates,
     useDeleteRecurringTemplate,
@@ -33,7 +31,6 @@ function formatRecurrenceInterval(interval: {
 
 function RouteComponent() {
     const todoId = Route.useParams().todoId
-    const getTodoQuery = useSuspenseQuery(getTodoQueryOptions(todoId))
     const templatesQuery = useListRecurringTemplates(todoId)
     const deleteTemplateMutation = useDeleteRecurringTemplate()
 
@@ -66,31 +63,25 @@ function RouteComponent() {
     return (
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4">
             <div className="flex flex-col gap-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                            Recurring Templates
-                        </h1>
-                        <p className="text-sm text-gray-500">
-                            Manage templates for {getTodoQuery.data.name}
-                        </p>
+                {templatesQuery.data?.templates.length !== 0 ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex gap-2">
+                            <Link
+                                className={buttonVariants({
+                                    variant: 'default',
+                                    size: 'sm',
+                                    className:
+                                        'gap-2 shadow-sm hover:shadow-md transition-shadow',
+                                })}
+                                to="/todo/$todoId/new"
+                                params={{ todoId }}
+                                search={{ recurring: true }}
+                            >
+                                <Plus className="h-4 w-4" /> New Template
+                            </Link>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Link
-                            className={buttonVariants({
-                                variant: 'default',
-                                size: 'sm',
-                                className:
-                                    'gap-2 shadow-sm hover:shadow-md transition-shadow',
-                            })}
-                            to="/todo/$todoId/new"
-                            params={{ todoId }}
-                            search={{ recurring: true }}
-                        >
-                            <Plus className="h-4 w-4" /> New Template
-                        </Link>
-                    </div>
-                </div>
+                ) : null}
 
                 {templatesQuery.data?.templates.length === 0 ? (
                     <div className="text-center py-12">
