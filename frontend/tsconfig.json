@@ -1,19 +1,19 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "esModuleInterop": true,
-        "sourceMap": true,
-        "noImplicitAny": true,
-        "jsx": "react-jsx",
-        "moduleResolution": "Bundler",
-        "module": "ESNext",
-        "lib": ["ES2022", "DOM", "DOM.Iterable"],
-        "skipLibCheck": true,
-        "noEmit": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["./src/*"]
-        }
-    },
-    "include": ["./src"]
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["./src"]
 }

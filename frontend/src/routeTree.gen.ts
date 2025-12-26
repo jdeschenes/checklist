@@ -10,256 +10,255 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LoginImport } from './routes/login'
-import { Route as IndexImport } from './routes/index'
-import { Route as TodoNewImport } from './routes/todo.new'
-import { Route as TodoTodoIdImport } from './routes/todo.$todoId'
-import { Route as AuthCallbackImport } from './routes/auth.callback'
-import { Route as TodoTodoIdIndexImport } from './routes/todo.$todoId.index'
-import { Route as TodoTodoIdTemplatesImport } from './routes/todo.$todoId.templates'
-import { Route as TodoTodoIdNewImport } from './routes/todo.$todoId.new'
-import { Route as TodoTodoIdTemplateTemplateIdEditImport } from './routes/todo.$todoId.template.$templateId.edit'
+import { Route as rootRoute } from "./routes/__root";
+import { Route as LoginImport } from "./routes/login";
+import { Route as IndexImport } from "./routes/index";
+import { Route as TodoNewImport } from "./routes/todo.new";
+import { Route as TodoTodoIdImport } from "./routes/todo.$todoId";
+import { Route as AuthCallbackImport } from "./routes/auth.callback";
+import { Route as TodoTodoIdIndexImport } from "./routes/todo.$todoId.index";
+import { Route as TodoTodoIdTemplatesImport } from "./routes/todo.$todoId.templates";
+import { Route as TodoTodoIdNewImport } from "./routes/todo.$todoId.new";
+import { Route as TodoTodoIdTemplateTemplateIdEditImport } from "./routes/todo.$todoId.template.$templateId.edit";
 
 // Create/Update Routes
 
 const LoginRoute = LoginImport.update({
-    id: '/login',
-    path: '/login',
-    getParentRoute: () => rootRoute,
-} as any)
+  id: "/login",
+  path: "/login",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => rootRoute,
-} as any)
+  id: "/",
+  path: "/",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const TodoNewRoute = TodoNewImport.update({
-    id: '/todo/new',
-    path: '/todo/new',
-    getParentRoute: () => rootRoute,
-} as any)
+  id: "/todo/new",
+  path: "/todo/new",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const TodoTodoIdRoute = TodoTodoIdImport.update({
-    id: '/todo/$todoId',
-    path: '/todo/$todoId',
-    getParentRoute: () => rootRoute,
-} as any)
+  id: "/todo/$todoId",
+  path: "/todo/$todoId",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const AuthCallbackRoute = AuthCallbackImport.update({
-    id: '/auth/callback',
-    path: '/auth/callback',
-    getParentRoute: () => rootRoute,
-} as any)
+  id: "/auth/callback",
+  path: "/auth/callback",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const TodoTodoIdIndexRoute = TodoTodoIdIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => TodoTodoIdRoute,
-} as any)
+  id: "/",
+  path: "/",
+  getParentRoute: () => TodoTodoIdRoute,
+} as any);
 
 const TodoTodoIdTemplatesRoute = TodoTodoIdTemplatesImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => TodoTodoIdRoute,
-} as any)
+  id: "/templates",
+  path: "/templates",
+  getParentRoute: () => TodoTodoIdRoute,
+} as any);
 
 const TodoTodoIdNewRoute = TodoTodoIdNewImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => TodoTodoIdRoute,
-} as any)
+  id: "/new",
+  path: "/new",
+  getParentRoute: () => TodoTodoIdRoute,
+} as any);
 
 const TodoTodoIdTemplateTemplateIdEditRoute =
-    TodoTodoIdTemplateTemplateIdEditImport.update({
-        id: '/template/$templateId/edit',
-        path: '/template/$templateId/edit',
-        getParentRoute: () => TodoTodoIdRoute,
-    } as any)
+  TodoTodoIdTemplateTemplateIdEditImport.update({
+    id: "/template/$templateId/edit",
+    path: "/template/$templateId/edit",
+    getParentRoute: () => TodoTodoIdRoute,
+  } as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
-    interface FileRoutesByPath {
-        '/': {
-            id: '/'
-            path: '/'
-            fullPath: '/'
-            preLoaderRoute: typeof IndexImport
-            parentRoute: typeof rootRoute
-        }
-        '/login': {
-            id: '/login'
-            path: '/login'
-            fullPath: '/login'
-            preLoaderRoute: typeof LoginImport
-            parentRoute: typeof rootRoute
-        }
-        '/auth/callback': {
-            id: '/auth/callback'
-            path: '/auth/callback'
-            fullPath: '/auth/callback'
-            preLoaderRoute: typeof AuthCallbackImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/$todoId': {
-            id: '/todo/$todoId'
-            path: '/todo/$todoId'
-            fullPath: '/todo/$todoId'
-            preLoaderRoute: typeof TodoTodoIdImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/new': {
-            id: '/todo/new'
-            path: '/todo/new'
-            fullPath: '/todo/new'
-            preLoaderRoute: typeof TodoNewImport
-            parentRoute: typeof rootRoute
-        }
-        '/todo/$todoId/new': {
-            id: '/todo/$todoId/new'
-            path: '/new'
-            fullPath: '/todo/$todoId/new'
-            preLoaderRoute: typeof TodoTodoIdNewImport
-            parentRoute: typeof TodoTodoIdImport
-        }
-        '/todo/$todoId/templates': {
-            id: '/todo/$todoId/templates'
-            path: '/templates'
-            fullPath: '/todo/$todoId/templates'
-            preLoaderRoute: typeof TodoTodoIdTemplatesImport
-            parentRoute: typeof TodoTodoIdImport
-        }
-        '/todo/$todoId/': {
-            id: '/todo/$todoId/'
-            path: '/'
-            fullPath: '/todo/$todoId/'
-            preLoaderRoute: typeof TodoTodoIdIndexImport
-            parentRoute: typeof TodoTodoIdImport
-        }
-        '/todo/$todoId/template/$templateId/edit': {
-            id: '/todo/$todoId/template/$templateId/edit'
-            path: '/template/$templateId/edit'
-            fullPath: '/todo/$todoId/template/$templateId/edit'
-            preLoaderRoute: typeof TodoTodoIdTemplateTemplateIdEditImport
-            parentRoute: typeof TodoTodoIdImport
-        }
-    }
+declare module "@tanstack/react-router" {
+  interface FileRoutesByPath {
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/auth/callback": {
+      id: "/auth/callback";
+      path: "/auth/callback";
+      fullPath: "/auth/callback";
+      preLoaderRoute: typeof AuthCallbackImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/todo/$todoId": {
+      id: "/todo/$todoId";
+      path: "/todo/$todoId";
+      fullPath: "/todo/$todoId";
+      preLoaderRoute: typeof TodoTodoIdImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/todo/new": {
+      id: "/todo/new";
+      path: "/todo/new";
+      fullPath: "/todo/new";
+      preLoaderRoute: typeof TodoNewImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/todo/$todoId/new": {
+      id: "/todo/$todoId/new";
+      path: "/new";
+      fullPath: "/todo/$todoId/new";
+      preLoaderRoute: typeof TodoTodoIdNewImport;
+      parentRoute: typeof TodoTodoIdImport;
+    };
+    "/todo/$todoId/templates": {
+      id: "/todo/$todoId/templates";
+      path: "/templates";
+      fullPath: "/todo/$todoId/templates";
+      preLoaderRoute: typeof TodoTodoIdTemplatesImport;
+      parentRoute: typeof TodoTodoIdImport;
+    };
+    "/todo/$todoId/": {
+      id: "/todo/$todoId/";
+      path: "/";
+      fullPath: "/todo/$todoId/";
+      preLoaderRoute: typeof TodoTodoIdIndexImport;
+      parentRoute: typeof TodoTodoIdImport;
+    };
+    "/todo/$todoId/template/$templateId/edit": {
+      id: "/todo/$todoId/template/$templateId/edit";
+      path: "/template/$templateId/edit";
+      fullPath: "/todo/$todoId/template/$templateId/edit";
+      preLoaderRoute: typeof TodoTodoIdTemplateTemplateIdEditImport;
+      parentRoute: typeof TodoTodoIdImport;
+    };
+  }
 }
 
 // Create and export the route tree
 
 interface TodoTodoIdRouteChildren {
-    TodoTodoIdNewRoute: typeof TodoTodoIdNewRoute
-    TodoTodoIdTemplatesRoute: typeof TodoTodoIdTemplatesRoute
-    TodoTodoIdIndexRoute: typeof TodoTodoIdIndexRoute
-    TodoTodoIdTemplateTemplateIdEditRoute: typeof TodoTodoIdTemplateTemplateIdEditRoute
+  TodoTodoIdNewRoute: typeof TodoTodoIdNewRoute;
+  TodoTodoIdTemplatesRoute: typeof TodoTodoIdTemplatesRoute;
+  TodoTodoIdIndexRoute: typeof TodoTodoIdIndexRoute;
+  TodoTodoIdTemplateTemplateIdEditRoute: typeof TodoTodoIdTemplateTemplateIdEditRoute;
 }
 
 const TodoTodoIdRouteChildren: TodoTodoIdRouteChildren = {
-    TodoTodoIdNewRoute: TodoTodoIdNewRoute,
-    TodoTodoIdTemplatesRoute: TodoTodoIdTemplatesRoute,
-    TodoTodoIdIndexRoute: TodoTodoIdIndexRoute,
-    TodoTodoIdTemplateTemplateIdEditRoute:
-        TodoTodoIdTemplateTemplateIdEditRoute,
-}
+  TodoTodoIdNewRoute: TodoTodoIdNewRoute,
+  TodoTodoIdTemplatesRoute: TodoTodoIdTemplatesRoute,
+  TodoTodoIdIndexRoute: TodoTodoIdIndexRoute,
+  TodoTodoIdTemplateTemplateIdEditRoute: TodoTodoIdTemplateTemplateIdEditRoute,
+};
 
 const TodoTodoIdRouteWithChildren = TodoTodoIdRoute._addFileChildren(
-    TodoTodoIdRouteChildren
-)
+  TodoTodoIdRouteChildren
+);
 
 export interface FileRoutesByFullPath {
-    '/': typeof IndexRoute
-    '/login': typeof LoginRoute
-    '/auth/callback': typeof AuthCallbackRoute
-    '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
-    '/todo/$todoId/': typeof TodoTodoIdIndexRoute
-    '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
+  "/": typeof IndexRoute;
+  "/login": typeof LoginRoute;
+  "/auth/callback": typeof AuthCallbackRoute;
+  "/todo/$todoId": typeof TodoTodoIdRouteWithChildren;
+  "/todo/new": typeof TodoNewRoute;
+  "/todo/$todoId/new": typeof TodoTodoIdNewRoute;
+  "/todo/$todoId/templates": typeof TodoTodoIdTemplatesRoute;
+  "/todo/$todoId/": typeof TodoTodoIdIndexRoute;
+  "/todo/$todoId/template/$templateId/edit": typeof TodoTodoIdTemplateTemplateIdEditRoute;
 }
 
 export interface FileRoutesByTo {
-    '/': typeof IndexRoute
-    '/login': typeof LoginRoute
-    '/auth/callback': typeof AuthCallbackRoute
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
-    '/todo/$todoId': typeof TodoTodoIdIndexRoute
-    '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
+  "/": typeof IndexRoute;
+  "/login": typeof LoginRoute;
+  "/auth/callback": typeof AuthCallbackRoute;
+  "/todo/new": typeof TodoNewRoute;
+  "/todo/$todoId/new": typeof TodoTodoIdNewRoute;
+  "/todo/$todoId/templates": typeof TodoTodoIdTemplatesRoute;
+  "/todo/$todoId": typeof TodoTodoIdIndexRoute;
+  "/todo/$todoId/template/$templateId/edit": typeof TodoTodoIdTemplateTemplateIdEditRoute;
 }
 
 export interface FileRoutesById {
-    __root__: typeof rootRoute
-    '/': typeof IndexRoute
-    '/login': typeof LoginRoute
-    '/auth/callback': typeof AuthCallbackRoute
-    '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
-    '/todo/new': typeof TodoNewRoute
-    '/todo/$todoId/new': typeof TodoTodoIdNewRoute
-    '/todo/$todoId/templates': typeof TodoTodoIdTemplatesRoute
-    '/todo/$todoId/': typeof TodoTodoIdIndexRoute
-    '/todo/$todoId/template/$templateId/edit': typeof TodoTodoIdTemplateTemplateIdEditRoute
+  __root__: typeof rootRoute;
+  "/": typeof IndexRoute;
+  "/login": typeof LoginRoute;
+  "/auth/callback": typeof AuthCallbackRoute;
+  "/todo/$todoId": typeof TodoTodoIdRouteWithChildren;
+  "/todo/new": typeof TodoNewRoute;
+  "/todo/$todoId/new": typeof TodoTodoIdNewRoute;
+  "/todo/$todoId/templates": typeof TodoTodoIdTemplatesRoute;
+  "/todo/$todoId/": typeof TodoTodoIdIndexRoute;
+  "/todo/$todoId/template/$templateId/edit": typeof TodoTodoIdTemplateTemplateIdEditRoute;
 }
 
 export interface FileRouteTypes {
-    fileRoutesByFullPath: FileRoutesByFullPath
-    fullPaths:
-        | '/'
-        | '/login'
-        | '/auth/callback'
-        | '/todo/$todoId'
-        | '/todo/new'
-        | '/todo/$todoId/new'
-        | '/todo/$todoId/templates'
-        | '/todo/$todoId/'
-        | '/todo/$todoId/template/$templateId/edit'
-    fileRoutesByTo: FileRoutesByTo
-    to:
-        | '/'
-        | '/login'
-        | '/auth/callback'
-        | '/todo/new'
-        | '/todo/$todoId/new'
-        | '/todo/$todoId/templates'
-        | '/todo/$todoId'
-        | '/todo/$todoId/template/$templateId/edit'
-    id:
-        | '__root__'
-        | '/'
-        | '/login'
-        | '/auth/callback'
-        | '/todo/$todoId'
-        | '/todo/new'
-        | '/todo/$todoId/new'
-        | '/todo/$todoId/templates'
-        | '/todo/$todoId/'
-        | '/todo/$todoId/template/$templateId/edit'
-    fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths:
+    | "/"
+    | "/login"
+    | "/auth/callback"
+    | "/todo/$todoId"
+    | "/todo/new"
+    | "/todo/$todoId/new"
+    | "/todo/$todoId/templates"
+    | "/todo/$todoId/"
+    | "/todo/$todoId/template/$templateId/edit";
+  fileRoutesByTo: FileRoutesByTo;
+  to:
+    | "/"
+    | "/login"
+    | "/auth/callback"
+    | "/todo/new"
+    | "/todo/$todoId/new"
+    | "/todo/$todoId/templates"
+    | "/todo/$todoId"
+    | "/todo/$todoId/template/$templateId/edit";
+  id:
+    | "__root__"
+    | "/"
+    | "/login"
+    | "/auth/callback"
+    | "/todo/$todoId"
+    | "/todo/new"
+    | "/todo/$todoId/new"
+    | "/todo/$todoId/templates"
+    | "/todo/$todoId/"
+    | "/todo/$todoId/template/$templateId/edit";
+  fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-    IndexRoute: typeof IndexRoute
-    LoginRoute: typeof LoginRoute
-    AuthCallbackRoute: typeof AuthCallbackRoute
-    TodoTodoIdRoute: typeof TodoTodoIdRouteWithChildren
-    TodoNewRoute: typeof TodoNewRoute
+  IndexRoute: typeof IndexRoute;
+  LoginRoute: typeof LoginRoute;
+  AuthCallbackRoute: typeof AuthCallbackRoute;
+  TodoTodoIdRoute: typeof TodoTodoIdRouteWithChildren;
+  TodoNewRoute: typeof TodoNewRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
-    IndexRoute: IndexRoute,
-    LoginRoute: LoginRoute,
-    AuthCallbackRoute: AuthCallbackRoute,
-    TodoTodoIdRoute: TodoTodoIdRouteWithChildren,
-    TodoNewRoute: TodoNewRoute,
-}
+  IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  TodoTodoIdRoute: TodoTodoIdRouteWithChildren,
+  TodoNewRoute: TodoNewRoute,
+};
 
 export const routeTree = rootRoute
-    ._addFileChildren(rootRouteChildren)
-    ._addFileTypes<FileRouteTypes>()
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>();
 
 /* ROUTE_MANIFEST_START
 {
