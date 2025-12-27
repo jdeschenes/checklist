@@ -23,6 +23,7 @@
 * Improve logs on failure
 * Use quickcheck to validate the dummify function
 * Add a test to properly validate the list todo item order by logic
+* Add pagination to the responses
 
 # FRONTEND TODO
 
