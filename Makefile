@@ -38,8 +38,8 @@ golden-test:
 
 .PHONY: check
 check:
-	ansible-playbook infra/check.yml -i infra/inventory/hosts.yml
+	ansible-playbook infra/check.yml -i infra/inventory/hosts.yml --ask-vault-pass
 
 .PHONY: setup
 setup:
-	ansible-playbook infra/setup.yml -i infra/inventory/hosts.yml
+	ansible-playbook infra/setup.yml -i infra/inventory/hosts.yml --ask-vault-pass
