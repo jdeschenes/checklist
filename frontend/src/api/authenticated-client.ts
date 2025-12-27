@@ -22,6 +22,16 @@ export const authenticatedFetch = async (
   options: AuthenticatedFetchOptions = {}
 ): Promise<Response> => {
   const { skipAuth = false, ...fetchOptions } = options;
+  let token: string | null = null;
+  if (!skipAuth) {
+    token = authToken;
+    if (!token && typeof window !== "undefined") {
+      token = localStorage.getItem("checklist_auth_token");
+    }
+    if (token) {
+      authToken = token;
+    }
+  }
 
   // Add base URL if not already present
   const fullUrl = url.startsWith("http") ? url : `${BASE_URL}${url}`;
@@ -37,7 +47,7 @@ export const authenticatedFetch = async (
   const response = await fetch(fullUrl, fetchOptions);
 
   // Check for authentication errors
-  if (response.status === 401 || response.status === 403) {
+  if ((response.status === 401 || response.status === 403) && token) {
     // Clear stored auth data
     authToken = null;
     localStorage.removeItem("checklist_auth_token");
