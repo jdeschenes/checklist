@@ -1,7 +1,6 @@
 use axum::{extract, http::StatusCode, Json};
 use eyre::Context;
 use serde::{Deserialize, Serialize};
-use sqlx::Acquire;
 use time::{Date, OffsetDateTime};
 use tracing::info;
 use uuid::Uuid;
@@ -11,13 +10,14 @@ use crate::{
         self, ListRecurringTemplate, NewRecurringTemplateRequest, RecurringTemplate, TodoName,
     },
     error::APIError,
-    extractors::{AppRecurringSettings, AuthenticatedUser, DatabaseConnection},
+    extractors::{AppRecurringSettings, AuthenticatedUser},
     repos::{
         create_recurring_template, delete_recurring_template, get_recurring_template,
         list_recurring_templates, update_recurring_template,
     },
     services::process_single_template,
 };
+use crate::tx::tx::Tx;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RecurrenceInterval {
@@ -126,14 +126,14 @@ impl From<ListRecurringTemplate> for ListRecurringTemplatesResponse {
 
 #[tracing::instrument(
     name = "Create recurring template",
-    skip(conn),
+    skip(tx),
     fields(
         todo_name = %todo_name,
         title = %req.title,
     )
 )]
 pub async fn create_recurring_template_handler(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     AppRecurringSettings(recurring_settings): AppRecurringSettings,
     AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path(todo_name): extract::Path<String>,
@@ -151,18 +151,13 @@ pub async fn create_recurring_template_handler(
         end_date: req.end_date,
     };
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-
     let template =
-        create_recurring_template(&mut transaction, &new_template_request, user_id).await?;
+        create_recurring_template(&mut tx, &new_template_request, user_id).await?;
 
     // Generate any todos that should be created within the advance window
     let template_single = (&template).into();
     process_single_template(
-        &mut transaction,
+        &mut tx,
         &template_single,
         recurring_settings.look_ahead_duration,
         user_id,
@@ -172,55 +167,40 @@ pub async fn create_recurring_template_handler(
 
     info!("Created recurring template {}", template.template_id);
 
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to create recurring template")?;
-
     Ok(Json(template.into()))
 }
 
 #[tracing::instrument(
     name = "Get recurring template",
-    skip(conn),
+    skip(tx),
     fields(
         todo_name = %todo_name,
         template_id = %template_id
     )
 )]
 pub async fn get_recurring_template_handler(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-
     let template =
-        get_recurring_template(&mut transaction, &todo_name, &template_id, user_id).await?;
-
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to get recurring template")?;
+        get_recurring_template(&mut tx, &todo_name, &template_id, user_id).await?;
 
     Ok(Json(template.into()))
 }
 
 #[tracing::instrument(
     name = "Update recurring template",
-    skip(conn),
+    skip(tx),
     fields(
         todo_name = %todo_name,
         template_id = %template_id
     )
 )]
 pub async fn update_recurring_template_handler(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     AppRecurringSettings(recurring_settings): AppRecurringSettings,
     AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
@@ -238,13 +218,8 @@ pub async fn update_recurring_template_handler(
         is_active: req.is_active,
     };
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-
     let template = update_recurring_template(
-        &mut transaction,
+        &mut tx,
         &todo_name,
         &template_id,
         &update_request,
@@ -256,7 +231,7 @@ pub async fn update_recurring_template_handler(
     // after the template update
     let template_single = (&template).into();
     process_single_template(
-        &mut transaction,
+        &mut tx,
         &template_single,
         recurring_settings.look_ahead_duration,
         user_id,
@@ -266,67 +241,42 @@ pub async fn update_recurring_template_handler(
 
     info!("Updated recurring template {}", template.template_id);
 
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to update recurring template")?;
-
     Ok(Json(template.into()))
 }
 
 #[tracing::instrument(
     name = "List recurring templates",
-    skip(conn),
+    skip(tx),
     fields(todo_name = %todo_name)
 )]
 pub async fn list_recurring_templates_handler(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path(todo_name): extract::Path<String>,
 ) -> Result<Json<ListRecurringTemplatesResponse>, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-
-    let templates = list_recurring_templates(&mut transaction, &todo_name, user_id).await?;
-
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to list recurring templates")?;
+    let templates = list_recurring_templates(&mut tx, &todo_name, user_id).await?;
 
     Ok(Json(templates.into()))
 }
 
 #[tracing::instrument(
     name = "Delete recurring template",
-    skip(conn),
+    skip(tx),
     fields(
         todo_name = %todo_name,
         template_id = %template_id
     )
 )]
 pub async fn delete_recurring_template_handler(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     AuthenticatedUser { user_id, .. }: AuthenticatedUser,
     extract::Path((todo_name, template_id)): extract::Path<(String, Uuid)>,
 ) -> Result<StatusCode, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire a Postgres connection from the pool")?;
-
-    delete_recurring_template(&mut transaction, &todo_name, &template_id, user_id).await?;
-
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit SQL transaction to delete recurring template")?;
+    delete_recurring_template(&mut tx, &todo_name, &template_id, user_id).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }

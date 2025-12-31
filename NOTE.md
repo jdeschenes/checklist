@@ -9,24 +9,29 @@
 * Add backups script and access to the backup folder
 
 # BACKEND TODO
-* Fix CORS
-* Run script should check if db is up and online, before starting anything.
 * Add response for create/update on TODO
 * Add transaction in the middleware
+* Add a test to properly validate the list todo item order by logic
+* Add pagination to the responses
+* Fix CORS
+* Run script should check if db is up and online, before starting anything.
 * Add CI and all the checks
 * Add a test that we are not sending cookie and authorization headers in the logs
 * Add a test to check that we are sending the right logs
 * Change the assert_response to a macro to check for x-request-id, to give error message
 * Improve logs on failure
 * Use quickcheck to validate the dummify function
-* Add a test to properly validate the list todo item order by logic
-* Add pagination to the responses
+* Investigate if we can use openapi/something else to generate the API documentation
+* Possibly add a "clock" type passed around to get the current time. This helps
+  with testing.
+* Add groups/owners to the todos to allow sharing todos
 
 # FRONTEND TODO
 
 * Add a redirect if todo is not found
-* Add tanstack form and convert the few forms to it
+* Add a way to know when the the todo list has been updated(are there new todo items?)
 * Create Main Page(No todo created and then shows the todo item of the favorite todo)
+* Add tanstack form and convert the few forms to it
 * Add dummy/offline "backend"
 * The favorite todo is browser side
 * Handle dates and time and not only a string

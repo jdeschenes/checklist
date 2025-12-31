@@ -2,32 +2,10 @@ use axum::{
     extract::FromRequestParts,
     http::{request::Parts, StatusCode},
 };
-use eyre::WrapErr;
 
 use crate::{
-    configuration::RecurringSettings, error::InternalError, repos::UserRepository, AppState,
+    configuration::RecurringSettings, error::InternalError, AppState,
 };
-
-// we can also write a custom extractor that grabs a connection from the pool
-// which setup is appropriate depends on your application
-pub struct DatabaseConnection(pub sqlx::pool::PoolConnection<sqlx::Postgres>);
-
-impl FromRequestParts<AppState> for DatabaseConnection {
-    type Rejection = InternalError;
-
-    async fn from_request_parts(
-        _parts: &mut Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        let conn = state
-            .pool
-            .acquire()
-            .await
-            .context("acquiring database connection from pool")?;
-
-        Ok(Self(conn))
-    }
-}
 
 pub struct AppRecurringSettings(pub RecurringSettings);
 
@@ -66,9 +44,8 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
             .validate_token(auth_header)
             .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
-        let user_repo = UserRepository::new(state.pool.clone());
-        let user_exists = user_repo
-            .find_by_email(&claims.email)
+        let mut transaction = state.tx_state.transaction().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let user_exists = crate::repos::find_by_email(&mut transaction, &claims.email)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         match user_exists {
