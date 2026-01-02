@@ -1,8 +1,6 @@
 use axum::extract;
 use axum::Json;
-use eyre::WrapErr;
 use serde::{Deserialize, Serialize};
-use sqlx::Acquire;
 use time::Date;
 use time::OffsetDateTime;
 use time::UtcOffset;
@@ -11,8 +9,9 @@ use uuid::Uuid;
 use crate::domain;
 use crate::domain::NewTodoItemRequest;
 use crate::error::APIError;
-use crate::extractors::{AuthenticatedUser, DatabaseConnection};
+use crate::extractors::AuthenticatedUser;
 use crate::repos;
+use crate::tx::tx::Tx;
 
 #[derive(Debug, Deserialize)]
 pub struct CreateTodoItemRequest {
@@ -134,41 +133,33 @@ impl TryFrom<TodoItemSingleResponse> for domain::UpdateTodoItemRequest {
 
 #[tracing::instrument(
     name = "List TODO Item"
-    skip(conn, todo_str),
+    skip(tx, todo_str),
     fields(
         todo_name = %todo_str
     )
 )]
 pub async fn list_todo_items(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
 ) -> Result<Json<ListTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
-    let result = repos::list_todo_items(&mut transaction, &todo_name, user.user_id)
+    let result = repos::list_todo_items(&mut tx, &todo_name, user.user_id)
         .await?
         .into();
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
     Ok(Json(result))
 }
 
 #[tracing::instrument(
     name = "Create TODO Item"
-    skip(conn, todo_str, payload),
+    skip(tx, todo_str, payload),
     fields(
         todo_name = %todo_str
     )
 )]
 pub async fn create_todo_item(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path(todo_str): extract::Path<String>,
     Json(payload): Json<CreateTodoItemRequest>,
@@ -176,59 +167,43 @@ pub async fn create_todo_item(
     let todo_name = todo_str.try_into()?;
     let todo = payload.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
-    let todo_item = repos::create_todo_item(&mut transaction, &todo_name, &todo, user.user_id)
+    let todo_item = repos::create_todo_item(&mut tx, &todo_name, &todo, user.user_id)
         .await?
         .into();
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
     Ok(Json(todo_item))
 }
 
 #[tracing::instrument(
     name = "Get TODO Item"
-    skip(conn, todo_str, todo_item),
+    skip(tx, todo_str, todo_item),
     fields(
         todo_name = %todo_str,
         todo_item = %todo_item,
     )
 )]
 pub async fn get_todo_item(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<GetTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
-    let todo_item = repos::get_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id)
+    let todo_item = repos::get_todo_item(&mut tx, &todo_name, &todo_item, user.user_id)
         .await?
         .into();
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
     Ok(Json(todo_item))
 }
 
 #[tracing::instrument(
     name = "Update TODO Item"
-    skip(conn, todo_str, todo_item, payload),
+    skip(tx, todo_str, todo_item, payload),
     fields(
         todo_name = %todo_str,
         todo_item = %todo_item,
     )
 )]
 pub async fn update_todo_item(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
     Json(payload): Json<UpdateTodoItemRequest>,
@@ -236,12 +211,8 @@ pub async fn update_todo_item(
     let todo_name = todo_str.try_into()?;
     let item = payload.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
     let todo_item = repos::update_todo_item(
-        &mut transaction,
+        &mut tx,
         &todo_name,
         &todo_item,
         &item,
@@ -249,66 +220,46 @@ pub async fn update_todo_item(
     )
     .await?
     .into();
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
     Ok(Json(todo_item))
 }
 
 #[tracing::instrument(
     name = "Delete TODO Item"
-    skip(conn, todo_str, todo_item),
+    skip(tx, todo_str, todo_item),
     fields(
         todo_name = %todo_str,
         todo_item = %todo_item,
     )
 )]
 pub async fn delete_todo_item(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<(), APIError> {
     let todo_name = todo_str.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
-    repos::delete_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id).await?;
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
+    repos::delete_todo_item(&mut tx, &todo_name, &todo_item, user.user_id).await?;
     Ok(())
 }
 
 #[tracing::instrument(
     name = "Complete TODO Item"
-    skip(conn, todo_str, todo_item),
+    skip(tx, todo_str, todo_item),
     fields(
         todo_name = %todo_str,
         todo_item = %todo_item,
     )
 )]
 pub async fn complete_todo_item(
-    DatabaseConnection(mut conn): DatabaseConnection,
+    mut tx: Tx,
     user: AuthenticatedUser,
     extract::Path((todo_str, todo_item)): extract::Path<(String, Uuid)>,
 ) -> Result<Json<GetTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
 
-    let mut transaction = conn
-        .begin()
-        .await
-        .context("Failed to acquire transaction")?;
     let todo_item =
-        repos::complete_todo_item(&mut transaction, &todo_name, &todo_item, user.user_id)
+        repos::complete_todo_item(&mut tx, &todo_name, &todo_item, user.user_id)
             .await?
             .into();
-    transaction
-        .commit()
-        .await
-        .context("Failed to commit transaction")?;
     Ok(Json(todo_item))
 }

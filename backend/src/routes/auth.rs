@@ -12,7 +12,7 @@ use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 
-use crate::{domain::User, repos::UserRepository, AppState};
+use crate::{domain::User, repos::find_by_email, AppState};
 
 #[derive(Deserialize)]
 pub struct AuthCallbackQuery {
@@ -114,9 +114,9 @@ pub async fn google_callback(
         return Err(StatusCode::BAD_REQUEST);
     }
 
+    let mut transaction = state.tx_state.transaction().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     // Find user (do not create if not exists)
-    let user_repo = UserRepository::new(state.pool.clone());
-    let user = match user_repo.find_by_email(&user_info.email).await {
+    let user = match find_by_email(&mut transaction, &user_info.email).await {
         Ok(Some(user)) => user,
         Ok(None) => {
             // User not found - return 403 Forbidden

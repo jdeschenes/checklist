@@ -35,6 +35,7 @@ mod error;
 mod extractors;
 mod repos;
 mod routes;
+mod tx;
 pub mod services;
 pub mod startup;
 pub mod telemetry;
@@ -45,7 +46,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: Pool<Postgres>,
+    pub tx_state: tx::state::State,
     pub recurring_settings: RecurringSettings,
     pub auth: configuration::AuthSettings,
     pub jwt_service: auth::JwtService,
@@ -60,6 +61,7 @@ pub async fn run(
     auth: configuration::AuthSettings,
     jwt_service: auth::JwtService,
 ) -> Result<Server> {
+    let (tx_state, tx_layer) = tx::setup(pg_pool);
     let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
     let request_middleware = ServiceBuilder::new()
         .layer(SetRequestIdLayer::new(
@@ -91,7 +93,8 @@ pub async fn run(
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         }))
-        .layer(TimeoutLayer::new(REQUEST_TIMEOUT));
+        .layer(TimeoutLayer::new(REQUEST_TIMEOUT))
+        .layer(tx_layer);
     let cors = CorsLayer::new()
         // allow `GET`, `POST`, `PUT`, and `DELETE` when accessing the resource
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -151,7 +154,7 @@ pub async fn run(
         .layer(request_middleware)
         .layer(cors)
         .with_state(AppState {
-            pool: pg_pool,
+            tx_state,
             recurring_settings,
             auth,
             jwt_service,
