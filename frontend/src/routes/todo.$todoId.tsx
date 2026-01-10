@@ -8,6 +8,8 @@ import useCreateTodoItem from "@/api/useCreateTodoItem";
 import { Input } from "@/components/ui/input";
 import * as React from "react";
 
+const COMPLETION_DELAY_MS = 3000;
+
 export const Route = createFileRoute("/todo/$todoId")({
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { todoId } }) => {
@@ -35,6 +37,8 @@ function RouteComponent() {
   const completionTimeoutRef = React.useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
+  const isQuickAddFocusedRef = React.useRef(false);
+  const suppressNextClickRef = React.useRef(false);
   const pendingCompletionsRef = React.useRef(pendingCompletions);
   const inFlightCompletionsRef = React.useRef<Set<string>>(new Set());
 
@@ -85,15 +89,28 @@ function RouteComponent() {
           },
         });
       });
-    }, 1000);
+    }, COMPLETION_DELAY_MS);
   }, [clearCompletionTimeout, completeTodoItemMutation]);
 
   React.useEffect(() => {
     resetCompletionWindow();
   }, [pendingCompletions, resetCompletionWindow]);
 
+  const handleItemPointerDown = React.useCallback(() => {
+    if (!isQuickAddFocusedRef.current) {
+      return;
+    }
+
+    suppressNextClickRef.current = true;
+  }, []);
+
   const handleItemClick = React.useCallback(
     (itemId: string, isComplete: boolean) => {
+      if (suppressNextClickRef.current) {
+        suppressNextClickRef.current = false;
+        return;
+      }
+
       if (isComplete) return;
 
       setPendingCompletions((prev) => {
@@ -165,6 +182,14 @@ function RouteComponent() {
               name="quick-add"
               type="text"
               value={quickTitle}
+              onFocus={() => {
+                isQuickAddFocusedRef.current = true;
+              }}
+              onBlur={() => {
+                isQuickAddFocusedRef.current = false;
+                setQuickTitle("");
+                setQuickError(null);
+              }}
               onChange={(event) => {
                 setQuickTitle(event.target.value);
                 if (quickError) {
@@ -194,6 +219,7 @@ function RouteComponent() {
                 return (
                   <li
                     key={item.todo_item_id}
+                    onPointerDown={handleItemPointerDown}
                     onClick={() =>
                       handleItemClick(item.todo_item_id, item.is_complete)
                     }
