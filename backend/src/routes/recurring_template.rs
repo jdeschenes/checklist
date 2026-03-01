@@ -5,6 +5,7 @@ use time::{Date, OffsetDateTime};
 use tracing::info;
 use uuid::Uuid;
 
+use crate::tx::tx::Tx;
 use crate::{
     domain::{
         self, ListRecurringTemplate, NewRecurringTemplateRequest, RecurringTemplate, TodoName,
@@ -17,7 +18,6 @@ use crate::{
     },
     services::process_single_template,
 };
-use crate::tx::tx::Tx;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RecurrenceInterval {
@@ -151,8 +151,7 @@ pub async fn create_recurring_template_handler(
         end_date: req.end_date,
     };
 
-    let template =
-        create_recurring_template(&mut tx, &new_template_request, user_id).await?;
+    let template = create_recurring_template(&mut tx, &new_template_request, user_id).await?;
 
     // Generate any todos that should be created within the advance window
     let template_single = (&template).into();
@@ -185,8 +184,7 @@ pub async fn get_recurring_template_handler(
 ) -> Result<Json<RecurringTemplateResponse>, APIError> {
     let todo_name = TodoName::try_from(todo_name)?;
 
-    let template =
-        get_recurring_template(&mut tx, &todo_name, &template_id, user_id).await?;
+    let template = get_recurring_template(&mut tx, &todo_name, &template_id, user_id).await?;
 
     Ok(Json(template.into()))
 }
@@ -218,14 +216,9 @@ pub async fn update_recurring_template_handler(
         is_active: req.is_active,
     };
 
-    let template = update_recurring_template(
-        &mut tx,
-        &todo_name,
-        &template_id,
-        &update_request,
-        user_id,
-    )
-    .await?;
+    let template =
+        update_recurring_template(&mut tx, &todo_name, &template_id, &update_request, user_id)
+            .await?;
 
     // Generate any todos that should be created within the advance window
     // after the template update

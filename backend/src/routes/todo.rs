@@ -205,8 +205,6 @@ pub async fn list_todo(
     mut tx: Tx,
     user: AuthenticatedUser,
 ) -> Result<Json<ListTodoResponse>, APIError> {
-    let todo_response = repos::list_todo(&mut tx, user.user_id)
-        .await?
-        .into();
+    let todo_response = repos::list_todo(&mut tx, user.user_id).await?.into();
     Ok(Json(todo_response))
 }

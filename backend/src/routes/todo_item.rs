@@ -26,6 +26,7 @@ pub struct ListTodoItemResponse {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TodoItemSingleResponse {
+    pub todo_name: String,
     pub todo_item_id: Uuid,
     pub title: String,
     pub due_date: Date,
@@ -49,6 +50,19 @@ pub struct UpdateTodoItemRequest {
 pub type CreateTodoItemResponse = TodoItemSingleResponse;
 pub type GetTodoItemResponse = TodoItemSingleResponse;
 pub type UpdateTodoItemResponse = TodoItemSingleResponse;
+
+fn todo_item_response(todo_name: &str, value: domain::TodoItem) -> TodoItemSingleResponse {
+    TodoItemSingleResponse {
+        todo_name: todo_name.to_string(),
+        todo_item_id: value.todo_item_id,
+        title: value.title,
+        due_date: value.due_date,
+        is_complete: value.is_complete,
+        complete_time: value.complete_time,
+        create_time: value.create_time,
+        update_time: value.update_time,
+    }
+}
 
 impl TryFrom<CreateTodoItemRequest> for NewTodoItemRequest {
     type Error = APIError;
@@ -93,23 +107,10 @@ impl From<domain::ListTodoItem> for ListTodoItemResponse {
     }
 }
 
-impl From<domain::TodoItem> for TodoItemSingleResponse {
-    fn from(value: domain::TodoItem) -> Self {
-        Self {
-            todo_item_id: value.todo_item_id,
-            title: value.title,
-            due_date: value.due_date,
-            is_complete: value.is_complete,
-            complete_time: value.complete_time,
-            create_time: value.create_time,
-            update_time: value.update_time,
-        }
-    }
-}
-
 impl From<domain::ListTodoItemSingle> for TodoItemSingleResponse {
     fn from(value: domain::ListTodoItemSingle) -> Self {
         Self {
+            todo_name: value.todo_name,
             todo_item_id: value.todo_item_id,
             title: value.title,
             due_date: value.due_date,
@@ -151,6 +152,17 @@ pub async fn list_todo_items(
     Ok(Json(result))
 }
 
+#[tracing::instrument(name = "List TODO Items Due Today", skip(tx))]
+pub async fn list_today_todo_items(
+    mut tx: Tx,
+    user: AuthenticatedUser,
+) -> Result<Json<ListTodoItemResponse>, APIError> {
+    let result = repos::list_today_todo_items(&mut tx, user.user_id)
+        .await?
+        .into();
+    Ok(Json(result))
+}
+
 #[tracing::instrument(
     name = "Create TODO Item"
     skip(tx, todo_str, payload),
@@ -167,9 +179,8 @@ pub async fn create_todo_item(
     let todo_name = todo_str.try_into()?;
     let todo = payload.try_into()?;
 
-    let todo_item = repos::create_todo_item(&mut tx, &todo_name, &todo, user.user_id)
-        .await?
-        .into();
+    let todo_item = repos::create_todo_item(&mut tx, &todo_name, &todo, user.user_id).await?;
+    let todo_item = todo_item_response(todo_name.as_ref(), todo_item);
     Ok(Json(todo_item))
 }
 
@@ -188,9 +199,8 @@ pub async fn get_todo_item(
 ) -> Result<Json<GetTodoItemResponse>, APIError> {
     let todo_name = todo_str.try_into()?;
 
-    let todo_item = repos::get_todo_item(&mut tx, &todo_name, &todo_item, user.user_id)
-        .await?
-        .into();
+    let todo_item = repos::get_todo_item(&mut tx, &todo_name, &todo_item, user.user_id).await?;
+    let todo_item = todo_item_response(todo_name.as_ref(), todo_item);
     Ok(Json(todo_item))
 }
 
@@ -211,15 +221,9 @@ pub async fn update_todo_item(
     let todo_name = todo_str.try_into()?;
     let item = payload.try_into()?;
 
-    let todo_item = repos::update_todo_item(
-        &mut tx,
-        &todo_name,
-        &todo_item,
-        &item,
-        user.user_id,
-    )
-    .await?
-    .into();
+    let todo_item =
+        repos::update_todo_item(&mut tx, &todo_name, &todo_item, &item, user.user_id).await?;
+    let todo_item = todo_item_response(todo_name.as_ref(), todo_item);
     Ok(Json(todo_item))
 }
 
@@ -258,8 +262,7 @@ pub async fn complete_todo_item(
     let todo_name = todo_str.try_into()?;
 
     let todo_item =
-        repos::complete_todo_item(&mut tx, &todo_name, &todo_item, user.user_id)
-            .await?
-            .into();
+        repos::complete_todo_item(&mut tx, &todo_name, &todo_item, user.user_id).await?;
+    let todo_item = todo_item_response(todo_name.as_ref(), todo_item);
     Ok(Json(todo_item))
 }

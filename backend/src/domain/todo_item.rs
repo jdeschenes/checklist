@@ -26,6 +26,7 @@ pub struct ListTodoItem {
 
 #[derive(Debug, Clone)]
 pub struct ListTodoItemSingle {
+    pub todo_name: String,
     pub todo_item_id: Uuid,
     pub title: String,
     pub due_date: Date,

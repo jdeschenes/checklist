@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n              todo.name as \"todo_name!\",\n              todo_item.todo_item_id,\n              todo_item.title,\n              todo_item.is_complete,\n              todo_item.due_date,\n              todo_item.complete_time,\n              todo_item.create_time,\n              todo_item.update_time\n           FROM todo_item\n           INNER JOIN todo ON todo.todo_id = todo_item.todo_id\n           WHERE\n              todo_item.is_complete = FALSE\n              AND todo_item.due_date <= CURRENT_DATE\n              AND ((todo.user_id = $1 AND todo.visibility = 'private') OR todo.visibility = 'public')\n           ORDER BY todo_item.due_date, todo_item.create_time\n        ;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "todo_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "todo_item_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_complete",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "due_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "complete_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "create_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "update_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e1c9dce4a5574213d7a11f29e4651f8097a5878cf1d37a5b2bc10d5e4d54fbbf"
+}

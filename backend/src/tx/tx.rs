@@ -8,13 +8,11 @@ pub struct Tx {
     tx: ArcMutexGuard<RawMutex, LazyTransaction>,
 }
 
-
 impl AsRef<sqlx::PgTransaction<'static>> for Tx {
     fn as_ref(&self) -> &sqlx::PgTransaction<'static> {
         self.tx.as_ref()
     }
 }
-
 
 impl std::ops::Deref for Tx {
     type Target = sqlx::PgTransaction<'static>;
@@ -30,18 +28,19 @@ impl std::ops::DerefMut for Tx {
     }
 }
 
-impl<S>  FromRequestParts<S> for Tx
-where 
-    S: Sync
+impl<S> FromRequestParts<S> for Tx
+where
+    S: Sync,
 {
     type Rejection = Error;
 
-    async fn from_request_parts(parts: &mut axum::http::request::Parts, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
         let ext: &Extension = parts.extensions.get().ok_or(Error::MissingExtension)?;
 
         let tx = ext.acquire().await?;
-        Ok(Self {
-            tx,
-        })
+        Ok(Self { tx })
     }
 }
