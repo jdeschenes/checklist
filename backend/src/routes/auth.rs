@@ -114,7 +114,11 @@ pub async fn google_callback(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let mut transaction = state.tx_state.transaction().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let mut transaction = state
+        .tx_state
+        .transaction()
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     // Find user (do not create if not exists)
     let user = match find_by_email(&mut transaction, &user_info.email).await {
         Ok(Some(user)) => user,

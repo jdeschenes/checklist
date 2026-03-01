@@ -131,7 +131,15 @@ pub async fn list_todo_items(
     let todo = get_todo_by_name(transaction, todo_name, user_id).await?;
     match sqlx::query_as!(
         ListTodoItemSingle,
-        r#"SELECT todo_item_id, title, is_complete, due_date, complete_time, create_time, update_time
+        r#"SELECT
+              $2 as "todo_name!",
+              todo_item_id,
+              title,
+              is_complete,
+              due_date,
+              complete_time,
+              create_time,
+              update_time
            FROM todo_item
            WHERE
               todo_id = $1
@@ -139,6 +147,44 @@ pub async fn list_todo_items(
             ORDER BY due_date, create_time
         ;"#,
         todo.todo_id,
+        todo_name.as_ref(),
+    )
+    .fetch_all(&mut **transaction)
+    .await
+    {
+        Ok(result) => Ok(result.into()),
+        Err(err) => Err(APIError::Internal(err.into())),
+    }
+}
+
+#[tracing::instrument(
+    name = "List due todo items for today in the database",
+    skip(transaction)
+)]
+pub async fn list_today_todo_items(
+    transaction: &mut PgTransaction<'_>,
+    user_id: i32,
+) -> Result<ListTodoItem, APIError> {
+    match sqlx::query_as!(
+        ListTodoItemSingle,
+        r#"SELECT
+              todo.name as "todo_name!",
+              todo_item.todo_item_id,
+              todo_item.title,
+              todo_item.is_complete,
+              todo_item.due_date,
+              todo_item.complete_time,
+              todo_item.create_time,
+              todo_item.update_time
+           FROM todo_item
+           INNER JOIN todo ON todo.todo_id = todo_item.todo_id
+           WHERE
+              todo_item.is_complete = FALSE
+              AND todo_item.due_date <= CURRENT_DATE
+              AND ((todo.user_id = $1 AND todo.visibility = 'private') OR todo.visibility = 'public')
+           ORDER BY todo_item.due_date, todo_item.create_time
+        ;"#,
+        user_id,
     )
     .fetch_all(&mut **transaction)
     .await

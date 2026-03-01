@@ -1,50 +1,57 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT todo_item_id, title, is_complete, due_date, complete_time, create_time, update_time\n           FROM todo_item\n           WHERE\n              todo_id = $1\n              AND is_complete = FALSE\n            ORDER BY due_date, create_time\n        ;",
+  "query": "SELECT\n              $2 as \"todo_name!\",\n              todo_item_id,\n              title,\n              is_complete,\n              due_date,\n              complete_time,\n              create_time,\n              update_time\n           FROM todo_item\n           WHERE\n              todo_id = $1\n              AND is_complete = FALSE\n            ORDER BY due_date, create_time\n        ;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
+        "name": "todo_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
         "name": "todo_item_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 1,
+        "ordinal": 2,
         "name": "title",
         "type_info": "Text"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "is_complete",
         "type_info": "Bool"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "due_date",
         "type_info": "Date"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "complete_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "create_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "update_time",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Text"
       ]
     },
     "nullable": [
+      null,
       false,
       false,
       false,
@@ -54,5 +61,5 @@
       false
     ]
   },
-  "hash": "d1669ec246da492c0ed5defbcb2b5f9b7f05bca647e1fe01d3be0e501ccda598"
+  "hash": "79c8d628c15cde63437f5c51132ad35c9d51346cdba3ea0ae25c39d4db8ffe3d"
 }

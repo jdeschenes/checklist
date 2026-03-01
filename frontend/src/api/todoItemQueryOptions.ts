@@ -7,3 +7,8 @@ export const listTodoItemsQueryOptions = (todo_name: string) => {
     queryFn: () => FinalTodoItemAPI.ListTodoItem(todo_name),
   });
 };
+
+export const todayItemsQueryOptions = queryOptions({
+  queryKey: ["items", "today"],
+  queryFn: () => FinalTodoItemAPI.ListTodayItems(),
+});

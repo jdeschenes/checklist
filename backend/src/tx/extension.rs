@@ -18,7 +18,10 @@ impl Extension {
     }
 
     pub async fn acquire(&self) -> Result<ArcMutexGuard<RawMutex, LazyTransaction>, Error> {
-        let mut tx = self.slot.try_lock_arc().ok_or(Error::OverlappingExtractors)?;
+        let mut tx = self
+            .slot
+            .try_lock_arc()
+            .ok_or(Error::OverlappingExtractors)?;
         tx.acquire().await?;
         Ok(tx)
     }
@@ -39,16 +42,11 @@ impl Clone for Extension {
     }
 }
 
-
 pub struct LazyTransaction(LazyTransactionState);
 
 enum LazyTransactionState {
-    Unacquired {
-        state: State,
-    },
-    Acquired {
-        tx: PgTransaction<'static>,
-    },
+    Unacquired { state: State },
+    Acquired { tx: PgTransaction<'static> },
     Resolved,
 }
 
@@ -59,14 +57,18 @@ impl LazyTransaction {
 
     pub(crate) fn as_ref(&self) -> &PgTransaction<'static> {
         match &self.0 {
-            LazyTransactionState::Unacquired { .. } | LazyTransactionState::Resolved => panic!("BUG: transaction is not acquired"),
+            LazyTransactionState::Unacquired { .. } | LazyTransactionState::Resolved => {
+                panic!("BUG: transaction is not acquired")
+            }
             LazyTransactionState::Acquired { tx } => tx,
         }
     }
 
     pub(crate) fn as_mut(&mut self) -> &mut PgTransaction<'static> {
         match &mut self.0 {
-            LazyTransactionState::Unacquired { .. } | LazyTransactionState::Resolved => panic!("BUG: transaction is not acquired"),
+            LazyTransactionState::Unacquired { .. } | LazyTransactionState::Resolved => {
+                panic!("BUG: transaction is not acquired")
+            }
             LazyTransactionState::Acquired { tx } => tx,
         }
     }
@@ -77,7 +79,7 @@ impl LazyTransaction {
                 let tx = state.transaction().await?;
                 self.0 = LazyTransactionState::Acquired { tx };
                 Ok(())
-            },
+            }
             LazyTransactionState::Acquired { .. } => Ok(()),
             LazyTransactionState::Resolved => Err(Error::OverlappingExtractors),
         }
@@ -89,17 +91,17 @@ impl LazyTransaction {
             LazyTransactionState::Acquired { tx } => {
                 tx.commit().await?;
                 Ok(())
-            },
+            }
         }
     }
 
     pub async fn commit(&mut self) -> Result<(), sqlx::Error> {
         match std::mem::replace(&mut self.0, LazyTransactionState::Resolved) {
             LazyTransactionState::Unacquired { .. } => {
-            panic!("BUG: tries to commit an unaquired transaction")
-        },
-        LazyTransactionState::Acquired { tx } => tx.commit().await,
-        LazyTransactionState::Resolved => panic!("BUG: tries to commit a resolved transaction"),
-    }
+                panic!("BUG: tries to commit an unaquired transaction")
+            }
+            LazyTransactionState::Acquired { tx } => tx.commit().await,
+            LazyTransactionState::Resolved => panic!("BUG: tries to commit a resolved transaction"),
+        }
     }
 }

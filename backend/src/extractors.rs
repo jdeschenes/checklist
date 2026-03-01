@@ -3,9 +3,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 
-use crate::{
-    configuration::RecurringSettings, error::InternalError, AppState,
-};
+use crate::{configuration::RecurringSettings, error::InternalError, AppState};
 
 pub struct AppRecurringSettings(pub RecurringSettings);
 
@@ -44,7 +42,11 @@ impl FromRequestParts<AppState> for AuthenticatedUser {
             .validate_token(auth_header)
             .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
-        let mut transaction = state.tx_state.transaction().await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let mut transaction = state
+            .tx_state
+            .transaction()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         let user_exists = crate::repos::find_by_email(&mut transaction, &claims.email)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

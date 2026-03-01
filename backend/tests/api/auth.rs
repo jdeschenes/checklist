@@ -9,6 +9,7 @@ async fn routes_return_401_without_authorization_header() {
     let test_app = spawn_app().await;
 
     let endpoints = vec![
+        ("GET", format!("{}/items/today", test_app.address)),
         ("GET", format!("{}/todo", test_app.address)),
         ("POST", format!("{}/todo", test_app.address)),
         ("GET", format!("{}/todo/test", test_app.address)),
@@ -88,6 +89,7 @@ async fn routes_return_401_with_invalid_authorization_header() {
     for invalid_header in invalid_headers {
         // Test a few representative endpoints
         let endpoints = vec![
+            ("GET", format!("{}/items/today", test_app.address)),
             ("GET", format!("{}/todo", test_app.address)),
             ("POST", format!("{}/todo", test_app.address)),
             ("GET", format!("{}/todo/test", test_app.address)),
@@ -143,6 +145,7 @@ async fn routes_return_403_when_user_does_not_exist() {
 
     // Test a few representative endpoints
     let endpoints = vec![
+        ("GET", format!("{}/items/today", test_app.address)),
         ("GET", format!("{}/todo", test_app.address)),
         ("POST", format!("{}/todo", test_app.address)),
         ("GET", format!("{}/todo/test", test_app.address)),

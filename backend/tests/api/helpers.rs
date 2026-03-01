@@ -271,6 +271,15 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
+    pub async fn list_today_items(&self) -> reqwest::Response {
+        self.client
+            .get(format!("{}/items/today", self.address))
+            .header("Authorization", self.get_auth_header())
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
     pub async fn delete_todo_item(&self, todo_name: &str, todo_item_id: &str) -> reqwest::Response {
         self.client
             .delete(format!(

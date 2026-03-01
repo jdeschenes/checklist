@@ -21,4 +21,3 @@ impl FromRef<State> for sqlx::PgPool {
         state.pool.clone()
     }
 }
-

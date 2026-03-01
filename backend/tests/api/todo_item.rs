@@ -1,6 +1,7 @@
 use reqwest::StatusCode;
 use serde::Deserialize;
 use time::Date;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::helpers::{assert_response, spawn_app};
@@ -257,6 +258,175 @@ async fn list_todo_items_fails() {
         let list_response = test_app.list_todo_items(test_case.0).await;
         assert_eq!(list_response.status(), test_case.1, "{}", test_case.0);
     }
+}
+
+#[tokio::test]
+async fn list_today_items_works_for_today_and_overdue_only() {
+    let test_app = spawn_app().await;
+
+    let todo_a: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
+    let todo_b: serde_json::Value =
+        serde_json::from_str(r#"{"name": "apple", "visibility": "private"}"#).unwrap();
+    assert_response(&test_app.post_todo(&todo_a).await, StatusCode::OK);
+    assert_response(&test_app.post_todo(&todo_b).await, StatusCode::OK);
+
+    let today = OffsetDateTime::now_utc().date();
+    let overdue = today.previous_day().expect("expected a previous day");
+    let future = today.next_day().expect("expected a next day");
+
+    let overdue_payload = serde_json::json!({
+        "title": "overdue",
+        "due_date": overdue.to_string(),
+    });
+    let today_payload = serde_json::json!({
+        "title": "today",
+        "due_date": today.to_string(),
+    });
+    let future_payload = serde_json::json!({
+        "title": "future",
+        "due_date": future.to_string(),
+    });
+
+    assert_response(
+        &test_app.post_todo_item("banana", &overdue_payload).await,
+        StatusCode::OK,
+    );
+    assert_response(
+        &test_app.post_todo_item("apple", &today_payload).await,
+        StatusCode::OK,
+    );
+    assert_response(
+        &test_app.post_todo_item("banana", &future_payload).await,
+        StatusCode::OK,
+    );
+
+    let response = test_app.list_today_items().await;
+    assert_response(&response, StatusCode::OK);
+    let value: serde_json::Value = response.json().await.expect("Failed to parse response");
+    test_app.golden.check_diff_json("list_today_items", &value);
+    let items = value["items"].as_array().expect("items should be an array");
+
+    assert_eq!(items.len(), 2);
+    assert!(items.iter().all(|item| item["is_complete"] == false));
+    assert!(items
+        .iter()
+        .all(|item| item["todo_name"] == "banana" || item["todo_name"] == "apple"));
+    assert!(items.iter().all(|item| item["title"] != "future"));
+}
+
+#[tokio::test]
+async fn list_today_items_excludes_completed_items() {
+    let test_app = spawn_app().await;
+
+    let todo_payload: serde_json::Value =
+        serde_json::from_str(r#"{"name": "banana", "visibility": "private"}"#).unwrap();
+    assert_response(&test_app.post_todo(&todo_payload).await, StatusCode::OK);
+
+    let today = OffsetDateTime::now_utc().date();
+    let item_payload = serde_json::json!({
+        "title": "to-complete",
+        "due_date": today.to_string(),
+    });
+    let created = test_app.post_todo_item("banana", &item_payload).await;
+    assert_response(&created, StatusCode::OK);
+    let created_json: serde_json::Value = created.json().await.expect("Failed to parse response");
+    let item_id = created_json["todo_item_id"]
+        .as_str()
+        .expect("todo_item_id should be present")
+        .to_string();
+
+    assert_response(
+        &test_app.complete_todo_item("banana", &item_id).await,
+        StatusCode::OK,
+    );
+
+    let response = test_app.list_today_items().await;
+    assert_response(&response, StatusCode::OK);
+    let value: serde_json::Value = response.json().await.expect("Failed to parse response");
+    let items = value["items"].as_array().expect("items should be an array");
+    assert!(items.is_empty());
+}
+
+#[tokio::test]
+async fn list_today_items_respects_private_and_public_visibility() {
+    let test_app = spawn_app().await;
+    let other_user_id = test_app.create_user("other@example.com").await;
+    let other_auth = test_app.get_auth_header_for_user(other_user_id, "other@example.com");
+    let today = OffsetDateTime::now_utc().date();
+
+    let own_todo = serde_json::json!({ "name": "own-private", "visibility": "private" });
+    let own_create = test_app.post_todo(&own_todo).await;
+    assert_response(&own_create, StatusCode::OK);
+    let own_item = serde_json::json!({ "title": "own-task", "due_date": today.to_string() });
+    let own_item_create = test_app.post_todo_item("own-private", &own_item).await;
+    assert_response(&own_item_create, StatusCode::OK);
+
+    let other_private_todo =
+        serde_json::json!({ "name": "other-private", "visibility": "private" });
+    let other_private_create = test_app
+        .client
+        .post(format!("{}/todo", test_app.address))
+        .header("Authorization", &other_auth)
+        .json(&other_private_todo)
+        .send()
+        .await
+        .expect("Failed to create other private todo");
+    assert_response(&other_private_create, StatusCode::OK);
+    let other_private_item =
+        serde_json::json!({ "title": "hidden-task", "due_date": today.to_string() });
+    let other_private_item_create = test_app
+        .client
+        .post(format!(
+            "{}/todo/{}/item",
+            test_app.address, "other-private"
+        ))
+        .header("Authorization", &other_auth)
+        .json(&other_private_item)
+        .send()
+        .await
+        .expect("Failed to create private item for other user");
+    assert_response(&other_private_item_create, StatusCode::OK);
+
+    let other_public_todo = serde_json::json!({ "name": "other-public", "visibility": "public" });
+    let other_public_create = test_app
+        .client
+        .post(format!("{}/todo", test_app.address))
+        .header("Authorization", &other_auth)
+        .json(&other_public_todo)
+        .send()
+        .await
+        .expect("Failed to create other public todo");
+    assert_response(&other_public_create, StatusCode::OK);
+    let other_public_item =
+        serde_json::json!({ "title": "public-task", "due_date": today.to_string() });
+    let other_public_item_create = test_app
+        .client
+        .post(format!("{}/todo/{}/item", test_app.address, "other-public"))
+        .header("Authorization", &other_auth)
+        .json(&other_public_item)
+        .send()
+        .await
+        .expect("Failed to create public item for other user");
+    assert_response(&other_public_item_create, StatusCode::OK);
+
+    let list_response = test_app.list_today_items().await;
+    assert_response(&list_response, StatusCode::OK);
+    let value: serde_json::Value = list_response
+        .json()
+        .await
+        .expect("Failed to parse list_today_items response");
+    let items = value["items"].as_array().expect("items should be an array");
+
+    assert!(items
+        .iter()
+        .any(|item| item["todo_name"] == "own-private" && item["title"] == "own-task"));
+    assert!(items
+        .iter()
+        .any(|item| item["todo_name"] == "other-public" && item["title"] == "public-task"));
+    assert!(!items
+        .iter()
+        .any(|item| item["todo_name"] == "other-private" && item["title"] == "hidden-task"));
 }
 
 #[tokio::test]

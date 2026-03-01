@@ -18,8 +18,8 @@ use routes::{
     complete_todo_item, create_recurring_template_handler, create_todo, create_todo_item,
     delete_recurring_template_handler, delete_todo, delete_todo_item,
     get_recurring_template_handler, get_todo, get_todo_item, google_callback, google_login,
-    health_check, list_recurring_templates_handler, list_todo, list_todo_items,
-    update_recurring_template_handler, update_todo, update_todo_item,
+    health_check, list_recurring_templates_handler, list_today_todo_items, list_todo,
+    list_todo_items, update_recurring_template_handler, update_todo, update_todo_item,
 };
 use tower::timeout::TimeoutLayer;
 use tower::ServiceBuilder;
@@ -35,10 +35,10 @@ mod error;
 mod extractors;
 mod repos;
 mod routes;
-mod tx;
 pub mod services;
 pub mod startup;
 pub mod telemetry;
+mod tx;
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 const MAX_BODY_BYTES: usize = 1024 * 1024;
@@ -116,6 +116,7 @@ pub async fn run(
     }
 
     let app = app
+        .route("/items/today", get(list_today_todo_items))
         .route("/todo", post(create_todo))
         .route("/todo", get(list_todo))
         .route("/todo/{todo_id}", delete(delete_todo))

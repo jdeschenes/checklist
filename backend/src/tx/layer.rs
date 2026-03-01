@@ -6,17 +6,13 @@ use http_body::Body;
 use super::extension::Extension;
 use super::state::State;
 
-
 pub struct Layer {
     state: State,
 }
 
-impl Layer
-{
+impl Layer {
     pub fn new(state: State) -> Self {
-        Self {
-            state,
-        }
+        Self { state }
     }
 }
 
@@ -28,8 +24,7 @@ impl Clone for Layer {
     }
 }
 
-impl<S> tower_layer::Layer<S> for Layer
-{
+impl<S> tower_layer::Layer<S> for Layer {
     type Service = Service<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
@@ -55,10 +50,10 @@ impl<S: Clone> Clone for Service<S> {
 }
 
 impl<S, ReqBody, ResBody> tower_service::Service<http::Request<ReqBody>> for Service<S>
-where 
+where
     S: tower_service::Service<
-        http::Request<ReqBody>, 
-        Response = http::Response<ResBody>, 
+        http::Request<ReqBody>,
+        Response = http::Response<ResBody>,
         Error = std::convert::Infallible,
     >,
     S::Future: Send + 'static,
@@ -69,7 +64,8 @@ where
     type Error = S::Error;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&mut self,
+    fn poll_ready(
+        &mut self,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx).map_err(|err| match err {})
@@ -90,7 +86,5 @@ where
             }
             Ok(res.map(axum_core::body::Body::new))
         })
-
     }
-
 }

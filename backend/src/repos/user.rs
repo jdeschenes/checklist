@@ -3,8 +3,10 @@ use sqlx::PgTransaction;
 
 use crate::domain::User;
 
-
-pub async fn find_by_email(transaction: &mut PgTransaction<'_>, email: &str) -> Result<Option<User>> {
+pub async fn find_by_email(
+    transaction: &mut PgTransaction<'_>,
+    email: &str,
+) -> Result<Option<User>> {
     let row = sqlx::query_as!(
         User,
         r#"

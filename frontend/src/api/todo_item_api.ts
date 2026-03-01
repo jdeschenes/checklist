@@ -1,5 +1,6 @@
 import {
   ListTodoItemResponse,
+  ListTodayItemsResponse,
   CreateTodoItemRequest,
   CreateTodoItemResponse,
   GetTodoItemResponse,
@@ -28,5 +29,8 @@ export const BackendTodoItemAPI = {
     return await authenticatedPost<GetTodoItemResponse>(
       `/todo/${todo_name}/item/${item_id}/complete`
     );
+  },
+  ListTodayItems: async (): Promise<ListTodayItemsResponse> => {
+    return await authenticatedGet<ListTodayItemsResponse>(`/items/today`);
   },
 };
