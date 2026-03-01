@@ -31,45 +31,30 @@ export function AppBreadcrumb() {
     isPage: boolean;
   }> = [];
 
-  // Always show Home breadcrumb
   if (pathname === "/") {
-    // On home page, show Home as current page (no link)
-    breadcrumbItems.push({
-      label: "Home",
-      href: "/",
-      isPage: true,
-    });
-  } else {
-    // On other pages, show Home as link
-    breadcrumbItems.push({
-      label: "Home",
-      href: "/",
-      isPage: false,
-    });
-  }
+    breadcrumbItems.push({ label: "Today", href: "/", isPage: true });
+  } else if (pathname === "/todos") {
+    breadcrumbItems.push({ label: "Todos", href: "/todos", isPage: true });
+  } else if (segments[0] === "todo") {
+    // All /todo/* routes show "Todos" as the parent
+    breadcrumbItems.push({ label: "Todos", href: "/todos", isPage: false });
 
-  // Handle different route patterns
-  if (segments[0] === "todo") {
     if (segments.length === 2 && segments[1] === "new") {
-      // /todo/new
       breadcrumbItems.push({
         label: "New Todo",
         href: "/todo/new",
         isPage: true,
       });
     } else if (segments.length >= 2 && segments[1] !== "new") {
-      // /todo/$todoId or /todo/$todoId/new
       const todoName = todoQuery?.data?.name || todoId;
 
       if (segments.length === 2) {
-        // /todo/$todoId
         breadcrumbItems.push({
           label: todoName,
           href: `/todo/${todoId}`,
           isPage: true,
         });
       } else if (segments.length === 3 && segments[2] === "new") {
-        // /todo/$todoId/new
         breadcrumbItems.push({
           label: todoName,
           href: `/todo/${todoId}`,
@@ -81,7 +66,6 @@ export function AppBreadcrumb() {
           isPage: true,
         });
       } else if (segments.length === 3 && segments[2] === "templates") {
-        // /todo/$todoId/templates
         breadcrumbItems.push({
           label: todoName,
           href: `/todo/${todoId}`,
@@ -97,7 +81,6 @@ export function AppBreadcrumb() {
         segments[2] === "template" &&
         segments[4] === "edit"
       ) {
-        // /todo/$todoId/template/$templateId/edit
         breadcrumbItems.push({
           label: todoName,
           href: `/todo/${todoId}`,

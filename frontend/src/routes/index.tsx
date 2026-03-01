@@ -1,71 +1,178 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { listTodoQueryOptions } from "@/api/todoQueryOptions";
-import { buttonVariants } from "@/components/ui/button";
-import { ChevronRight, Plus } from "lucide-react";
+import { todayItemsQueryOptions } from "@/api/todoItemQueryOptions";
+import useCompleteTodayItem from "@/api/useCompleteTodayItem";
+import { CheckCircle2, Circle } from "lucide-react";
+import * as React from "react";
+
+const COMPLETION_DELAY_MS = 3000;
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: Today,
   loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(listTodoQueryOptions),
+    queryClient.ensureQueryData(todayItemsQueryOptions),
 });
 
-function Index() {
-  const listTodoQuery = useSuspenseQuery(listTodoQueryOptions);
-  const todos = listTodoQuery.data;
+function Today() {
+  const todayItemsQuery = useSuspenseQuery(todayItemsQueryOptions);
+  const items = todayItemsQuery.data.items;
+
+  const completeTodayItemMutation = useCompleteTodayItem();
+  const [pendingCompletions, setPendingCompletions] = React.useState<
+    Set<string>
+  >(new Set());
+  const completionTimeoutRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const pendingCompletionsRef = React.useRef(pendingCompletions);
+  const pendingTodoNamesRef = React.useRef<Map<string, string>>(new Map());
+  const inFlightCompletionsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    pendingCompletionsRef.current = pendingCompletions;
+  }, [pendingCompletions]);
+
+  const clearCompletionTimeout = React.useCallback(() => {
+    if (completionTimeoutRef.current) {
+      clearTimeout(completionTimeoutRef.current);
+      completionTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resetCompletionWindow = React.useCallback(() => {
+    clearCompletionTimeout();
+
+    const pending = Array.from(pendingCompletionsRef.current).filter(
+      (itemId) => !inFlightCompletionsRef.current.has(itemId)
+    );
+
+    if (pending.length === 0) {
+      return;
+    }
+
+    completionTimeoutRef.current = setTimeout(() => {
+      const itemsToComplete = Array.from(pendingCompletionsRef.current).filter(
+        (itemId) => !inFlightCompletionsRef.current.has(itemId)
+      );
+
+      if (itemsToComplete.length === 0) {
+        return;
+      }
+
+      itemsToComplete.forEach((itemId) => {
+        inFlightCompletionsRef.current.add(itemId);
+        completeTodayItemMutation.mutate(
+          { todoName: pendingTodoNamesRef.current.get(itemId)!, itemId },
+          {
+            onSettled: () => {
+              inFlightCompletionsRef.current.delete(itemId);
+              setPendingCompletions((prev) => {
+                if (!prev.has(itemId)) {
+                  return prev;
+                }
+                const newSet = new Set(prev);
+                newSet.delete(itemId);
+                return newSet;
+              });
+            },
+          }
+        );
+      });
+    }, COMPLETION_DELAY_MS);
+  }, [clearCompletionTimeout, completeTodayItemMutation]);
+
+  React.useEffect(() => {
+    resetCompletionWindow();
+  }, [pendingCompletions, resetCompletionWindow]);
+
+  const handleItemClick = React.useCallback(
+    (itemId: string, todoName: string, isComplete: boolean) => {
+      if (isComplete) return;
+
+      setPendingCompletions((prev) => {
+        const newSet = new Set(prev);
+
+        if (newSet.has(itemId)) {
+          newSet.delete(itemId);
+          pendingTodoNamesRef.current.delete(itemId);
+        } else {
+          newSet.add(itemId);
+          pendingTodoNamesRef.current.set(itemId, todoName);
+        }
+
+        return newSet;
+      });
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    return () => {
+      clearCompletionTimeout();
+    };
+  }, [clearCompletionTimeout]);
+
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 pb-24">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold text-gray-900">Todo Lists</h1>
-            <Link
-              className={buttonVariants({ variant: "default" })}
-              to="/todo/new"
-            >
-              <Plus className="h-4 w-4" /> New
-            </Link>
-          </div>
-        </div>
-        {todos.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
-            <div className="text-xl font-semibold text-gray-700">
-              No lists yet
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+            <div className="text-lg sm:text-2xl font-medium text-gray-500 mb-2">
+              All done
             </div>
-            <p className="mt-2 text-sm text-gray-500">
-              Create your first todo list to get started.
+            <p className="text-gray-400 text-sm text-center">
+              Nothing due today
             </p>
           </div>
         ) : (
           <ul className="space-y-2">
-            {todos.items.map((i) => {
-              const isPrivate = i.visibility === "private";
+            {items.map((item) => {
+              const isPending = pendingCompletions.has(item.todo_item_id);
+              const isClickable = !item.is_complete;
 
               return (
-                <li key={i.name}>
-                  <Link
-                    className="group flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm transition hover:border-gray-300 hover:shadow-md"
-                    to="/todo/$todoId"
-                    params={{ todoId: i.name }}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold text-gray-900">
-                          {i.name}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                            isPrivate
-                              ? "bg-gray-900 text-white"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {isPrivate ? "Private" : "Public"}
-                        </span>
+                <li
+                  key={item.todo_item_id}
+                  onClick={() =>
+                    handleItemClick(
+                      item.todo_item_id,
+                      item.todo_name,
+                      item.is_complete
+                    )
+                  }
+                  className={`group flex items-start sm:items-center gap-3 p-3 sm:p-4 bg-white rounded-lg border transition-all ${
+                    isClickable
+                      ? "cursor-pointer hover:shadow-sm"
+                      : "border-gray-100"
+                  } ${
+                    isPending
+                      ? "border-green-200 bg-green-50 hover:border-green-300"
+                      : isClickable
+                        ? "border-gray-100 hover:border-gray-200"
+                        : "border-gray-100"
+                  }`}
+                >
+                  <div className="flex-shrink-0 mt-0.5 sm:mt-0">
+                    {item.is_complete ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : isPending ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500 animate-pulse" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div
+                        className={`text-sm sm:text-base font-medium leading-relaxed ${item.is_complete ? "text-gray-400 line-through" : "text-gray-900"}`}
+                      >
+                        {item.title}
                       </div>
+                      <span className="text-sm text-gray-500 font-medium shrink-0">
+                        {item.todo_name}
+                      </span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400 transition group-hover:text-gray-500" />
-                  </Link>
+                  </div>
                 </li>
               );
             })}

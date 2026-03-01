@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TodosRouteImport } from './routes/todos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TodoNewRouteImport } from './routes/todo.new'
@@ -19,6 +20,11 @@ import { Route as TodoTodoIdTemplatesRouteImport } from './routes/todo.$todoId.t
 import { Route as TodoTodoIdNewRouteImport } from './routes/todo.$todoId.new'
 import { Route as TodoTodoIdTemplateTemplateIdEditRouteImport } from './routes/todo.$todoId.template.$templateId.edit'
 
+const TodosRoute = TodosRouteImport.update({
+  id: '/todos',
+  path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -69,6 +75,7 @@ const TodoTodoIdTemplateTemplateIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/todos': typeof TodosRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
   '/todo/new': typeof TodoNewRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/todos': typeof TodosRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/todo/new': typeof TodoNewRoute
   '/todo/$todoId/new': typeof TodoTodoIdNewRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/todos': typeof TodosRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/todo/$todoId': typeof TodoTodoIdRouteWithChildren
   '/todo/new': typeof TodoNewRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/todos'
     | '/auth/callback'
     | '/todo/$todoId'
     | '/todo/new'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/todos'
     | '/auth/callback'
     | '/todo/new'
     | '/todo/$todoId/new'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/todos'
     | '/auth/callback'
     | '/todo/$todoId'
     | '/todo/new'
@@ -137,6 +149,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  TodosRoute: typeof TodosRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   TodoTodoIdRoute: typeof TodoTodoIdRouteWithChildren
   TodoNewRoute: typeof TodoNewRoute
@@ -144,6 +157,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/todos': {
+      id: '/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -231,6 +251,7 @@ const TodoTodoIdRouteWithChildren = TodoTodoIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  TodosRoute: TodosRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   TodoTodoIdRoute: TodoTodoIdRouteWithChildren,
   TodoNewRoute: TodoNewRoute,

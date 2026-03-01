@@ -85,6 +85,21 @@ export type ListTodoItemResponse = {
   items: ListTodoItemSingle[];
 };
 
+export type TodayTodoItem = {
+  todo_name: string;
+  todo_item_id: string;
+  title: string;
+  due_date: string;
+  is_complete: boolean;
+  complete_time: string | null;
+  create_time: string;
+  update_time: string;
+};
+
+export type ListTodayItemsResponse = {
+  items: TodayTodoItem[];
+};
+
 interface TodoItemAPI {
   CreateTodoItem(
     todo_name: string,
@@ -95,6 +110,7 @@ interface TodoItemAPI {
     todo_name: string,
     item_id: string
   ): Promise<GetTodoItemResponse>;
+  ListTodayItems(): Promise<ListTodayItemsResponse>;
 }
 
 export type RecurrenceInterval = {
